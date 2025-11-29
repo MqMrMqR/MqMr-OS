@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MqMr's OS | 1.0.0v</title>
+    <title>MqMr's OS | </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+
     <style>
         * {
             margin: 0;
@@ -517,6 +524,223 @@
     color: #90959f !important;
 }
 
+
+
+
+
+/* صفحات الإعدادات (يمين) — أنيميشن مثل macOS */
+.settings-page {
+    opacity: 0;
+    transform: translateX(16px);
+    transition: opacity .18s ease, transform .18s ease;
+    display: none;
+}
+
+.settings-page.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+    display: block;
+}
+
+/* الأعمدة الوسطى لكل Section */
+.settings-middle-section {
+    display: none;
+}
+
+.settings-middle-section.active {
+    display: block;
+}
+
+/* Mode buttons (pills) */
+.mode-pill {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid #d0d0d0;
+    background: #f7f7f7;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.mode-pill:hover {
+    background: #e9e9e9;
+    border-color: #c0c0c0;
+}
+
+
+/* General style for Settings sidebar buttons */
+.settings-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #444;
+    transition: 0.2s;
+}
+
+/* Hover effect */
+.settings-btn:hover {
+    background: #e5e5e5;
+}
+
+/* ACTIVE BLUE BUTTON — EXACT macOS STYLE */
+.settings-btn.active {
+    background: #007aff;
+    color: #fbfcff !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.3);
+}
+
+/* Make icon white when active */
+.settings-btn.active .icon {
+    color: white !important;
+}
+
+/* Icon base */
+.settings-btn .icon {
+    font-size: 18px;
+    opacity: 0.85;
+}
+
+/* ---------- MID PANEL BUTTONS ---------- */
+
+.mid-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 10px;
+    border-radius: 12px;
+    font-size: 14px;
+    cursor: pointer;
+        color: #444;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+/* الجزء اليسار: أيقونة + نص */
+.mid-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* أيقونة اليسار */
+.mid-btn .icon svg {
+    width: 18px;
+    height: 18px;
+    stroke: #4b5563;
+    transition: stroke 0.18s ease;
+}
+
+/* Chevron يمين */
+.mid-chevron svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.5;
+    stroke: #4b5563;
+    transition: stroke 0.18s ease, opacity 0.18s ease;
+}
+
+/* Hover خفيف */
+.mid-btn:hover {
+    background: #f3f4f6;
+}
+
+/* Active (أزرق) */
+.mid-btn.active {
+    background: #007aff;
+    color: #ffffff;
+}
+
+/* أيقونات لما تكون Active → تصير بيضاء */
+.mid-btn.active .icon svg,
+.mid-btn.active .mid-chevron svg {
+    stroke: #ffffff !important;
+    opacity: 0.9;
+}
+
+/* Row styles on right side */
+/* الكارد لكل سطر في اليمين */
+.setting-row {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-bottom: 8px;
+    transition:
+        background 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+}
+
+/* مسافة أكبر بين الكروت عشان تنفس التصميم */
+.setting-row + .setting-row {
+    margin-top: 8px;
+}
+
+/* الـ Hover (نفس إحساس macOS) */
+.setting-row:hover {
+    background: #f9fafb;           /* رمادي فاتح جداً */
+    box-shadow: 0 0 0 1px #f3f4f6; /* حافة خفيفة جداً عشان ما يطلع مقصوص */
+}
+
+/* عنوان السؤال */
+.setting-title {
+    font-size: 14px;
+    font-weight: 500;              /* مو 700 عشان يكون الـ Bold أخف */
+    color: #101828;                /* قريب من الأسود بس مو أسود تماماً */
+}
+
+/* الإجابة تحت بلون رمادي */
+.setting-answer {
+    font-size: 13px;
+    color: #6b7280;                /* gray-500 */
+}
+
+.settings-btn .icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #555;
+    transition: 0.2s;
+}
+
+.settings-btn.active .icon svg {
+    stroke: white !important;
+}
+
+
+
+.icon {
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* هذا يخلي كل الأيقونات perfect aligned */
+}
+
+.icon svg {
+    width: 20px;
+    height: 20px;
+
+    stroke-width: 2;
+    stroke: #555;
+    transition: 0.2s;
+}
+
+
+
+
+
     </style>
 </head>
 <body>
@@ -831,7 +1055,7 @@
                 <div style="width: 68px;"></div>
             </div>
             <div class="window-content">
-                <h2>Coming Soon!, Current Version: 1.0.0v</h2>
+                <h2 id="projects-version-title">Coming Soon!, Current Version: </h2>
 
             </div>
             <div class="resize-handle"></div>
@@ -896,7 +1120,317 @@ Type 'help' to see available commands.
 
     <div class="resize-handle"></div>
 </div>
+
+
+
+
+
+<!-- Settings Window -->
+<div class="window" id="settings-window" style="top: 140px; left: 200px; width: 900px; height: 700px;">
+  <div class="window-titlebar">
+    <div class="window-controls">
+      <div class="window-control close"></div>
+      <div class="window-control minimize"></div>
+      <div class="window-control maximize"></div>
+    </div>
+    <div class="window-title">Settings</div>
+    <div style="width: 68px;"></div>
+  </div>
+
+  <div class="window-content" style="padding:0; display:flex; background:#f8f8f8;">
+
+    <!-- LEFT SIDEBAR -->
+    <div style="width:190px; background:#f2f2f2; border-right:1px solid #d0d0d0; display:flex; flex-direction:column;">
+      <div style="padding:20px;">
+        <h2 style="font-size:22px; font-weight:700;">Settings</h2>
+      </div>
+
+      <!-- Sign in section -->
+      <div style="padding:0 16px 16px 16px;">
+        <div style="background:#e8f0ff; border:1px solid #c5d7ff; padding:16px; border-radius:12px;">
+          <p style="font-size:14px; font-weight:600; margin-bottom:4px;">Sign in with Google</p>
+          <p style="font-size:12px; color:#555; margin-bottom:10px;">
+            To View Your Name And Picture In the System
+          </p>
+          <button style="
+            width:100%;
+            padding:8px;
+            background:#007aff;
+            color:white;
+            font-size:12px;
+            border-radius:8px;
+            border:none;
+            cursor:pointer;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            font-weight:600;
+            
+          ">
+            Sign In with Google
+          </button>
+        </div>
+      </div>
+
+      <!-- Sidebar buttons -->
+      <div style="flex:1; overflow-y:auto; padding:0 8px 16px 8px;">
+        <!-- GENERAL -->
+        <div class="settings-btn active" data-section="general">
+          <span class="icon">
+            <!-- General SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="1 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+          </span>
+          General
+        </div>
+
+
+        <!-- DISPLAY -->
+        <div class="settings-btn" data-section="display">
+          <span class="icon">
+            <!-- Display SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 18a6 6 0 0 0 0-12v12z"></path>
+            </svg>
+          </span>
+          Display
+        </div>
+
+        <!-- PRIVACY -->
+        <div class="settings-btn" data-section="privacy">
+          <span class="icon">
+            <!-- Privacy SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </span>
+          Privacy
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MIDDLE PANEL -->
+    <div class="settings-middle" style="width:200px; border-right:1px solid #d0d0d0; background:white; display:flex; flex-direction:column;">
+      <div style="padding:20px; border-bottom:1px solid #e0e0e0;">
+        <h3 id="settings-middle-title" style="font-size:22px; font-weight:700;">General</h3>
+      </div>
+
+      <div style="padding:12px; overflow-y:auto;">
+
+        <!-- GENERAL SECTION SUB-MENU -->
+        <div class="settings-middle-section active" data-section="general">
+          <div class="mid-btn active" data-page="general-about-page">
+            <div class="mid-left">
+            <span class="icon">
+              <!-- About icon (HardDrive) -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" x2="2" y1="12" y2="12"></line>
+                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                <line x1="6" x2="6.01" y1="16" y2="16"></line>
+                <line x1="10" x2="10.01" y1="16" y2="16"></line>
+              </svg>
+            </span>
+            <span>About</span>
+             </div>
+
+               <span class="mid-chevron">
+    <!-- ChevronRight SVG -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="m9 18 6-6-6-6"></path>
+    </svg>
+  </span>
+          </div>
+
+          <div class="mid-btn" data-page="general-software-page">
+                        <div class="mid-left">
+            <span class="icon">
+              <!-- Software Update (Zap) -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
+              </svg>
+            </span>
+            <span>Software Update</span>
+                         </div>
+  <span class="mid-chevron">
+    <!-- ChevronRight SVG -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="m9 18 6-6-6-6"></path>
+    </svg>
+  </span>
+          </div>
+        </div>
+
+        <!-- DISPLAY SECTION SUB-MENU -->
+        <div class="settings-middle-section" data-section="display">
+          <div class="mid-btn active" data-page="display-mode-page">
+                        <div class="mid-left">
+
+            <span class="icon">
+              <!-- Mode (Contrast) -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 18a6 6 0 0 0 0-12v12z"></path>
+              </svg>
+            </span>
+            <span>Mode</span>
+                         </div>
+  <span class="mid-chevron">
+    <!-- ChevronRight SVG -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="m9 18 6-6-6-6"></path>
+    </svg>
+  </span>
+          </div>
+        </div>
+
+        <!-- PRIVACY SECTION SUB-MENU -->
+        <div class="settings-middle-section" data-section="privacy">
+          <div class="mid-btn active" data-page="privacy-google-page">
+                        <div class="mid-left">
+
+            <span class="icon">
+              <!-- Google (Lock icon) -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
+            <span>Google</span>
+                         </div>
+  <span class="mid-chevron">
+    <!-- ChevronRight SVG -->
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="m9 18 6-6-6-6"></path>
+    </svg>
+  </span>
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+
+    <!-- RIGHT CONTENT -->
+    <div class="settings-main" style="flex:1; background:white; overflow-y:auto; padding:32px;">
+
+      <!-- GENERAL → ABOUT -->
+<div class="settings-page is-visible" id="general-about-page">
+  <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">About</h1>
+
+  <div class="setting-row">
+    <span class="setting-title">Creator</span>
+    <span class="setting-answer" id="about-creator"></span>
+  </div>
+
+  <div class="setting-row">
+    <span class="setting-title">Software</span>
+    <span class="setting-answer" id="about-version"></span>
+  </div>
 </div>
+
+      <!-- GENERAL → SOFTWARE UPDATE -->
+<div class="settings-page" id="general-software-page">
+  <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Software Update</h1>
+
+  <div class="setting-row">
+    <span class="setting-title">MqMr's OS Update</span>
+    <span class="setting-answer" id="sw-version"></span>
+  </div>
+
+  <div class="setting-row">
+    <span class="setting-title">Available Updates</span>
+    <span class="setting-answer" id="sw-updates-text"></span>
+  </div>
+
+  <div class="setting-row setting-row--changelog" style="gap:8px;">
+    <span class="setting-title">Change Logs</span>
+    <ul id="sw-changelog-list" style="margin-left:0; padding-left:16px; font-size:13px; color:#6b7280;">
+    </ul>
+  </div>
+</div>
+
+      <!-- DISPLAY → MODE -->
+      <div class="settings-page" id="display-mode-page">
+        <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Mode</h1>
+
+        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:12px;">
+          <span class="setting-title">Mode ( Coming Soon )</span>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="mode-pill">Full Desktop</button>
+            <button class="mode-pill">Simple Desktop</button>
+            <button class="mode-pill">Simple Phone</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRIVACY → GOOGLE -->
+      <div class="settings-page" id="privacy-google-page">
+        <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Google</h1>
+
+        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+          <span class="setting-title">Google Account ( Coming Soon )</span>
+          <p style="font-size:14px; color:#444;">
+            Sign In With Google, To View Your Name And Picture In The System.
+          </p>
+          <p style="font-size:13px; color:#777;">
+            Safety: We CanNot Access Your Password Or Location.
+          </p>
+          <button style="
+            margin-top:8px;
+            padding:8px 14px;
+            border-radius:8px;
+            border:none;
+            background:#007aff;
+            color:white;
+            font-size:13px;
+            font-weight:600;
+            cursor:pointer;
+          ">
+            Sign In with Google
+          </button>
+        </div>
+      </div>
+
+      <!-- PLACEHOLDER PAGES -->
+      <div class="settings-page" id="sound-page">
+        <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Sound</h1>
+        <p style="font-size:14px; color:#555;">Sound settings coming soon.</p>
+      </div>
+
+      <div class="settings-page" id="notifications-page">
+        <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Notifications</h1>
+        <p style="font-size:14px; color:#555;">Notification settings coming soon.</p>
+      </div>
+
+      <div class="settings-page" id="battery-page">
+        <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Battery</h1>
+        <p style="font-size:14px; color:#555;">Battery settings coming soon.</p>
+      </div>
+
+    </div>
+
+  </div>
+  <div class="resize-handle"></div>
+</div>
+
+
+
+
+
+
+
+</div> <!-- CLOUSER -->
 
 
     </div>
@@ -932,7 +1466,15 @@ Type 'help' to see available commands.
     <div class="dock-dot"></div>
 </div>
 
-    </div>
+
+<div class="dock-item settings" data-window="settings-window">
+    <span>⚙️</span>
+    <div class="dock-label">Settings</div>
+    <div class="dock-dot"></div>
+</div>
+
+
+    </div> <!-- CLOSUR -->
 
 <script>
 /* ================= CLOCK ================= */
@@ -1225,11 +1767,15 @@ terminalBody.addEventListener("keydown", function(e) {
         input.contentEditable = "false"; // وقف الكتابة في القديم
 
         // تنفيذ الأمر
-        if (cmd === "help") {
-            terminalBody.innerHTML += `\nMqMr OS Terminal – version 1.0.0v\nNew commands coming soon...\n`;
-        } else if (cmd !== "") {
-            terminalBody.innerHTML += `\nCommand not found.\n`;
-        }
+if (cmd === "help") {
+    const sw = window.softwareInfo || {};
+    const osName = sw.osName || "MqMr's OS";
+    const version = sw.version || "1.0.0v";
+
+    terminalBody.innerHTML += `\n${osName} Terminal – version ${version}\nNew commands coming soon...\n`;
+} else if (cmd !== "") {
+    terminalBody.innerHTML += `\nCommand not found.\n`;
+}
 
         // إضافة prompt جديد
         newPrompt();
@@ -1241,6 +1787,139 @@ setTimeout(() => {
     const input = document.getElementById("terminal-input");
     if (input) input.focus();
 }, 50);
+
+
+
+
+
+// ===================== SETTINGS APP LOGIC =====================
+(function () {
+  const settingsWindow = document.getElementById("settings-window");
+  if (!settingsWindow) return;
+
+  const sidebarButtons = settingsWindow.querySelectorAll(".settings-btn");
+  const middleSections = settingsWindow.querySelectorAll(".settings-middle-section");
+  const midButtons = settingsWindow.querySelectorAll(".mid-btn");
+  const pages = settingsWindow.querySelectorAll(".settings-page");
+  const middleTitle = document.getElementById("settings-middle-title");
+
+  function showPage(pageId) {
+    pages.forEach(page => {
+      if (page.id === pageId) {
+        page.style.display = "block";
+        // allow transition to kick in
+        requestAnimationFrame(() => {
+          page.classList.add("is-visible");
+        });
+      } else {
+        page.classList.remove("is-visible");
+        page.style.display = "none";
+      }
+    });
+  }
+
+  function activateMid(btn) {
+    midButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const pageId = btn.getAttribute("data-page");
+    if (pageId) showPage(pageId);
+  }
+
+  function activateSection(sectionName) {
+    // left sidebar highlight
+    sidebarButtons.forEach(btn => {
+      btn.classList.toggle("active", btn.getAttribute("data-section") === sectionName);
+    });
+
+    // middle title (General / Display / Privacy ...)
+    if (middleTitle) {
+      const pretty = sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
+      middleTitle.textContent = pretty;
+    }
+
+    // show only matching middle section
+    middleSections.forEach(sec => {
+      const isActive = sec.getAttribute("data-section") === sectionName;
+      sec.classList.toggle("active", isActive);
+
+      if (isActive) {
+        const firstMid = sec.querySelector(".mid-btn");
+        if (firstMid) activateMid(firstMid);
+      }
+    });
+  }
+
+  // click handlers
+  sidebarButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const sec = btn.getAttribute("data-section");
+      if (!sec) return;
+      activateSection(sec);
+    });
+  });
+
+  midButtons.forEach(btn => {
+    btn.addEventListener("click", () => activateMid(btn));
+  });
+
+  // default state: General → About
+  activateSection("general");
+
+  // ===================== LOAD DATA FROM JSON =====================
+  // ===================== LOAD DATA FROM JSON =====================
+  fetch("settings-data.json")
+    .then(res => res.json())
+    .then(data => {
+      const sw = data.software;
+      if (!sw) return;
+
+      // نخزن البيانات في global عشان نستخدمها في التيرمنال وغيره
+      window.softwareInfo = sw;
+
+      // ===== Settings: General → About =====
+      const aboutCreator = document.getElementById("about-creator");
+      const aboutVersion = document.getElementById("about-version");
+
+      if (aboutCreator) aboutCreator.textContent = sw.creator || "MqMr";
+      if (aboutVersion) aboutVersion.textContent = sw.version || "1.0.0v";
+
+      // ===== Settings: General → Software Update =====
+      const swVersion = document.getElementById("sw-version");
+      const swUpdatesText = document.getElementById("sw-updates-text");
+      const swChangelogList = document.getElementById("sw-changelog-list");
+
+      if (swVersion) swVersion.textContent = sw.version || "1.0.0v";
+      if (swUpdatesText) swUpdatesText.textContent = sw.availableUpdatesText || "Your software is up to date";
+
+      if (swChangelogList && Array.isArray(sw.changelog)) {
+        swChangelogList.innerHTML = "";
+        sw.changelog.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = `${item.version}: ${item.label}`;
+          swChangelogList.appendChild(li);
+        });
+      }
+
+      // ===== Title & Menubar =====
+      if (sw.osName) {
+        // عنوان التبويب
+        document.title = `${sw.osName} | ${sw.version}`;
+
+        // اسم النظام في المينوبار (أول strong في menubar-left)
+        const menuLabel = document.querySelector(".menubar-left .menubar-item strong");
+        if (menuLabel) menuLabel.textContent = sw.osName;
+      }
+
+      // ===== Projects Window title =====
+      const projectsTitle = document.getElementById("projects-version-title");
+      if (projectsTitle) {
+        projectsTitle.textContent = `Coming Soon!, Current Version: ${sw.version}`;
+      }
+    })
+    .catch(err => {
+      console.warn("Could not load settings-data.json", err);
+    });
+})();
 
 
 

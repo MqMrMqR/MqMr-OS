@@ -1,0 +1,12 @@
+{
+  "software": {
+    "creator": "MqMr",
+    "version": "1.0.1v",
+    "osName": "MqMr's OS",
+    "availableUpdatesText": "Your software is up to date",
+    "changelog": [
+      { "version": "Nov 29 2025 | 1.0.1v", "label": "Added New App: Settings, Changed The font, fixed some issues" },
+      { "version": "Nov 28 2025 | 1.0.0v", "label": "First Release" }
+    ]
+  }
+}
