@@ -417,26 +417,14 @@ Type 'help' to see available commands.
 
       <!-- Sign in section -->
       <div style="padding:0 16px 16px 16px;">
-        <div style="background:#e8f0ff; border:1px solid #c5d7ff; padding:16px; border-radius:12px;">
-          <p style="font-size:14px; font-weight:600; margin-bottom:4px;">Sign in with Google</p>
-          <p style="font-size:12px; color:#555; margin-bottom:10px;">
-            To View Your Name And Picture In the System
-          </p>
-          <button id="btn-google-signin-sidebar" style="
-            width:100%;
-            padding:8px;
-            background:#007aff;
-            color:white;
-            font-size:12px;
-            border-radius:8px;
-            border:none;
-            cursor:pointer;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            font-weight:600;
-            
-          ">
-            Sign In with Google
-          </button>
+        <div id="settings-google-card-inner" style="
+          background:linear-gradient(135deg,#f4f7ff,#edf2ff);
+          border:1px solid #d5e0ff;
+          padding:16px 14px 14px;
+          border-radius:18px;
+          box-shadow:0 10px 25px rgba(15,23,42,0.05);
+        ">
+          <!-- محتوى الكرت (Sign In / Logout) يتغير من JavaScript -->
         </div>
       </div>
 
@@ -649,14 +637,14 @@ Type 'help' to see available commands.
         <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Google</h1>
 
         <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-          <span class="setting-title">Google Account ( Coming Soon )</span>
-          <p style="font-size:14px; color:#444;">
+          <span class="setting-title">Google Account</span>
+          <p id="privacy-google-desc-main" style="font-size:14px; color:#444;">
             Sign In With Google, To View Your Name And Picture In The System.
           </p>
-          <p style="font-size:13px; color:#777;">
+          <p id="privacy-google-desc-safety" style="font-size:13px; color:#777;">
             Safety: We CanNot Access Your Password Or Location.
           </p>
-          <button id="btn-google-signin-sidebar" style="
+          <button id="btn-google-signin-main" style="
             margin-top:8px;
             padding:8px 14px;
             border-radius:8px;
