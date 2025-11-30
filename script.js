@@ -662,71 +662,118 @@ setTimeout(() => {
 
 
 
-/* ================= GOOGLE SIGN-IN (with name & picture) ================= */
+/* ================= GOOGLE SIGN-IN (Popup OAuth) ================= */
 
-// حط هنا الـ Client ID اللي أخذته من Google Console:
+// حط هنا الـ Client ID حق مشروعك من Google Console
 const GOOGLE_CLIENT_ID = "543147531406-tvgcuqvlh92c2dfcfs4iqqpfqeb55cam.apps.googleusercontent.com";
 
-let googleUser = null; // بنحفظ فيه بيانات المستخدم
+let googleUser = null;        // name / email / picture
+let googleTokenClient = null; // OAuth token client
 
-// دالة لفك الـ JWT اللي ترسله Google عشان نطلع الاسم والصورة
-function parseJwt(token) {
-  const base64Url = token.split(".")[1];
-  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-  const jsonPayload = decodeURIComponent(
-    atob(base64)
-      .split("")
-      .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-      .join("")
-  );
-
-  return JSON.parse(jsonPayload);
-}
-
-// تستقبل الرد من Google لما يختار المستخدم حسابه
-function handleGoogleCredential(response) {
+// نحاول نرجّع بيانات المستخدم من localStorage (عشان ما تروح بعد Refresh)
+(function restoreGoogleUser() {
   try {
-    const payload = parseJwt(response.credential);
+    const saved = localStorage.getItem("mqmr_google_user");
+    if (saved) {
+      googleUser = JSON.parse(saved);
+    }
+  } catch (e) {
+    console.warn("Failed to parse saved Google user", e);
+  }
+})();
 
-    googleUser = {
-      name: payload.name,
-      email: payload.email,
-      picture: payload.picture,
-    };
+// يرسم الكرت اللي في يسار نافذة الإعدادات
+function renderSettingsSidebarCard() {
+  const box = document.getElementById("settings-google-card-inner");
+  if (!box) return;
 
-    // نحفظ البيانات في localStorage عشان ما تروح بعد Refresh
-    localStorage.setItem("mqmr_google_user", JSON.stringify(googleUser));
-
-    updateGoogleUI();
-  } catch (err) {
-    console.error("Error parsing Google ID token", err);
+  if (!googleUser) {
+    // حالة غير مسجّل
+    box.innerHTML = `
+      <p style="font-size:14px; font-weight:600; margin-bottom:4px; color:#111827;">
+        Sign in with Google
+      </p>
+      <p style="font-size:12px; color:#4b5563; margin-bottom:10px; width:100%; text-align:left;">
+        To View Your Name And Picture In the System
+      </p>
+      <button id="btn-google-signin-sidebar" style="
+        width:100%;
+        padding:8px 0;
+        border-radius:999px;
+        border:none;
+        background:#007aff;
+        color:white;
+        font-size:13px;
+        font-weight:600;
+        cursor:pointer;
+      ">
+        Sign In with Google
+      </button>
+    `;
+  } else {
+    // حالة مسجّل (مثل الصورة اللي أرسلتها)
+    box.innerHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px; width:100%;">
+        <img src="${googleUser.picture}" alt="Google avatar" style="
+          width:56px;
+          height:56px;
+          border-radius:50%;
+          object-fit:cover;
+        ">
+        <div style="
+          font-size:14px;
+          font-weight:600;
+          color:#111827;
+          max-width:100%;
+          text-align:center;
+          word-break:break-word;
+        ">
+          ${googleUser.name}
+        </div>
+        <button id="btn-google-logout-sidebar" style="
+          width:100%;
+          padding:8px 0;
+          border-radius:999px;
+          border:none;
+          background:#ef4444;
+          color:white;
+          font-size:13px;
+          font-weight:600;
+          cursor:pointer;
+        ">
+          Logout
+        </button>
+      </div>
+    `;
   }
 }
 
-// تحديث شكل الإعدادات بعد تسجيل الدخول
-function updateGoogleUI() {
-  const googleRow = document.querySelector("#privacy-google-page .setting-row");
-  const btnSidebar = document.getElementById("btn-google-signin-sidebar");
+// يحدّث صفحة Privacy → Google
+function updateGooglePrivacySection() {
+  const descMain = document.getElementById("privacy-google-desc-main");
+  const descSafety = document.getElementById("privacy-google-desc-safety");
   const btnMain = document.getElementById("btn-google-signin-main");
+  const googleRow = document.querySelector("#privacy-google-page .setting-row");
 
+  const isSignedIn = !!googleUser;
+
+  if (descMain) descMain.style.display = isSignedIn ? "none" : "";
+  if (descSafety) descSafety.style.display = isSignedIn ? "none" : "";
+
+  if (btnMain) {
+    btnMain.textContent = isSignedIn ? "Logout" : "Sign In with Google";
+    btnMain.style.background = isSignedIn ? "#ef4444" : "#007aff";
+  }
+
+  // كرت صغير يعرض الإسم + الإيميل داخل Privacy
   if (!googleRow) return;
 
-  // لو مافي مستخدم → رجّع الزرار للوضع الطبيعي واحذف الكارد
-  if (!googleUser) {
-    if (btnSidebar) btnSidebar.textContent = "Sign In with Google";
-    if (btnMain) btnMain.textContent = "Sign In with Google";
-
-    const existing = document.getElementById("google-user-card");
-    if (existing) existing.remove();
+  let card = document.getElementById("google-user-card");
+  if (!isSignedIn) {
+    if (card) card.remove();
     return;
   }
 
-  // عدّل نص الأزرار
-  if (btnSidebar) btnSidebar.textContent = "Signed in";
-  if (btnMain) btnMain.textContent = "Sign out";
-
-  // كارد فيه الاسم + الصورة + الإيميل
-  let card = document.getElementById("google-user-card");
   if (!card) {
     card = document.createElement("div");
     card.id = "google-user-card";
@@ -745,79 +792,103 @@ function updateGoogleUI() {
       <div style="font-size:12px;color:#6b7280;">${googleUser.email}</div>
     </div>
   `;
-
-  // زر الـ Sign out (اللي في صفحة Google)
-  if (btnMain) {
-    btnMain.onclick = () => {
-      const email = googleUser && googleUser.email;
-      googleUser = null;
-      localStorage.removeItem("mqmr_google_user");
-      updateGoogleUI();
-
-      // نطلب من Google إلغاء التفويض (اختياري)
-      if (window.google && google.accounts && google.accounts.id && email) {
-        google.accounts.id.revoke(email, () => {
-          console.log("Google session revoked");
-        });
-      }
-    };
-  }
 }
 
-// تهيئة Google Identity وربطها بالأزرار
-function setupGoogleSignIn() {
-  if (!window.google || !google.accounts || !google.accounts.id) {
-    console.warn("Google Identity Services not available");
+// يحدّث كل الـ UI الخاصة بقوقل ويربط الأزرار
+function updateGoogleUI() {
+  renderSettingsSidebarCard();
+  updateGooglePrivacySection();
+
+  const btnSidebarLogin = document.getElementById("btn-google-signin-sidebar");
+  const btnSidebarLogout = document.getElementById("btn-google-logout-sidebar");
+  const btnMain = document.getElementById("btn-google-signin-main");
+
+  if (btnSidebarLogin) btnSidebarLogin.onclick = startGoogleLogin;
+  if (btnSidebarLogout) btnSidebarLogout.onclick = logoutGoogle;
+  if (btnMain) btnMain.onclick = googleUser ? logoutGoogle : startGoogleLogin;
+}
+
+// تهيئة OAuth Client من Google (Popup فيه حساباتك)
+function setupGoogleOAuth() {
+  if (!window.google || !google.accounts || !google.accounts.oauth2) {
+    console.warn("Google OAuth not available yet");
     return;
   }
 
-  google.accounts.id.initialize({
+  googleTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID,
-    callback: handleGoogleCredential,
-    auto_select: false,
-  });
-
-  // لو فيه مستخدم محفوظ من قبل في localStorage
-  const saved = localStorage.getItem("mqmr_google_user");
-  if (saved) {
-    try {
-      googleUser = JSON.parse(saved);
-    } catch (e) {
-      console.warn("Failed to parse saved Google user", e);
-    }
-  }
-  updateGoogleUI();
-
-  // أربط الأزرار إنها تفتح نافذة اختيار الحساب
-  const btnSidebar = document.getElementById("btn-google-signin-sidebar");
-  const btnMain = document.getElementById("btn-google-signin-main");
-
-  function startSignIn() {
-    // تفتح One Tap / Popup من Google لاختيار الحساب
-    google.accounts.id.prompt();
-  }
-
-  [btnSidebar, btnMain].forEach((btn) => {
-    if (btn) {
-      btn.addEventListener("click", startSignIn);
-    }
+    scope: "openid profile email",
+    callback: (tokenResponse) => {
+      // بعد ما يرجع لنا access_token نجيب بيانات المستخدم من Google
+      fetchGoogleProfile(tokenResponse.access_token);
+    },
   });
 }
 
-// ننتظر لين مكتبة Google تتحمل ثم نهيئها (Polling بسيط)
-function initGoogleSignInPolling(tries = 0) {
-  if (window.google && google.accounts && google.accounts.id) {
-    setupGoogleSignIn();
+// جلب بيانات المستخدم من Google
+async function fetchGoogleProfile(accessToken) {
+  try {
+    const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch Google profile");
+    }
+
+    const data = await res.json();
+
+    googleUser = {
+      name: data.name || data.given_name || "Google User",
+      email: data.email || "",
+      picture: data.picture || "",
+    };
+
+    localStorage.setItem("mqmr_google_user", JSON.stringify(googleUser));
+    updateGoogleUI();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// يبدأ تسجيل الدخول → يفتح Popup بحسابات قوقل
+function startGoogleLogin() {
+  if (!googleTokenClient) {
+    alert("Google Sign-In is still loading, try again in a second.");
+    return;
+  }
+
+  // select_account عشان يطلع لك صفحة الحسابات كل مرة
+  googleTokenClient.requestAccessToken({
+    prompt: "select_account",
+  });
+}
+
+// خروج (Logout)
+function logoutGoogle() {
+  googleUser = null;
+  localStorage.removeItem("mqmr_google_user");
+  updateGoogleUI();
+}
+
+// ننتظر مكتبة Google تنتهي تحميل
+function initGoogleOAuthPolling(tries = 0) {
+  if (window.google && google.accounts && google.accounts.oauth2) {
+    setupGoogleOAuth();
     return;
   }
   if (tries > 20) {
-    console.warn("Could not init Google Sign-In");
+    console.warn("Could not init Google OAuth");
     return;
   }
-  setTimeout(() => initGoogleSignInPolling(tries + 1), 300);
+  setTimeout(() => initGoogleOAuthPolling(tries + 1), 300);
 }
 
-initGoogleSignInPolling();
+// أول مرة نحمل الصفحة
+updateGoogleUI();
+initGoogleOAuthPolling();
 
 
 
