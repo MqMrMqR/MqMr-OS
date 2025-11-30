@@ -274,13 +274,45 @@ window.addEventListener("pointerup", () => {
 function handleSubmit(e) {
     e.preventDefault();
 
-    const go = confirm("wait!, if you wanna contact with me, send me a message on my insta or my other accounts.\n\nOpen Instagram?");
+    const form = e.target;
 
-    if (go) {
-        window.open("https://www.instagram.com/_.wp1/", "_blank");
+    const name = form.elements["contact-name"]?.value.trim() || "";
+    const phone = form.elements["contact-phone"]?.value.trim() || "";
+    const subject = form.elements["contact-subject"]?.value.trim() || "New message from your OS";
+    const message = form.elements["contact-message"]?.value.trim() || "";
+
+    // نرتب جسم الإيميل: المدخلات فوق، الرسالة تحت
+    const lines = [];
+
+    if (name) lines.push(`Name: ${name}`);
+    if (phone) {
+        lines.push(`Phone: ${phone}`);
+    } else {
+        lines.push("Phone: (not provided)");
     }
 
-    e.target.reset();
+    lines.push(""); // سطر فاضي
+    lines.push("Message:");
+    lines.push(message || "(no message)");
+
+    const body = lines.join("\n");
+
+    const to = "mqmr@mqmr.lol";
+
+    const gmailUrl =
+        "https://mail.google.com/mail/?view=cm&fs=1&tf=1" +
+        `&to=${encodeURIComponent(to)}` +
+        `&su=${encodeURIComponent(subject)}` +
+        `&body=${encodeURIComponent(body)}`;
+
+    // فتح Gmail في نافذة بحجم 550x525
+    window.open(
+        gmailUrl,
+        "gmail-compose",
+        "width=550,height=525"
+    );
+
+    // ما نعمل reset عشان لو حب يرجع ينسخ البيانات
     return false;
 }
 

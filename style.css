@@ -147,8 +147,8 @@
 
         .window-titlebar {
             height: 52px;
-            background: rgba(246, 246, 246, 0.9);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            background: #faf8fb;
+            border-bottom: 0px solid rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
             padding: 0 16px;
@@ -199,12 +199,13 @@
             color: #3a4658;
         }
 
-        .window-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 32px;
-            color: #000;
-        }
+.window-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px;
+    color: #000;
+    background: #f7f7f7; /* لون خلفية التطبيق فقط */
+}
 
         .window-content h2 {
             font-size: 32px;
@@ -247,36 +248,126 @@
             margin-bottom: 8px;
         }
 
-        .contact-form {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            max-width: 500px;
-        }
+/* خلفية خاصة لتطبيق Contact نفسه */
+.contact-window-content {
+    background: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 32px 28px 24px;
+}
 
-        .contact-form input,
-        .contact-form textarea {
-            padding: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 14px;
-        }
+.contact-card {
+    width: 100%;
+    max-width: 460px;
+    /* نشيل كل تأثير الكرت */
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+}
 
-        .contact-form button {
-            background: #007AFF;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+.contact-title {
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 8px;
+    color: #111827;
+}
 
-        .contact-form button:hover {
-            background: #0051D5;
-        }
+.contact-subtitle {
+    font-size: 14px;
+    text-align: center;
+    color: #6b7280;
+    margin-bottom: 24px;
+}
+
+/* Form layout */
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.contact-grid {
+    display: flex;
+    gap: 12px;
+}
+
+.contact-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.contact-field label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.contact-form input,
+.contact-form textarea {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.9);
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+    background: #ffffff;
+}
+
+.contact-form textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Apple-style primary button */
+
+.contact-submit-wrap {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+}
+
+.contact-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 26px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    background: #007aff;
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.45);
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.contact-submit-btn:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.55);
+    transform: translateY(-1px);
+}
+
+.contact-submit-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.4);
+}
 
         .menubar, .dock {
     pointer-events: none;
@@ -523,6 +614,7 @@
     transform: translateX(16px);
     transition: opacity .18s ease, transform .18s ease;
     display: none;
+    
 }
 
 .settings-page.is-visible {
@@ -574,7 +666,8 @@
 
 /* Hover effect */
 .settings-btn:hover {
-    background: #e5e5e5;
+    background: #e9e9e9;
+    border-color: #c0c0c0;
 }
 
 /* ACTIVE BLUE BUTTON — EXACT macOS STYLE */
@@ -635,7 +728,8 @@
 
 /* Hover خفيف */
 .mid-btn:hover {
-    background: #f3f4f6;
+    background: #e9e9e9;
+    border-color: #c0c0c0;
 }
 
 /* Active (أزرق) */
@@ -676,8 +770,8 @@
 
 /* الـ Hover (نفس إحساس macOS) */
 .setting-row:hover {
-    background: #f9fafb;           /* رمادي فاتح جداً */
-    box-shadow: 0 0 0 1px #f3f4f6; /* حافة خفيفة جداً عشان ما يطلع مقصوص */
+    background: #e9e9e9;
+    border-color: #c0c0c0;
 }
 
 /* عنوان السؤال */
@@ -730,3 +824,28 @@
 
 
 
+
+/* Scrollbar حديث لكل محتوى التطبيقات */
+.window-content {
+    /* لـ Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+}
+
+/* لـ Chrome / Edge / Safari */
+.window-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.window-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.window-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: 999px;
+}
+
+.window-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.32);
+}

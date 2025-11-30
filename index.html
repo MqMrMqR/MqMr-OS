@@ -331,30 +331,83 @@
             <div class="resize-handle"></div>
         </div>
 
-        <!-- Contact Window -->
-        <div class="window" id="contact-window" style="top: 160px; left: 250px; width: 600px; height: 500px;">
-            <div class="window-titlebar">
-                <div class="window-controls">
-                    <div class="window-control close"></div>
-                    <div class="window-control minimize"></div>
-                    <div class="window-control maximize"></div>
-                </div>
-                <div class="window-title">Contact</div>
-                <div style="width: 68px;"></div>
-            </div>
-            <div class="window-content">
-                <h2>📬 Get In Touch</h2>
-                <p>I'd love to hear from you! Whether you have a project in mind, a question, or just want to connect, feel free to reach out.</p>
-                <form class="contact-form" onsubmit="return handleSubmit(event)">
-                    <input type="text" placeholder="Your Name (Coming Soon!)" required>
-                    <input type="email" placeholder="Your Email (Coming Soon!)" required>
-                    <input type="text" placeholder="Subject (Coming Soon!)" required>
-                    <textarea rows="5" placeholder="Your Message (Coming Soon!)" required></textarea>
-                    <button type="submit">Send Message</button>
-                </form>
-            </div>
-            <div class="resize-handle"></div>
+<!-- Contact Window -->
+<div class="window" id="contact-window" style="top: 160px; left: 260px; width: 525px; height: 550px;">
+  <div class="window-titlebar">
+    <div class="window-controls">
+      <div class="window-control close"></div>
+      <div class="window-control minimize"></div>
+      <div class="window-control maximize"></div>
+    </div>
+    <div class="window-title">Contact</div>
+    <div style="width: 68px;"></div>
+  </div>
+
+  <div class="window-content contact-window-content">
+    <div class="contact-card">
+      <h1 class="contact-title">Get in Touch</h1>
+      <p class="contact-subtitle">
+        Have a project in mind or just want to say hi? Drop me a message below.
+      </p>
+
+      <form class="contact-form" onsubmit="return handleSubmit(event)">
+        <div class="contact-grid">
+          <div class="contact-field">
+            <label for="contact-name">Name</label>
+            <input
+              id="contact-name"
+              name="contact-name"
+              type="text"
+              placeholder="John Doe"
+              required
+            />
+          </div>
+
+          <div class="contact-field">
+            <label for="contact-phone">Phone Number</label>
+            <input
+              id="contact-phone"
+              name="contact-phone"
+              type="text"
+              placeholder="( if needed )"
+            />
+          </div>
         </div>
+
+        <div class="contact-field">
+          <label for="contact-subject">Subject</label>
+          <input
+            id="contact-subject"
+            name="contact-subject"
+            type="text"
+            placeholder="Project inquiry..."
+            required
+          />
+        </div>
+
+        <div class="contact-field">
+          <label for="contact-message">Message</label>
+          <textarea
+            id="contact-message"
+            name="contact-message"
+            rows="4"
+            placeholder="Tell me about your project..."
+            required
+          ></textarea>
+        </div>
+
+        <div class="contact-submit-wrap">
+          <button type="submit" class="contact-submit-btn">
+            <span style="margin-right:6px;">✈️</span>
+            Send Message
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="resize-handle"></div>
+</div>
 
 <!-- Terminal Window -->
 <div class="window" id="terminal-window" style="top: 180px; left: 300px; width: 700px; height: 500px;">
@@ -410,7 +463,7 @@ Type 'help' to see available commands.
   <div class="window-content" style="padding:0; display:flex; background:#f8f8f8;">
 
     <!-- LEFT SIDEBAR -->
-    <div style="width:190px; background:#f2f2f2; border-right:1px solid #d0d0d0; display:flex; flex-direction:column;">
+    <div style="width:190px; background:#f7f7f7; border-right:1px solid #d0d0d0; display:flex; flex-direction:column;">
       <div style="padding:20px;">
         <h2 style="font-size:22px; font-weight:700;">Settings</h2>
       </div>
@@ -471,7 +524,7 @@ Type 'help' to see available commands.
     </div>
 
     <!-- MIDDLE PANEL -->
-    <div class="settings-middle" style="width:200px; border-right:1px solid #d0d0d0; background:white; display:flex; flex-direction:column;">
+    <div class="settings-middle" style="width:200px; border-right:1px solid #d0d0d0; background:#f7f7f7; display:flex; flex-direction:column;">
       <div style="padding:20px; border-bottom:1px solid #e0e0e0;">
         <h3 id="settings-middle-title" style="font-size:22px; font-weight:700;">General</h3>
       </div>
@@ -580,7 +633,7 @@ Type 'help' to see available commands.
     </div>
 
     <!-- RIGHT CONTENT -->
-    <div class="settings-main" style="flex:1; background:white; overflow-y:auto; padding:32px;">
+    <div class="settings-main" style="flex:1; background:#f7f7f7; overflow-y:auto; padding:32px;">
 
       <!-- GENERAL → ABOUT -->
 <div class="settings-page is-visible" id="general-about-page">
