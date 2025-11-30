@@ -690,11 +690,13 @@ function renderSettingsSidebarCard() {
   if (!googleUser) {
     // حالة غير مسجّل
     box.innerHTML = `
-      <p style="font-size:14px; font-weight:600; margin-bottom:4px; color:#111827;">
+      <p style="
+        font-size:14px;
+        font-weight:600;
+        margin-bottom:10px;
+        color:#111827;
+      ">
         Sign in with Google
-      </p>
-      <p style="font-size:12px; color:#4b5563; margin-bottom:10px; width:100%; text-align:left;">
-        To View Your Name And Picture In the System
       </p>
       <button id="btn-google-signin-sidebar" style="
         width:100%;
@@ -706,12 +708,13 @@ function renderSettingsSidebarCard() {
         font-size:13px;
         font-weight:600;
         cursor:pointer;
+        font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       ">
-        Sign In with Google
+        Sign In
       </button>
     `;
   } else {
-    // حالة مسجّل (مثل الصورة اللي أرسلتها)
+    // حالة مسجّل (كرت فيه الصورة + الاسم + زر Logout أحمر)
     box.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; gap:10px; width:100%;">
         <img src="${googleUser.picture}" alt="Google avatar" style="
@@ -740,6 +743,7 @@ function renderSettingsSidebarCard() {
           font-size:13px;
           font-weight:600;
           cursor:pointer;
+          font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         ">
           Logout
         </button>
@@ -806,6 +810,13 @@ function updateGoogleUI() {
   if (btnSidebarLogin) btnSidebarLogin.onclick = startGoogleLogin;
   if (btnSidebarLogout) btnSidebarLogout.onclick = logoutGoogle;
   if (btnMain) btnMain.onclick = googleUser ? logoutGoogle : startGoogleLogin;
+    // ✅ توحيد الخط Inter لكل الأزرار
+  [btnSidebarLogin, btnSidebarLogout, btnMain].forEach((btn) => {
+    if (btn) {
+      btn.style.fontFamily =
+        "Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    }
+  });
 }
 
 // تهيئة OAuth Client من Google (Popup فيه حساباتك)
