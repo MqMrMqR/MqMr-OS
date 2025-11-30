@@ -1,4 +1,10 @@
 # MqMr-OS
-1.0.1v
+1.0.2v
+
+
+
+      { "version": "Nov 30 2025 | 1.0.2v", "label": "Fixed The Terminal, Add a Sign In To Google Account" },
+      { "version": "Nov 29 2025 | 1.0.1v", "label": "Added New App: Settings, \nChanged the font, \nfixed some issues, \nReleased The Terminal" },
+      { "version": "Nov 28 2025 | 1.0.0v", "label": "First Release" }
 
 Created By a Human and an AI
