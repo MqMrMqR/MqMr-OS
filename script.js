@@ -302,7 +302,7 @@ function focusTerminalInput() {
     if (!input) return;
 
     // فقط فوكس ع العنصر
-    input.focus();
+    //input.focus();
 
     // لو فيه نص، حط المؤشر في آخره
     if (input.innerText && input.innerText.length > 0) {
@@ -654,6 +654,174 @@ setTimeout(() => {
       console.warn("Could not load settings-data.json", err);
     });
 })();
+
+
+
+
+
+
+
+
+/* ================= GOOGLE SIGN-IN (with name & picture) ================= */
+
+// حط هنا الـ Client ID اللي أخذته من Google Console:
+const GOOGLE_CLIENT_ID = "543147531406-tvgcuqvlh92c2dfcfs4iqqpfqeb55cam.apps.googleusercontent.com";
+
+let googleUser = null; // بنحفظ فيه بيانات المستخدم
+
+// دالة لفك الـ JWT اللي ترسله Google عشان نطلع الاسم والصورة
+function parseJwt(token) {
+  const base64Url = token.split(".")[1];
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  const jsonPayload = decodeURIComponent(
+    atob(base64)
+      .split("")
+      .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+      .join("")
+  );
+
+  return JSON.parse(jsonPayload);
+}
+
+// تستقبل الرد من Google لما يختار المستخدم حسابه
+function handleGoogleCredential(response) {
+  try {
+    const payload = parseJwt(response.credential);
+
+    googleUser = {
+      name: payload.name,
+      email: payload.email,
+      picture: payload.picture,
+    };
+
+    // نحفظ البيانات في localStorage عشان ما تروح بعد Refresh
+    localStorage.setItem("mqmr_google_user", JSON.stringify(googleUser));
+
+    updateGoogleUI();
+  } catch (err) {
+    console.error("Error parsing Google ID token", err);
+  }
+}
+
+// تحديث شكل الإعدادات بعد تسجيل الدخول
+function updateGoogleUI() {
+  const googleRow = document.querySelector("#privacy-google-page .setting-row");
+  const btnSidebar = document.getElementById("btn-google-signin-sidebar");
+  const btnMain = document.getElementById("btn-google-signin-main");
+
+  if (!googleRow) return;
+
+  // لو مافي مستخدم → رجّع الزرار للوضع الطبيعي واحذف الكارد
+  if (!googleUser) {
+    if (btnSidebar) btnSidebar.textContent = "Sign In with Google";
+    if (btnMain) btnMain.textContent = "Sign In with Google";
+
+    const existing = document.getElementById("google-user-card");
+    if (existing) existing.remove();
+    return;
+  }
+
+  // عدّل نص الأزرار
+  if (btnSidebar) btnSidebar.textContent = "Signed in";
+  if (btnMain) btnMain.textContent = "Sign out";
+
+  // كارد فيه الاسم + الصورة + الإيميل
+  let card = document.getElementById("google-user-card");
+  if (!card) {
+    card = document.createElement("div");
+    card.id = "google-user-card";
+    card.style.display = "flex";
+    card.style.alignItems = "center";
+    card.style.gap = "10px";
+    card.style.marginTop = "8px";
+    googleRow.appendChild(card);
+  }
+
+  card.innerHTML = `
+    <img src="${googleUser.picture}" alt="avatar"
+         style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
+    <div>
+      <div style="font-size:14px;font-weight:600;">${googleUser.name}</div>
+      <div style="font-size:12px;color:#6b7280;">${googleUser.email}</div>
+    </div>
+  `;
+
+  // زر الـ Sign out (اللي في صفحة Google)
+  if (btnMain) {
+    btnMain.onclick = () => {
+      const email = googleUser && googleUser.email;
+      googleUser = null;
+      localStorage.removeItem("mqmr_google_user");
+      updateGoogleUI();
+
+      // نطلب من Google إلغاء التفويض (اختياري)
+      if (window.google && google.accounts && google.accounts.id && email) {
+        google.accounts.id.revoke(email, () => {
+          console.log("Google session revoked");
+        });
+      }
+    };
+  }
+}
+
+// تهيئة Google Identity وربطها بالأزرار
+function setupGoogleSignIn() {
+  if (!window.google || !google.accounts || !google.accounts.id) {
+    console.warn("Google Identity Services not available");
+    return;
+  }
+
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: false,
+  });
+
+  // لو فيه مستخدم محفوظ من قبل في localStorage
+  const saved = localStorage.getItem("mqmr_google_user");
+  if (saved) {
+    try {
+      googleUser = JSON.parse(saved);
+    } catch (e) {
+      console.warn("Failed to parse saved Google user", e);
+    }
+  }
+  updateGoogleUI();
+
+  // أربط الأزرار إنها تفتح نافذة اختيار الحساب
+  const btnSidebar = document.getElementById("btn-google-signin-sidebar");
+  const btnMain = document.getElementById("btn-google-signin-main");
+
+  function startSignIn() {
+    // تفتح One Tap / Popup من Google لاختيار الحساب
+    google.accounts.id.prompt();
+  }
+
+  [btnSidebar, btnMain].forEach((btn) => {
+    if (btn) {
+      btn.addEventListener("click", startSignIn);
+    }
+  });
+}
+
+// ننتظر لين مكتبة Google تتحمل ثم نهيئها (Polling بسيط)
+function initGoogleSignInPolling(tries = 0) {
+  if (window.google && google.accounts && google.accounts.id) {
+    setupGoogleSignIn();
+    return;
+  }
+  if (tries > 20) {
+    console.warn("Could not init Google Sign-In");
+    return;
+  }
+  setTimeout(() => initGoogleSignInPolling(tries + 1), 300);
+}
+
+initGoogleSignInPolling();
+
+
+
+
 
 
 
