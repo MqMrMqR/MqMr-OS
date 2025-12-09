@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MqMr's OS | Simple</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="simple.css" />
+</head>
+<body>
+  <div class="wallpaper"></div>
+
+  <!-- ========== TOP BAR (نفس الموقع الأصلي 1:1) ========== -->
+  <div class="menubar">
+    <!-- LEFT AREA -->
+    <div class="menubar-left">
+      <!-- APPLE ICON -->
+      <div class="menubar-item">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+             viewBox="0 0 24 24" fill="true" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+             class="lucide lucide-apple fill-current" aria-hidden="true">
+          <path d="M12 6.528V3a1 1 0 0 1 1-1h0"></path>
+          <path d="M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21"></path>
+        </svg>
+      </div>
+
+      <!-- OS NAME -->
+      <div class="menubar-item">
+        <strong>MqMr's OS</strong>
+      </div>
+
+      <!-- MENU LIST -->
+      <div class="menu-list">
+        <div class="menubar-item">File</div>
+        <div class="menubar-item">Edit</div>
+        <div class="menubar-item">View</div>
+        <div class="menubar-item">Go</div>
+        <div class="menubar-item">Window</div>
+        <div class="menubar-item">Help</div>
+      </div>
+    </div>
+
+    <!-- RIGHT AREA -->
+    <div class="menubar-right">
+      <div class="menubar-icons">
+        <!-- WiFi -->
+        <div class="menubar-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               class="lucide lucide-wifi" aria-hidden="true">
+            <path d="M12 20h.01"></path>
+            <path d="M2 8.82a15 15 0 0 1 20 0"></path>
+            <path d="M5 12.859a10 10 0 0 1 14 0"></path>
+            <path d="M8.5 16.429a5 5 0 0 1 7 0"></path>
+          </svg>
+        </div>
+
+        <!-- Battery -->
+        <div class="menubar-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               class="lucide lucide-battery" aria-hidden="true">
+            <path d="M22 14V10"></path>
+            <rect x="2" y="6" width="16" height="12" rx="2"></rect>
+          </svg>
+        </div>
+      </div>
+
+      <!-- CLOCK -->
+      <div class="menubar-item" id="clock"></div>
+    </div>
+  </div>
+
+  <!-- ========== SAFARI FULL SCREEN ========== -->
+  <main class="safari-app">
+    <!-- Titlebar -->
+    <header class="safari-titlebar">
+      <div class="safari-controls">
+        <span class="safari-dot close"></span>
+        <span class="safari-dot minimize"></span>
+        <span class="safari-dot maximize"></span>
+      </div>
+
+      <div class="safari-title">Safari</div>
+
+      <div class="safari-toolbar-right">
+        <span class="toolbar-pill"></span>
+        <span class="toolbar-pill"></span>
+      </div>
+    </header>
+
+    <!-- URL BAR -->
+    <div class="safari-urlbar">
+      <!-- LEFT: back / forward / refresh (شكل فقط) -->
+      <div class="toolbar-left">
+        <button class="toolbar-icon" type="button" aria-label="Back">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="m12 19-7-7 7-7"></path>
+            <path d="M19 12H5"></path>
+          </svg>
+        </button>
+
+        <button class="toolbar-icon" type="button" aria-label="Forward">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M5 12h14"></path>
+            <path d="m12 5 7 7-7 7"></path>
+          </svg>
+        </button>
+
+        <button class="toolbar-icon" type="button" aria-label="Refresh">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+            <path d="M8 16H3v5"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- CENTER: Search Bar -->
+      <div class="toolbar-center">
+        <div class="urlbar-inner">
+          <div class="urlbar-lock">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                 aria-hidden="true">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <input
+            class="urlbar-input"
+            type="text"
+            value="portfolio.com"
+          />
+        </div>
+      </div>
+
+      <!-- RIGHT: Settings icon -->
+      <div class="toolbar-right">
+        <button class="toolbar-icon" type="button"
+                aria-label="Settings" onclick="toggleSimpleSettings()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+               viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6l-.09.11a2 2 0 0 1-3.18 0l-.09-.11a1.65 1.65 0 0 0-1-.6 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1l-.11-.09a2 2 0 0 1 0-3.18l.11-.09a1.65 1.65 0 0 0 .6-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6l.09-.11a2 2 0 0 1 3.18 0l.09.11a1.65 1.65 0 0 0 1 .6 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 .6 1l.11.09a2 2 0 0 1 0 3.18l-.11.09a1.65 1.65 0 0 0-.6 1Z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <section class="safari-content">
+      <h1 class="hero-title">Welcome to My Portfolio</h1>
+      <p class="hero-subtitle">
+        Building digital experiences that matter.
+      </p>
+
+      <!-- أقسام الموقع داخل كروت -->
+      <div class="cards-grid">
+        <!-- ABOUT -->
+        <article class="portfolio-card section-about" id="about">
+          <header class="card-header">
+            <h2 class="card-title">About Me</h2>
+            <p class="card-tagline">A quick snapshot of who I am.</p>
+          </header>
+
+          <div class="about-layout">
+            <div class="about-avatar-wrap">
+              <div class="about-avatar-ring">
+<img src="../assets/avatar.jpg" alt="MqMr avatar" class="about-avatar" />
+              </div>
+            </div>
+
+            <div class="about-main">
+              <h3 class="about-name">MqMr</h3>
+              <p class="about-subtitle">The Best Man Alive</p>
+              <p class="about-description">
+                Crafting digital experiences with code and creativity.
+                Based in Saudi Arabia.
+              </p>
+
+              <div class="about-socials">
+                <button class="social-btn social-instagram"
+                        onclick="window.open('https://www.instagram.com/_.wp1/', '_blank')">
+                  Instagram
+                </button>
+                <button class="social-btn social-discord"
+                        onclick="window.open('https://discord.com/users/1367578118830817420', '_blank')">
+                  Discord
+                </button>
+                <button class="social-btn social-x"
+                        onclick="window.open('https://x.com/mqmrmqr', '_blank')">
+                  Twitter (X)
+                </button>
+                <button class="social-btn social-youtube"
+                        onclick="window.open('https://www.youtube.com/@MqMr', '_blank')">
+                  YouTube
+                </button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- PROJECTS -->
+        <article class="portfolio-card section-projects" id="projects">
+          <header class="card-header">
+            <h2 class="card-title">Projects</h2>
+            <p class="card-tagline">A peek at what I’m building.</p>
+          </header>
+
+          <div class="projects-content">
+            <p class="projects-version" id="simple-projects-version">
+              Coming Soon!, Current Version: —
+            </p>
+
+            <div class="project-list">
+              <div class="project-item">
+                <h3 class="project-name">MqMr's OS</h3>
+                <p class="project-desc">
+                  A macOS–inspired web desktop experience with draggable windows,
+                  apps, and a custom settings panel.
+                </p>
+                <span class="project-label">Personal Project</span>
+              </div>
+
+              <div class="project-item project-item--soon">
+                <h3 class="project-name">Next Big Thing</h3>
+                <p class="project-desc">
+                  A new experience currently under construction. Stay tuned for updates
+                  in the change log.
+                </p>
+                <span class="project-badge">Coming Soon</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- SKILLS -->
+        <article class="portfolio-card section-skills" id="skills">
+          <header class="card-header">
+            <h2 class="card-title">Skills &amp; Technologies</h2>
+            <p class="card-tagline">What I use to bring ideas to life.</p>
+          </header>
+
+          <div class="skills-columns">
+            <div class="skills-group">
+              <h3 class="skills-heading">Games</h3>
+
+              <div class="skill-row">
+                <span class="skill-label">C#</span>
+                <span class="skill-percent">92%</span>
+              </div>
+              <div class="skill-bar">
+                <div class="skill-bar-fill" style="width:92%;"></div>
+              </div>
+
+              <div class="skill-row">
+                <span class="skill-label">C++</span>
+                <span class="skill-percent">43%</span>
+              </div>
+              <div class="skill-bar">
+                <div class="skill-bar-fill" style="width:43%;"></div>
+              </div>
+            </div>
+
+            <div class="skills-group">
+              <h3 class="skills-heading">iOS</h3>
+
+              <div class="skill-row">
+                <span class="skill-label">Swift</span>
+                <span class="skill-percent">78%</span>
+              </div>
+              <div class="skill-bar">
+                <div class="skill-bar-fill" style="width:78%;"></div>
+              </div>
+
+              <div class="skill-row">
+                <span class="skill-label">Obj-C</span>
+                <span class="skill-percent">54%</span>
+              </div>
+              <div class="skill-bar">
+                <div class="skill-bar-fill" style="width:54%;"></div>
+              </div>
+            </div>
+
+            <div class="skills-group">
+              <h3 class="skills-heading">Web</h3>
+
+              <div class="skill-row">
+                <span class="skill-label">HTML</span>
+                <span class="skill-percent">20%</span>
+              </div>
+              <div class="skill-bar">
+                <div class="skill-bar-fill" style="width:20%;"></div>
+              </div>
+
+              <div class="skill-row">
+                <span class="skill-label">CSS</span>
+                <span class="skill-percent">20%</span>
+              </div>
+              <div class="skill-bar">
+                <div class="skill-bar-fill" style="width:20%;"></div>
+              </div>
+
+              <div class="skill-row">
+                <span class="skill-label">JavaScript</span>
+                <span class="skill-percent">20%</span>
+              </div>
+              <div class="skill-bar">
+                <div class="skill-bar-fill" style="width:20%;"></div>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CONTACT -->
+        <article class="portfolio-card section-contact" id="contact">
+          <header class="card-header">
+            <h2 class="card-title">Contact Me</h2>
+            <p class="card-tagline">
+              Have a project in mind or just want to say hi?
+            </p>
+          </header>
+
+          <div class="contact-inner">
+            <form class="contact-form" onsubmit="return handleSimpleContactSubmit(event)">
+              <div class="contact-grid">
+                <div class="contact-field">
+                  <label for="simple-name">Name</label>
+                  <input
+                    id="simple-name"
+                    name="simple-name"
+                    type="text"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+
+                <div class="contact-field">
+                  <label for="simple-phone">Phone Number</label>
+                  <input
+                    id="simple-phone"
+                    name="simple-phone"
+                    type="text"
+                    placeholder="( if needed )"
+                  />
+                </div>
+              </div>
+
+              <div class="contact-field">
+                <label for="simple-subject">Subject</label>
+                <input
+                  id="simple-subject"
+                  name="simple-subject"
+                  type="text"
+                  placeholder="Project inquiry..."
+                  required
+                />
+              </div>
+
+              <div class="contact-field">
+                <label for="simple-message">Message</label>
+                <textarea
+                  id="simple-message"
+                  name="simple-message"
+                  rows="4"
+                  placeholder="Tell me about your project..."
+                  required
+                ></textarea>
+              </div>
+
+              <div class="contact-submit-wrap">
+                <button type="submit" class="contact-submit-btn">
+                  <span style="margin-right:6px;">✈️</span>
+                  Send Message
+                </button>
+              </div>
+            </form>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <!-- Simple Settings Popup -->
+<!-- Simple Settings Popup -->
+<div
+  id="simple-settings-overlay"
+  class="simple-settings-overlay"
+  hidden
+  onclick="overlayClickToClose(event)"
+>
+  <div class="simple-settings-panel" onclick="event.stopPropagation()">
+    <div class="simple-settings-header">
+      <h2 class="simple-settings-title">Simple Mode Settings</h2>
+      <button
+        class="simple-settings-close"
+        type="button"
+        aria-label="Close"
+        onclick="toggleSimpleSettings(false)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+             viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- هنا المحتوى كله (Display Mode + switch + select) -->
+    <div class="simple-settings-body">
+      <h3 class="settings-section-title">Display Mode</h3>
+
+      <!-- Enable Advanced Display Mode -->
+      <div class="setting-row setting-row-inline">
+        <div class="setting-row-left">
+          <span class="setting-title">Enable Advanced Display Mode</span>
+          <p class="setting-description">
+            Unlocks additional display layouts intended for advanced use.
+          </p>
+        </div>
+
+        <button
+          id="simple-advanced-display-switch"
+          class="switch-toggle"
+          type="button"
+          aria-pressed="false"
+        >
+          <span class="switch-thumb"></span>
+        </button>
+      </div>
+
+      <!-- Display Mode select -->
+      <div class="setting-row setting-row-inline">
+        <div class="setting-row-left">
+          <span class="setting-title">Display Mode</span>
+          <p class="setting-description">
+            Choose how the interface layout is presented in Simple view.
+          </p>
+        </div>
+
+        <select id="simple-display-mode-select" class="setting-select">
+          <option value="standard">Standard</option>
+          <option value="simple">Simple</option>
+          <!-- Phone تنضاف من الـ JS لما يتفعّل Advanced -->
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Display Mode Warning Dialog (Simple) -->
+<div id="simple-display-mode-dialog"
+     class="modal-backdrop modal-hidden"
+     aria-modal="true"
+     aria-labelledby="simple-display-dialog-title">
+
+  <div class="modal-panel">
+    <!-- الأيقونة -->
+    <div class="modal-header">
+      <div class="modal-icon">
+        <img src="../assets/waring.png" alt="Warning" class="modal-icon-img" />
+      </div>
+    </div>
+
+    <!-- النص -->
+    <div class="modal-body">
+      <h2 id="simple-display-dialog-title" class="modal-title">
+        Change Display Mode.
+      </h2>
+      <p class="modal-text-main">
+        The interface will adjust to reflect the new display mode.
+      </p>
+    </div>
+
+    <!-- الأزرار -->
+    <div class="modal-actions">
+      <button id="simple-display-dialog-cancel" class="modal-btn modal-btn-secondary">
+        Cancel
+      </button>
+      <button id="simple-display-dialog-continue" class="modal-btn modal-btn-primary">
+        Continue
+      </button>
+    </div>
+  </div>
+</div>
+
+
+  <script src="simple.js"></script>
+</body>
+</html>

@@ -579,29 +579,35 @@ Type 'help' to see available commands.
         </div>
 
         <!-- DISPLAY SECTION SUB-MENU -->
-        <div class="settings-middle-section" data-section="display">
-          <div class="mid-btn active" data-page="display-mode-page">
-                        <div class="mid-left">
-
-            <span class="icon">
-              <!-- Mode (Contrast) -->
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 18a6 6 0 0 0 0-12v12z"></path>
-              </svg>
-            </span>
-            <span>Mode</span>
-                         </div>
-  <span class="mid-chevron">
-    <!-- ChevronRight SVG -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round">
-      <path d="m9 18 6-6-6-6"></path>
-    </svg>
-  </span>
-          </div>
-        </div>
+<!-- DISPLAY SECTION SUB-MENU -->
+<div class="settings-middle-section" data-section="display">
+  <div class="mid-btn active" data-page="display-mode-page">
+    <div class="mid-left">
+      <span class="icon">
+        <!-- Mode icon (Monitor) -->
+        <svg xmlns="http://www.w3.org/2000/svg"
+             width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"
+             class="lucide lucide-monitor w-4 h-4"
+             aria-hidden="true">
+          <rect width="20" height="14" x="2" y="3" rx="2"></rect>
+          <line x1="8" x2="16" y1="21" y2="21"></line>
+          <line x1="12" x2="12" y1="17" y2="21"></line>
+        </svg>
+      </span>
+      <span>Mode</span>
+    </div>
+    <span class="mid-chevron">
+      <!-- ChevronRight SVG -->
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="m9 18 6-6-6-6"></path>
+      </svg>
+    </span>
+  </div>
+</div>
 
         <!-- PRIVACY SECTION SUB-MENU -->
         <div class="settings-middle-section" data-section="privacy">
@@ -671,19 +677,45 @@ Type 'help' to see available commands.
   </div>
 </div>
 
-      <!-- DISPLAY → MODE -->
-      <div class="settings-page" id="display-mode-page">
-        <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Mode</h1>
+<!-- DISPLAY → MODE -->
+<div class="settings-page" id="display-mode-page">
+  <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Display Mode</h1>
 
-        <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:12px;">
-          <span class="setting-title">Mode ( Coming Soon )</span>
-          <div style="display:flex; gap:8px; flex-wrap:wrap;">
-            <button class="mode-pill">Full Desktop</button>
-            <button class="mode-pill">Simple Desktop</button>
-            <button class="mode-pill">Simple Phone</button>
-          </div>
-        </div>
-      </div>
+  <!-- Enable Advanced Display Mode (Switch) -->
+  <div class="setting-row setting-row-inline">
+    <div class="setting-row-left">
+      <span class="setting-title">Enable Advanced Display Mode</span>
+      <p class="setting-description">
+        Unlocks additional display layouts intended for advanced use.
+      </p>
+    </div>
+
+    <button
+      id="advanced-display-switch"
+      class="switch-toggle"
+      type="button"
+      aria-pressed="false"
+    >
+      <span class="switch-thumb"></span>
+    </button>
+  </div>
+
+  <!-- Display Mode (Dropdown) -->
+  <div class="setting-row setting-row-inline">
+    <div class="setting-row-left">
+      <span class="setting-title">Display Mode</span>
+      <p class="setting-description">
+        Choose how the interface layout is presented.
+      </p>
+    </div>
+
+    <select id="display-mode-select" class="setting-select">
+      <option value="standard">Standard</option>
+      <option value="simple">Simple</option>
+      <!-- Phone سيضاف تلقائياً من الـ JS عندما يكون Advanced مفعّل -->
+    </select>
+  </div>
+</div>
 
       <!-- PRIVACY → GOOGLE -->
       <div class="settings-page" id="privacy-google-page">
@@ -783,6 +815,42 @@ Type 'help' to see available commands.
     <span>⚙️</span>
     <div class="dock-label">Settings</div>
     <div class="dock-dot"></div>
+</div>
+
+
+
+</div>
+
+<!-- Display Mode Warning Dialog -->
+<!-- Display Mode Warning Dialog -->
+<div id="display-mode-dialog" class="modal-backdrop modal-hidden" role="dialog" aria-modal="true" aria-labelledby="display-dialog-title">
+<div class="modal-panel">
+  <!-- السطر الأول: شعار التحذير فقط -->
+  <div class="modal-header">
+<div class="modal-icon">
+  <img src="assets/waring.png" alt="Warning" class="modal-icon-img">
+</div>
+  </div>
+
+  <!-- تحتها: الـ Title ثم النص العادي -->
+  <div class="modal-body">
+    <h2 id="display-dialog-title" class="modal-title">
+      Change Display Mode.
+
+    </h2>
+    <p class="modal-text-main">
+     The interface will adjust to reflect the new display mode.
+    </p>
+  </div>
+
+  <div class="modal-actions">
+    <button id="display-dialog-cancel" class="modal-btn modal-btn-secondary">
+      Cancel
+    </button>
+    <button id="display-dialog-continue" class="modal-btn modal-btn-primary">
+      Continue
+    </button>
+  </div>
 </div>
 
 

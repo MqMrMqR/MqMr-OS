@@ -556,6 +556,128 @@ setTimeout(() => {
 
 /* ================= END TERMINAL LOGIC ================= */
 
+/* ================= DISPLAY MODE SETTINGS ================= */
+
+(function () {
+  const advancedSwitch = document.getElementById("advanced-display-switch");
+  const displaySelect  = document.getElementById("display-mode-select");
+
+  const dialog         = document.getElementById("display-mode-dialog");
+  const btnCancel      = document.getElementById("display-dialog-cancel");
+  const btnContinue    = document.getElementById("display-dialog-continue");
+
+  if (!advancedSwitch || !displaySelect || !dialog) return;
+
+  let isAdvancedOn = false;
+  let currentMode  = displaySelect.value || "standard";
+  let pendingMode  = null;
+
+  // تحديث الخيارات في القائمة حسب حالة Advanced
+  function refreshDisplayOptions() {
+    const previousValue = displaySelect.value || currentMode;
+
+    const baseOptions = [
+      { value: "standard", label: "Standard" },
+      { value: "simple",   label: "Simple" },
+    ];
+
+    const options = isAdvancedOn
+      ? [...baseOptions, { value: "phone", label: "Phone" }]
+      : baseOptions;
+
+    displaySelect.innerHTML = "";
+    options.forEach(opt => {
+      const o = document.createElement("option");
+      o.value = opt.value;
+      o.textContent = opt.label;
+      displaySelect.appendChild(o);
+    });
+
+    // لو الوضع السابق غير متاح الآن (مثلاً كان Phone وأغلقنا Advanced)
+    if (!options.some(o => o.value === previousValue)) {
+      currentMode = "standard";
+      displaySelect.value = "standard";
+    } else {
+      displaySelect.value = previousValue;
+    }
+  }
+
+  // فتح / إغلاق الـ dialog
+  function openDialog() {
+    dialog.classList.remove("modal-hidden");
+  }
+
+  function closeDialog() {
+    dialog.classList.add("modal-hidden");
+    pendingMode = null;
+  }
+
+  // تغيير حالة الـ switch
+  advancedSwitch.addEventListener("click", () => {
+    isAdvancedOn = !isAdvancedOn;
+    advancedSwitch.classList.toggle("is-on", isAdvancedOn);
+    advancedSwitch.setAttribute("aria-pressed", String(isAdvancedOn));
+
+    refreshDisplayOptions();
+  });
+
+  // عندما يغيّر المستخدم الـ Display Mode
+  displaySelect.addEventListener("change", (e) => {
+    const newValue = e.target.value;
+    if (newValue === currentMode) return;
+
+    pendingMode = newValue;
+    openDialog();
+  });
+
+  // Cancel → رجوع للقيمة القديمة
+  btnCancel.addEventListener("click", () => {
+    if (pendingMode !== null) {
+      displaySelect.value = currentMode;
+    }
+    closeDialog();
+  });
+
+btnContinue.addEventListener("click", () => {
+    if (!pendingMode) {
+        closeDialog();
+        return;
+    }
+
+    const newMode = pendingMode;
+    pendingMode = null;
+
+    // تحديث المتغير
+    currentMode = newMode;
+
+    // 🔥 التحويل بين الصفحات
+    if (newMode === "standard") {
+        window.location.href = "./index.html"; 
+    } 
+    else if (newMode === "simple") {
+        window.location.href = "./Simple/simple.html"; 
+    } 
+    else if (newMode === "phone") {
+        window.location.href = "./Simple/simple.html";
+    }
+
+    closeDialog();
+});
+
+  // إغلاق بالضغط خارج البانل
+  dialog.addEventListener("click", (e) => {
+    if (e.target === dialog) {
+      // رجّع القيمة القديمة لو كان فيه تغيير معلق
+      if (pendingMode !== null) {
+        displaySelect.value = currentMode;
+      }
+      closeDialog();
+    }
+  });
+
+  // تهيئة أولية
+  refreshDisplayOptions();
+})();
 
 
 // ===================== SETTINGS APP LOGIC =====================
