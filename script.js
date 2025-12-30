@@ -658,7 +658,7 @@ btnContinue.addEventListener("click", () => {
         window.location.href = "./Simple/simple.html"; 
     } 
     else if (newMode === "phone") {
-        window.location.href = "./Phone/phone.html";
+        window.location.href = "https://mqmr.lol/Phone/phone.html";
     }
 
     closeDialog();
@@ -1093,3 +1093,4 @@ aboutDockItem.classList.add("open");
     }
   }
 })();
+
