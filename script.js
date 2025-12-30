@@ -1070,3 +1070,26 @@ defaultWindow.style.display = "flex";
 // تفعيل النقطة تحت أيقونة About
 const aboutDockItem = document.querySelector(".dock-item.about");
 aboutDockItem.classList.add("open");
+
+
+
+
+
+
+
+(function redirectToPhoneIfMobile() {
+  const isPhone =
+    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(
+      navigator.userAgent
+    ) ||
+    window.innerWidth <= 768;
+
+  if (isPhone) {
+    const currentPath = window.location.pathname;
+
+    // لو هو بالفعل في نسخة Phone لا نسوي شي
+    if (!currentPath.includes('/Phone/')) {
+      window.location.replace('https://mqmr.lol/Phone/phone.html');
+    }
+  }
+})();

@@ -1,0 +1,202 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #f5f7fb;
+  color: #111827;
+}
+
+.phone-app {
+  padding: 24px 18px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 22px 20px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+}
+
+/* ===== ABOUT ===== */
+.about-card {
+  text-align: center;
+}
+
+.avatar-ring {
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  padding: 4px;
+  background: linear-gradient(135deg, #4f8bff, #72a3ff);
+}
+
+.avatar-ring img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.about-name {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.about-subtitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #717988;
+  margin-bottom: 14px;
+}
+
+.about-desc {
+  font-size: 14px;
+  color: #9ca3af;
+  line-height: 1.6;
+}
+
+.socials {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.socials button {
+  width: 100%;
+}
+
+.socials button {
+  padding: 10px 0;
+  border-radius: 12px;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.ig { background: #ff4dab; }
+.dc { background: #5865f2; }
+.x  { background: #000000; }
+.yt { background: #ff0000; }
+
+/* ===== PROJECTS ===== */
+.projects-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.muted {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 14px;
+}
+
+.project-item {
+  background: #f3f4f6;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.project-item h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.project-item p {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.tag,
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 11px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.tag {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.badge {
+  background: #4f46e5;
+  color: #e5e7ff;
+}
+
+.project-item.soon {
+  background: #eef2ff;
+}
+
+
+/* ===== CONTACT ===== */
+
+.contact-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.contact-form {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contact-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.contact-field label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.contact-field input,
+.contact-field textarea {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  background: #ffffff;
+}
+
+.contact-field input:focus,
+.contact-field textarea:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+}
+
+.contact-submit {
+  margin-top: 8px;
+  height: 44px;
+  border-radius: 14px;
+  border: none;
+  background: #007aff;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}

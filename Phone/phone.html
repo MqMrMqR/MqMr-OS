@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MqMr's OS | Phone</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="phone.css" />
+</head>
+<body>
+
+  <main class="phone-app">
+
+    <!-- ===== ABOUT ===== -->
+    <section class="card about-card">
+
+      <div class="avatar-ring">
+        <img src="../assets/avatar.jpg" alt="MqMr avatar" />
+      </div>
+
+      <h1 class="about-name">MqMr</h1>
+      <p class="about-subtitle">The Best Man Alive</p>
+
+      <p class="about-desc">
+        Crafting digital experiences with code and creativity.
+        Based in Saudi Arabia.
+      </p>
+
+      <div class="socials">
+        <button onclick="openLink('https://www.instagram.com/_.wp1/')" class="ig">Instagram</button>
+        <button onclick="openLink('https://discord.com/users/1367578118830817420')" class="dc">Discord</button>
+        <button onclick="openLink('https://x.com/mqmrmqr')" class="x">X</button>
+        <button onclick="openLink('https://www.youtube.com/@MqMr')" class="yt">YouTube</button>
+      </div>
+
+    </section>
+
+    <!-- ===== PROJECTS ===== -->
+    <section class="card projects-card">
+
+      <header>
+        <h2>Projects</h2>
+        <p class="muted" id="phone-projects-version">
+          Coming Soon!, Current Version: —
+        </p>
+      </header>
+
+      <div class="project-item">
+        <h3>MqMr's OS</h3>
+        <p>
+          A macOS–inspired web desktop experience with draggable windows,
+          apps, and a custom settings panel.
+        </p>
+        <span class="tag">Personal Project</span>
+      </div>
+
+      <div class="project-item soon">
+        <h3>Next Big Thing</h3>
+        <p>
+          A new experience currently under construction.
+        </p>
+        <span class="badge">Coming Soon</span>
+      </div>
+
+    </section>
+
+    <!-- ===== CONTACT ===== -->
+<section class="card contact-card">
+
+  <header>
+    <h2>Contact Me</h2>
+    <p class="muted">
+      Have a project in mind or just want to say hi?
+    </p>
+  </header>
+
+  <form class="contact-form" onsubmit="return handlePhoneContactSubmit(event)">
+
+    <div class="contact-field">
+      <label>Name</label>
+      <input type="text" name="name" placeholder="John Doe" required />
+    </div>
+
+    <div class="contact-field">
+      <label>Phone Number</label>
+      <input type="text" name="phone" placeholder="(optional)" />
+    </div>
+
+    <div class="contact-field">
+      <label>Subject</label>
+      <input type="text" name="subject" placeholder="Project inquiry..." required />
+    </div>
+
+    <div class="contact-field">
+      <label>Message</label>
+      <textarea name="message" rows="4"
+        placeholder="Tell me about your project..." required></textarea>
+    </div>
+
+    <button type="submit" class="contact-submit">
+      ✈️ Send Message
+    </button>
+
+  </form>
+
+</section>
+
+
+  </main>
+
+  <script src="phone.js"></script>
+</body>
+</html>
