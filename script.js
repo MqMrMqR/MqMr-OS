@@ -658,7 +658,7 @@ btnContinue.addEventListener("click", () => {
         window.location.href = "./Simple/simple.html"; 
     } 
     else if (newMode === "phone") {
-        window.location.href = "./Simple/simple.html";
+        window.location.href = "./Phone/phone.html";
     }
 
     closeDialog();

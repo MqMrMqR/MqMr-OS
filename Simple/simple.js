@@ -132,7 +132,7 @@ function overlayClickToClose(event) {
 
   const advancedOptions = [
     ...baseOptions,
-    { value: "phone", label: "Phone (Experimental)" },
+    { value: "phone", label: "Phone" },
   ];
 
 let isAdvancedOn = false;
@@ -231,7 +231,7 @@ btnContinue.addEventListener("click", () => {
     window.location.href = "./simple.html";  
   } 
   else if (newMode === "phone") {
-    window.location.href = "./simple.html";
+    window.location.href = "../Phone/phone.html";
   }
 });
 
