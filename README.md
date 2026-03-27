@@ -1,8 +1,9 @@
 # MqMr-OS
-2.0.0v
+2.1.0v
 
 
 
+      { "version": "Mar 28 2026 | 2.1.0v", "label": "Fixed Fetching Version (Simple), Changed Profile Picture" },
       { "version": "Dec 30 2025 | 2.0.0v", "label": "New Display Mode Has Been Added (Phone), Fixed (Project) App " },
       { "version": "Dec 9 2025 | 1.1.0v", "label": "New Display Mode Has Been Added (Simple) " },
       { "version": "Nov 30 2025 | 1.0.2v", "label": "Fixed The Terminal, Added a Sign In System, Improved The Design, Added a contact system " },
