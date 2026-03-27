@@ -22,7 +22,7 @@ updateClock();
 setInterval(updateClock, 1000);
 
 /* ================= SETTINGS-DATA (اختياري) ================= */
-fetch('settings-data.json')
+fetch("../settings-data.json")
   .then(res => res.json())
   .then(data => {
     const sw = data.software;
