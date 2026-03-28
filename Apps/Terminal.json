@@ -1,0 +1,79 @@
+{
+  "AppName": "Terminal",
+  "AppVersion": "1.0.0",
+
+  "Availability": {
+    "Standard": true,
+    "Simple": false,
+    "Phone": false
+  },
+
+  "Section": {
+    "windowTitle": "Terminal"
+  },
+
+  "UI": {
+    "welcomeTitle": "Welcome to MqMr's OS Terminal",
+    "welcomeSubtitle": "Type 'help' to see available commands.",
+    "promptUser": "guest",
+    "promptHost": "mqmr-os",
+    "promptPath": "~"
+  },
+
+  "Messages": {
+    "helpHeader": "{osName} Terminal - version {version}",
+    "helpTitle": "Available commands:",
+    "commandNotFound": "Command not found.",
+    "appOpenFailed": "Could not open \"{command}\" app."
+  },
+
+  "Commands": [
+    {
+      "command": "help",
+      "description": "Show this help message",
+      "action": "help"
+    },
+    {
+      "command": "clear",
+      "description": "Clear the terminal",
+      "action": "clear"
+    },
+    {
+      "command": "about",
+      "description": "Open About app",
+      "action": "open_window",
+      "target": "about-window"
+    },
+
+    {
+      "command": "workspace",
+      "description": "Open Workspace app",
+      "action": "open_window",
+      "target": "workspace-window"
+    },
+    {
+      "command": "projects",
+      "description": "Open Projects app",
+      "action": "open_window",
+      "target": "projects-window"
+    },
+    {
+      "command": "contact",
+      "description": "Open Contact app",
+      "action": "open_window",
+      "target": "contact-window"
+    },
+    {
+      "command": "settings",
+      "description": "Open Settings app",
+      "action": "open_window",
+      "target": "settings-window"
+    },
+    {
+      "command": "terminal",
+      "description": "Focus Terminal app",
+      "action": "open_window",
+      "target": "terminal-window"
+    }
+  ]
+}

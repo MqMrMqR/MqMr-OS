@@ -1,0 +1,63 @@
+{
+  "AppName": "Projects",
+  "AppVersion": "2.0.0",
+  "AppTags": {
+    "game": {
+      "label": "Game",
+      "bgColor": "#dcfce7",
+      "textColor": "#166534"
+    },
+    "app": {
+      "label": "App",
+      "bgColor": "#dbeafe",
+      "textColor": "#1d4ed8"
+    },
+    "website": {
+      "label": "Website",
+      "bgColor": "#e0e7ff",
+      "textColor": "#4338ca"
+    },
+    "soon": {
+      "label": "Coming Soon",
+      "bgColor": "#f3e8ff",
+      "textColor": "#7e22ce"
+    }
+  },
+
+  "Availability": {
+    "Standard": true,
+    "Simple": true,
+    "Phone": true
+  },
+
+  "Section": {
+    "title": "Projects",
+    "subtitle": "A peek at what I’m building."
+  },
+
+  "Projects": [
+    {
+      "id": "mqmr-os",
+      "name": "MqMr's OS",
+      "description": "A macOS-inspired web desktop experience with draggable windows, apps, and a custom settings panel.",
+      "tags": ["website", "soon"],
+      "show": true,
+      "links": {
+        "website": "https://mqmr.lol",
+        "github": "https://github.com/MqMrMqR/MqMr-OS"
+      }
+    },
+    {
+      "id": "next-big-thing",
+      "name": "Next Big Thing",
+      "description": "A new experience currently under construction.",
+      "tags": ["soon"],
+      "show": true,
+      "links": {
+        "website": "",
+        "github": ""
+      }
+    }
+    
+  ]
+}

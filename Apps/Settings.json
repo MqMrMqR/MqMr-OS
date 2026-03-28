@@ -1,0 +1,91 @@
+{
+  "AppName": "Settings",
+  "AppVersion": "1.0.0",
+
+  "Availability": {
+    "Standard": true,
+    "Simple": false,
+    "Phone": false
+  },
+
+  "Window": {
+    "title": "Settings",
+    "sidebarTitle": "Settings",
+    "googleCardSignedOutTitle": "Sign in with Google",
+    "googleCardSignedOutButton": "Sign In",
+    "googleCardSignedInButton": "Logout"
+  },
+
+  "Sections": {
+    "general": {
+      "label": "General",
+      "middleTitle": "General"
+    },
+    "display": {
+      "label": "Display",
+      "middleTitle": "Display"
+    },
+    "privacy": {
+      "label": "Privacy",
+      "middleTitle": "Privacy"
+    }
+  },
+
+  "General": {
+    "menu": {
+      "about": "About",
+      "softwareUpdate": "Software Update"
+    },
+    "aboutPage": {
+      "title": "About",
+      "creatorLabel": "Creator",
+      "softwareLabel": "Software"
+    },
+    "softwarePage": {
+      "title": "Software Update",
+      "updateLabel": "MqMr's OS Update",
+      "availableUpdatesLabel": "Available Updates",
+      "availableUpdatesText": "Your software is up to date",
+      "changeLogsLabel": "Change Logs",
+      "upcomingLabel": "What’s Next"
+    }
+  },
+
+  "Display": {
+    "menu": {
+      "mode": "Mode"
+    },
+    "modePage": {
+      "title": "Display Mode",
+      "advancedTitle": "Enable Advanced Display Mode",
+      "advancedDescription": "Unlocks additional display layouts intended for advanced use.",
+      "displayModeTitle": "Display Mode",
+      "displayModeDescription": "Choose how the interface layout is presented.",
+      "options": {
+        "standard": "Standard",
+        "simple": "Simple",
+        "phone": "Phone"
+      }
+    },
+    "dialog": {
+      "title": "Change Display Mode.",
+      "description": "The interface will adjust to reflect the new display mode.",
+      "cancel": "Cancel",
+      "continue": "Continue"
+    }
+  },
+
+  "Privacy": {
+    "menu": {
+      "google": "Google"
+    },
+    "googlePage": {
+      "title": "Google",
+      "accountLabel": "Google Account",
+      "signedOutDescription": "Sign In With Google, To View Your Name And Picture In The System.",
+      "signedOutSafety": "Safety: We CanNot Access Your Password Or Location.",
+      "signInButton": "Sign In with Google",
+      "logoutButton": "Logout"
+    }
+  }
+}

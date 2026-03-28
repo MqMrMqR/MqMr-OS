@@ -1,0 +1,23 @@
+{
+  "appName": "About Me",
+  "appVersion": "2.1.0",
+
+  "availability": {
+  "standard": true,
+  "simple": true,
+  "phone": true
+  },
+
+  "name": "MqMr",
+  "subtitle": "MqMr AKA Ethan",
+  "description": "Crafting digital experiences with code and creativity.",
+  "avatar": "assets/avatar.jpg",
+  "socials": {
+    "instagram": "https://www.instagram.com/_.wp1/",
+    "discord": "https://discord.com/users/1367578118830817420",
+    "x": "https://x.com/mqmrmqr",
+    "youtube": "https://www.youtube.com/@MqMr"
+  }
+
+
+}

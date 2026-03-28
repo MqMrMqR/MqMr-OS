@@ -1,0 +1,46 @@
+{
+  "AppName": "Contact",
+  "AppVersion": "1.0.0",
+
+  "Availability": {
+    "Standard": true,
+    "Simple": true,
+    "Phone": true
+  },
+
+  "Section": {
+    "windowTitle": "Contact",
+    "title": "Get in Touch",
+    "subtitle": "Have a project in mind or just want to say hi? Drop me a message below."
+  },
+
+  "Form": {
+    "fields": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Ethan Graves"
+      },
+      "phone": {
+        "label": "Phone Number",
+        "placeholder": "(optional)"
+      },
+      "subject": {
+        "label": "Subject",
+        "placeholder": "Project inquiry..."
+      },
+      "message": {
+        "label": "Message",
+        "placeholder": "Tell me about your project..."
+      }
+    },
+    "submitButton": "Send Message",
+    "submitIcon": "✈️"
+  },
+
+  "Mail": {
+    "to": "mqmr@mqmr.lol",
+    "defaultSubject": "New message from your OS",
+    "phoneFallback": "(not provided)",
+    "messageLabel": "Message:"
+  }
+}

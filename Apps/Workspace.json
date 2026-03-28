@@ -1,0 +1,96 @@
+{
+  "AppName": "Workspace",
+  "AppVersion": "1.0.0",
+
+  "Availability": {
+    "Standard": true,
+    "Simple": false,
+    "Phone": false
+  },
+
+  "Section": {
+    "title": "Workspace",
+    "subtitle": "The platforms, tools, and hardware behind what I build."
+  },
+
+  "AreasSection": {
+    "title": "Build Areas",
+    "subtitle": "The main spaces I currently create in."
+  },
+
+  "ToolsSection": {
+    "title": "Tools",
+    "subtitle": "The software I use in my workflow."
+  },
+
+  "HardwareSection": {
+    "title": "Device Specs",
+    "subtitle": "The machine I currently build on."
+  },
+
+  "Areas": [
+    {
+      "id": "games",
+      "title": "Games",
+      "description": "Building games using Unity."
+    },
+    {
+      "id": "apps",
+      "title": "iOS / Windows Apps",
+      "description": "Creating apps to solve problems I personally had."
+    },
+    {
+      "id": "websites",
+      "title": "Websites",
+      "description": "Designing and building modern web experiences, portfolio systems, and interactive UI."
+    }
+  ],
+
+  "Tools": [
+    {
+      "id": "xcode",
+      "name": "Xcode",
+      "type": "Development"
+    },
+    {
+      "id": "github",
+      "name": "GitHub",
+      "type": "Version Control"
+    },
+    {
+      "id": "vscode",
+      "name": "VS Code",
+      "type": "Editor"
+    },
+    {
+      "id": "unity",
+      "name": "Unity",
+      "type": "Engine"
+    }
+  ],
+
+  "Hardware": {
+    "items": [
+      {
+        "label": "GPU",
+        "value": "RTX 5070"
+      },
+      {
+        "label": "CPU",
+        "value": "Intel Core i7-11700F"
+      },
+      {
+        "label": "RAM",
+        "value": "32GB DDR4 3200MHz"
+      },
+      {
+        "label": "Storage",
+        "values": [
+          "Crucial T500 2TB",
+          "Crucial P2 512GB",
+          "HDD 1TB"
+        ]
+      }
+    ]
+  }
+}
