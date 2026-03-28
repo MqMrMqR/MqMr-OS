@@ -103,7 +103,7 @@
         background: linear-gradient(135deg, #4f8bff, #72a3ff);
         margin: 0 auto 20px auto;
     ">
-        <img src="assets/avatar.jpg" 
+        <img id="about-avatar" src="" 
              alt="avatar"
              style="
                 width: 100%;
@@ -115,25 +115,21 @@
     </div>
 
     <!-- Name -->
-    <h2 style="
+    <h2 id="about-name" style="
         font-size: 28px;
         margin-bottom: 6px;
         font-weight: 700;
-    ">
-        MqMr
-    </h2>
+    "></h2>
 
     <!-- Subtitle -->
-    <p style="
+    <p id="about-subtitle" style="
         font-size: 17px;
         margin-bottom: 22px;
         font-weight: 600;
         color: #717988;
-    ">
-        MqMr AKA Ethan
-    </p>
+    "></p>
 
-    <!-- Skills Row -->
+    <!-- Social Buttons -->
     <div style="
         display: flex;
         justify-content: center;
@@ -142,176 +138,90 @@
         font-weight: 600;
         opacity: 0.9;
     ">
-<div style="
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 200px;
-    margin-top: 20px;
-">
-
-    <button onclick="window.open('https://www.instagram.com/_.wp1/', '_blank')" 
-        style="
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: none;
-            background: #ff4dab;
-            color: white;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.2s;
+        <div style="
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 200px;
+            margin-top: 20px;
         ">
-        Instagram
-    </button>
 
-    <button onclick="window.open('https://discord.com/users/1367578118830817420', '_blank')" 
-        style="
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: none;
-            background: #5865F2;
-            color: white;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-        ">
-        Discord
-    </button>
+            <button id="about-instagram-btn"
+                style="
+                    padding: 10px 14px;
+                    border-radius: 10px;
+                    border: none;
+                    background: #ff4dab;
+                    color: white;
+                    font-weight: 600;
+                    font-size: 15px;
+                    cursor: pointer;
+                    transition: 0.2s;
+                ">
+                Instagram
+            </button>
 
-    <button onclick="window.open('https://x.com/mqmrmqr', '_blank')" 
-        style="
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: none;
-            background: #000;
-            color: white;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-        ">
-        Twitter (X)
-    </button>
+            <button id="about-discord-btn"
+                style="
+                    padding: 10px 14px;
+                    border-radius: 10px;
+                    border: none;
+                    background: #5865F2;
+                    color: white;
+                    font-weight: 600;
+                    font-size: 15px;
+                    cursor: pointer;
+                    transition: 0.2s;
+                ">
+                Discord
+            </button>
 
-    <button onclick="window.open('https://www.youtube.com/@MqMr', '_blank')" 
-        style="
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: none;
-            background: #ff0000;
-            color: white;
-            font-weight: 600;
-            font-size: 15px;
-            cursor: pointer;
-            transition: 0.2s;
-        ">
-        YouTube
-    </button>
+            <button id="about-x-btn"
+                style="
+                    padding: 10px 14px;
+                    border-radius: 10px;
+                    border: none;
+                    background: #000;
+                    color: white;
+                    font-weight: 600;
+                    font-size: 15px;
+                    cursor: pointer;
+                    transition: 0.2s;
+                ">
+                Twitter (X)
+            </button>
 
-</div>
+            <button id="about-youtube-btn"
+                style="
+                    padding: 10px 14px;
+                    border-radius: 10px;
+                    border: none;
+                    background: #ff0000;
+                    color: white;
+                    font-weight: 600;
+                    font-size: 15px;
+                    cursor: pointer;
+                    transition: 0.2s;
+                ">
+                YouTube
+            </button>
+
+        </div>
     </div>
 
     <!-- Description -->
-    <p style="
+    <p id="about-description" style="
         width: 85%;
         margin: auto;
         font-size: 15px;
         line-height: 1.7;
         color: #a3aab7;
-    ">
-        Crafting digital experiences with code and creativity.
-    </p>
+    "></p>
 
 </div>
             <div class="resize-handle"></div>
         </div>
 
-        <!-- Skills Window -->
-        <div class="window" id="skills-window" style="top: 120px; left: 150px; width: 500px; height: 600px;">
-            <div class="window-titlebar">
-                <div class="window-controls">
-                    <div class="window-control close"></div>
-                    <div class="window-control minimize"></div>
-                    <div class="window-control maximize"></div>
-                </div>
-                <div class="window-title">Skills & Technologies</div>
-                <div style="width: 68px;"></div>
-            </div>
-<div class="window-content" style="padding: 25px;">
-
-    <!-- Games -->
-    <h2 style="font-size:22px; margin-bottom:10px;">Games</h2>
-    <div style="height:1px; background:#dcdcdc; margin-bottom:20px;"></div>
-
-    <!-- C# -->
-    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span>C#</span><span class="skill-percent">92%</span>
-    </div>
-    <div style="background:#cfcfcf; height:8px; border-radius:6px; margin-bottom:20px;">
-        <div style="background:#000; height:8px; width:92%; border-radius:6px;"></div>
-    </div>
-
-    <!-- C++ -->
-    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span>C++</span><span class="skill-percent">43%</span>
-    </div>
-    <div style="background:#cfcfcf; height:8px; border-radius:6px; margin-bottom:40px;">
-        <div style="background:#000; height:8px; width:43%; border-radius:6px;"></div>
-    </div>
-
-    <!-- iOS -->
-    <h2 style="font-size:22px; margin-bottom:10px;">iOS</h2>
-    <div style="height:1px; background:#dcdcdc; margin-bottom:20px;"></div>
-
-    <!-- Swift -->
-    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span>Swift</span><span class="skill-percent">78%</span>
-    </div>
-    <div style="background:#cfcfcf; height:8px; border-radius:6px; margin-bottom:20px;">
-        <div style="background:#000; height:8px; width:78%; border-radius:6px;"></div>
-    </div>
-
-    <!-- Obj-C -->
-    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span>Obj-C</span><span class="skill-percent">54%</span>
-    </div>
-    <div style="background:#cfcfcf; height:8px; border-radius:6px; margin-bottom:40px;">
-        <div style="background:#000; height:8px; width:54%; border-radius:6px;"></div>
-    </div>
-
-    <!-- Web -->
-    <h2 style="font-size:22px; margin-bottom:10px;">Web</h2>
-    <div style="height:1px; background:#dcdcdc; margin-bottom:20px;"></div>
-
-    <!-- HTML -->
-    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span>HTML</span><span class="skill-percent">20%</span>
-    </div>
-    <div style="background:#cfcfcf; height:8px; border-radius:6px; margin-bottom:20px;">
-        <div style="background:#000; height:8px; width:20%; border-radius:6px;"></div>
-    </div>
-
-    <!-- CSS -->
-    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span>CSS</span><span class="skill-percent">20%</span>
-    </div>
-    <div style="background:#cfcfcf; height:8px; border-radius:6px; margin-bottom:20px;">
-        <div style="background:#000; height:8px; width:20%; border-radius:6px;"></div>
-    </div>
-
-    <!-- JS -->
-    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span>JavaScript</span><span class="skill-percent">20%</span>
-    </div>
-    <div style="background:#cfcfcf; height:8px; border-radius:6px;">
-        <div style="background:#000; height:8px; width:20%; border-radius:6px;"></div>
-    </div>
-
-</div>
-            <div class="resize-handle"></div>
-        </div>
 
         <!-- Projects Window -->
         <div class="window" id="projects-window" style="top: 140px; left: 200px; width: 700px; height: 600px;">
@@ -325,44 +235,18 @@
                 <div style="width: 68px;"></div>
             </div>
 <div class="window-content">
-
-  <!-- Simple Projects UI INSIDE WINDOW -->
   <div class="projects-simple">
 
     <div class="card-header">
-      <h2 class="card-title">Projects</h2>
-      <p class="card-tagline">A peek at what I’m building.</p>
+      <h2 class="card-title" id="projects-section-title"></h2>
+      <p class="card-tagline" id="projects-section-subtitle"></p>
     </div>
 
     <div class="projects-content">
-      <p class="projects-version" id="projects-version-title">
-        Coming Soon!, Current Version: —
-      </p>
-
-      <div class="project-list">
-
-        <div class="project-item">
-          <h3 class="project-name">MqMr's OS</h3>
-          <p class="project-desc">
-            A macOS–inspired web desktop experience with draggable windows,
-            apps, and a custom settings panel.
-          </p>
-          <span class="project-label">Personal Project</span>
-        </div>
-
-        <div class="project-item project-item--soon">
-          <h3 class="project-name">Next Big Thing</h3>
-          <p class="project-desc">
-            A new experience currently under construction.
-          </p>
-          <span class="project-badge">Coming Soon</span>
-        </div>
-
-      </div>
+      <div class="project-list" id="projects-list"></div>
     </div>
 
   </div>
-
 </div>
             <div class="resize-handle"></div>
         </div>
@@ -375,67 +259,61 @@
       <div class="window-control minimize"></div>
       <div class="window-control maximize"></div>
     </div>
-    <div class="window-title">Contact</div>
+    <div class="window-title" id="contact-window-title">Contact</div>
     <div style="width: 68px;"></div>
   </div>
 
   <div class="window-content contact-window-content">
     <div class="contact-card">
-      <h1 class="contact-title">Get in Touch</h1>
-      <p class="contact-subtitle">
-        Have a project in mind or just want to say hi? Drop me a message below.
-      </p>
+      <h1 class="contact-title" id="contact-app-title"></h1>
+      <p class="contact-subtitle" id="contact-app-subtitle"></p>
 
       <form class="contact-form" onsubmit="return handleSubmit(event)">
         <div class="contact-grid">
           <div class="contact-field">
-            <label for="contact-name">Name</label>
+            <label for="contact-name" id="contact-name-label"></label>
             <input
               id="contact-name"
               name="contact-name"
               type="text"
-              placeholder="Ethan Graves"
               required
             />
           </div>
 
           <div class="contact-field">
-            <label for="contact-phone">Phone Number</label>
+            <label for="contact-phone" id="contact-phone-label"></label>
             <input
               id="contact-phone"
               name="contact-phone"
               type="text"
-              placeholder="(optional)"
             />
           </div>
         </div>
 
         <div class="contact-field">
-          <label for="contact-subject">Subject</label>
+          <label for="contact-subject" id="contact-subject-label"></label>
           <input
             id="contact-subject"
             name="contact-subject"
             type="text"
-            placeholder="Project inquiry..."
             required
           />
         </div>
 
         <div class="contact-field">
-          <label for="contact-message">Message</label>
+          <label for="contact-message" id="contact-message-label"></label>
           <textarea
             id="contact-message"
             name="contact-message"
             rows="4"
-            placeholder="Tell me about your project..."
             required
           ></textarea>
         </div>
 
         <div class="contact-submit-wrap">
           <button type="submit" class="contact-submit-btn">
-            <span style="margin-right:6px;">✈️</span>
-            Send Message
+            <span id="contact-submit-icon" style="margin-right:6px;"></span>
+            <span id="contact-submit-text"></span>
           </button>
         </div>
       </form>
@@ -445,6 +323,7 @@
   <div class="resize-handle"></div>
 </div>
 
+
 <!-- Terminal Window -->
 <div class="window" id="terminal-window" style="top: 180px; left: 300px; width: 700px; height: 500px;">
     <div class="window-titlebar" style="color:#626b78;">
@@ -453,7 +332,7 @@
             <div class="window-control minimize"></div>
             <div class="window-control maximize"></div>
         </div>
-        <div class="window-title">Terminal</div>
+        <div class="window-title" id="terminal-window-title">Terminal</div>
         <div style="width: 68px;"></div>
     </div>
 
@@ -465,21 +344,10 @@
         font-size: 15px;
         overflow-y:auto;
         white-space: pre-wrap;
-    ">
-
-Welcome to MqMr's OS Terminal
-Type 'help' to see available commands.
-
-<span class="prompt">
-    <span style="color:#4d99ef;">guest@mqmr-os:~$</span> 
-    <span id="terminal-input" contenteditable="true" style="outline:none;"></span>
-</span>
-
-    </div>
+    "></div>
 
     <div class="resize-handle"></div>
 </div>
-
 
 
 
@@ -492,7 +360,7 @@ Type 'help' to see available commands.
       <div class="window-control minimize"></div>
       <div class="window-control maximize"></div>
     </div>
-    <div class="window-title">Settings</div>
+    <div class="window-title" id="settings-window-title">Settings</div>
     <div style="width: 68px;"></div>
   </div>
 
@@ -501,7 +369,7 @@ Type 'help' to see available commands.
     <!-- LEFT SIDEBAR -->
     <div style="width:190px; background:#f7f7f7; border-right:1px solid #d0d0d0; display:flex; flex-direction:column;">
       <div style="padding:20px;">
-        <h2 style="font-size:22px; font-weight:700;">Settings</h2>
+        <h2 id="settings-sidebar-title" style="font-size:22px; font-weight:700;">Settings</h2>
       </div>
 
       <!-- Sign in section -->
@@ -513,49 +381,44 @@ Type 'help' to see available commands.
           border-radius:18px;
           box-shadow:0 10px 25px rgba(15,23,42,0.05);
         ">
-          <!-- محتوى الكرت (Sign In / Logout) يتغير من JavaScript -->
+          <!-- محتوى الكرت يتغير من JavaScript -->
         </div>
       </div>
 
       <!-- Sidebar buttons -->
       <div style="flex:1; overflow-y:auto; padding:0 8px 16px 8px;">
         <!-- GENERAL -->
-        <div class="settings-btn active" data-section="general">
+        <div class="settings-btn active" data-section="general" id="settings-section-general">
           <span class="icon">
-            <!-- General SVG -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="1 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"></path>
               <circle cx="12" cy="12" r="3"></circle>
             </svg>
           </span>
-          General
+          <span id="settings-section-general-label">General</span>
         </div>
 
-
         <!-- DISPLAY -->
-        <div class="settings-btn" data-section="display">
+        <div class="settings-btn" data-section="display" id="settings-section-display">
           <span class="icon">
-            <!-- Display SVG -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <path d="M12 18a6 6 0 0 0 0-12v12z"></path>
             </svg>
           </span>
-          Display
+          <span id="settings-section-display-label">Display</span>
         </div>
 
         <!-- PRIVACY -->
-        <div class="settings-btn" data-section="privacy">
+        <div class="settings-btn" data-section="privacy" id="settings-section-privacy">
           <span class="icon">
-            <!-- Privacy SVG -->
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           </span>
-          Privacy
+          <span id="settings-section-privacy-label">Privacy</span>
         </div>
-
       </div>
     </div>
 
@@ -571,105 +434,94 @@ Type 'help' to see available commands.
         <div class="settings-middle-section active" data-section="general">
           <div class="mid-btn active" data-page="general-about-page">
             <div class="mid-left">
-            <span class="icon">
-              <!-- About icon (HardDrive) -->
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="22" x2="2" y1="12" y2="12"></line>
-                <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
-                <line x1="6" x2="6.01" y1="16" y2="16"></line>
-                <line x1="10" x2="10.01" y1="16" y2="16"></line>
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="22" x2="2" y1="12" y2="12"></line>
+                  <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                  <line x1="6" x2="6.01" y1="16" y2="16"></line>
+                  <line x1="10" x2="10.01" y1="16" y2="16"></line>
+                </svg>
+              </span>
+              <span id="settings-menu-about-label">About</span>
+            </div>
+
+            <span class="mid-chevron">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"></path>
               </svg>
             </span>
-            <span>About</span>
-             </div>
-
-               <span class="mid-chevron">
-    <!-- ChevronRight SVG -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round">
-      <path d="m9 18 6-6-6-6"></path>
-    </svg>
-  </span>
           </div>
 
           <div class="mid-btn" data-page="general-software-page">
-                        <div class="mid-left">
-            <span class="icon">
-              <!-- Software Update (Zap) -->
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
+            <div class="mid-left">
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
+                </svg>
+              </span>
+              <span id="settings-menu-software-label">Software Update</span>
+            </div>
+            <span class="mid-chevron">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"></path>
               </svg>
             </span>
-            <span>Software Update</span>
-                         </div>
-  <span class="mid-chevron">
-    <!-- ChevronRight SVG -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round">
-      <path d="m9 18 6-6-6-6"></path>
-    </svg>
-  </span>
           </div>
         </div>
 
         <!-- DISPLAY SECTION SUB-MENU -->
-<!-- DISPLAY SECTION SUB-MENU -->
-<div class="settings-middle-section" data-section="display">
-  <div class="mid-btn active" data-page="display-mode-page">
-    <div class="mid-left">
-      <span class="icon">
-        <!-- Mode icon (Monitor) -->
-        <svg xmlns="http://www.w3.org/2000/svg"
-             width="24" height="24" viewBox="0 0 24 24"
-             fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round"
-             class="lucide lucide-monitor w-4 h-4"
-             aria-hidden="true">
-          <rect width="20" height="14" x="2" y="3" rx="2"></rect>
-          <line x1="8" x2="16" y1="21" y2="21"></line>
-          <line x1="12" x2="12" y1="17" y2="21"></line>
-        </svg>
-      </span>
-      <span>Mode</span>
-    </div>
-    <span class="mid-chevron">
-      <!-- ChevronRight SVG -->
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2"
-           stroke-linecap="round" stroke-linejoin="round">
-        <path d="m9 18 6-6-6-6"></path>
-      </svg>
-    </span>
-  </div>
-</div>
+        <div class="settings-middle-section" data-section="display">
+          <div class="mid-btn active" data-page="display-mode-page">
+            <div class="mid-left">
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="24" height="24" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round"
+                     class="lucide lucide-monitor w-4 h-4"
+                     aria-hidden="true">
+                  <rect width="20" height="14" x="2" y="3" rx="2"></rect>
+                  <line x1="8" x2="16" y1="21" y2="21"></line>
+                  <line x1="12" x2="12" y1="17" y2="21"></line>
+                </svg>
+              </span>
+              <span id="settings-menu-mode-label">Mode</span>
+            </div>
+            <span class="mid-chevron">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"></path>
+              </svg>
+            </span>
+          </div>
+        </div>
 
         <!-- PRIVACY SECTION SUB-MENU -->
         <div class="settings-middle-section" data-section="privacy">
           <div class="mid-btn active" data-page="privacy-google-page">
-                        <div class="mid-left">
-
-            <span class="icon">
-              <!-- Google (Lock icon) -->
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            <div class="mid-left">
+              <span class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </span>
+              <span id="settings-menu-google-label">Google</span>
+            </div>
+            <span class="mid-chevron">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                   fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"></path>
               </svg>
             </span>
-            <span>Google</span>
-                         </div>
-  <span class="mid-chevron">
-    <!-- ChevronRight SVG -->
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="2"
-         stroke-linecap="round" stroke-linejoin="round">
-      <path d="m9 18 6-6-6-6"></path>
-    </svg>
-  </span>
           </div>
         </div>
-
 
       </div>
     </div>
@@ -678,93 +530,98 @@ Type 'help' to see available commands.
     <div class="settings-main" style="flex:1; background:#f7f7f7; overflow-y:auto; padding:32px;">
 
       <!-- GENERAL → ABOUT -->
-<div class="settings-page is-visible" id="general-about-page">
-  <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">About</h1>
+      <div class="settings-page is-visible" id="general-about-page">
+        <h1 id="settings-about-page-title" style="font-size:32px; font-weight:700; margin-bottom:24px;">About</h1>
 
-  <div class="setting-row">
-    <span class="setting-title">Creator</span>
-    <span class="setting-answer" id="about-creator"></span>
-  </div>
+        <div class="setting-row">
+          <span class="setting-title" id="settings-about-creator-label">Creator</span>
+          <span class="setting-answer" id="about-creator"></span>
+        </div>
 
-  <div class="setting-row">
-    <span class="setting-title">Software</span>
-    <span class="setting-answer" id="about-version"></span>
-  </div>
-</div>
+        <div class="setting-row">
+          <span class="setting-title" id="settings-about-software-label">Software</span>
+          <span class="setting-answer" id="about-version"></span>
+        </div>
+      </div>
 
       <!-- GENERAL → SOFTWARE UPDATE -->
-<div class="settings-page" id="general-software-page">
-  <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Software Update</h1>
+      <div class="settings-page" id="general-software-page">
+        <h1 id="settings-software-page-title" style="font-size:32px; font-weight:700; margin-bottom:24px;">Software Update</h1>
 
-  <div class="setting-row">
-    <span class="setting-title">MqMr's OS Update</span>
-    <span class="setting-answer" id="sw-version"></span>
-  </div>
+        <div class="setting-row">
+          <span class="setting-title" id="settings-software-update-label">MqMr's OS Update</span>
+          <span class="setting-answer" id="sw-version"></span>
+        </div>
 
-  <div class="setting-row">
-    <span class="setting-title">Available Updates</span>
-    <span class="setting-answer" id="sw-updates-text"></span>
-  </div>
+        <div class="setting-row">
+          <span class="setting-title" id="settings-software-available-label">Available Updates</span>
+          <span class="setting-answer" id="sw-updates-text"></span>
+        </div>
 
-  <div class="setting-row setting-row--changelog" style="gap:8px;">
-    <span class="setting-title">Change Logs</span>
-    <ul id="sw-changelog-list" style="margin-left:0; padding-left:16px; font-size:13px; color:#6b7280;">
-    </ul>
-  </div>
-</div>
+<div class="setting-row setting-row--changelog">
+  <span class="setting-title" id="settings-software-changelog-label">Change Logs</span>
 
-<!-- DISPLAY → MODE -->
-<div class="settings-page" id="display-mode-page">
-  <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Display Mode</h1>
-
-  <!-- Enable Advanced Display Mode (Switch) -->
-  <div class="setting-row setting-row-inline">
-    <div class="setting-row-left">
-      <span class="setting-title">Enable Advanced Display Mode</span>
-      <p class="setting-description">
-        Unlocks additional display layouts intended for advanced use.
-      </p>
-    </div>
-
-    <button
-      id="advanced-display-switch"
-      class="switch-toggle"
-      type="button"
-      aria-pressed="false"
-    >
-      <span class="switch-thumb"></span>
-    </button>
-  </div>
-
-  <!-- Display Mode (Dropdown) -->
-  <div class="setting-row setting-row-inline">
-    <div class="setting-row-left">
-      <span class="setting-title">Display Mode</span>
-      <p class="setting-description">
-        Choose how the interface layout is presented.
-      </p>
-    </div>
-
-    <select id="display-mode-select" class="setting-select">
-      <option value="standard">Standard</option>
-      <option value="simple">Simple</option>
-      <!-- Phone سيضاف تلقائياً من الـ JS عندما يكون Advanced مفعّل -->
-    </select>
+  <div class="settings-changelog-embed">
+    <ul id="sw-changelog-list" class="settings-changelog-list"></ul>
   </div>
 </div>
+<div class="setting-row setting-row--changelog">
+  <span class="setting-title" id="settings-software-upcoming-label">What’s Next</span>
+
+  <div class="settings-changelog-embed">
+    <ul id="sw-upcoming-list" class="settings-changelog-list"></ul>
+  </div>
+</div>
+</div>
+
+
+
+
+      <!-- DISPLAY → MODE -->
+      <div class="settings-page" id="display-mode-page">
+        <h1 id="settings-display-page-title" style="font-size:32px; font-weight:700; margin-bottom:24px;">Display Mode</h1>
+
+        <div class="setting-row setting-row-inline">
+          <div class="setting-row-left">
+            <span class="setting-title" id="settings-display-advanced-title">Enable Advanced Display Mode</span>
+            <p class="setting-description" id="settings-display-advanced-description">
+              Unlocks additional display layouts intended for advanced use.
+            </p>
+          </div>
+
+          <button
+            id="advanced-display-switch"
+            class="switch-toggle"
+            type="button"
+            aria-pressed="false"
+          >
+            <span class="switch-thumb"></span>
+          </button>
+        </div>
+
+        <div class="setting-row setting-row-inline">
+          <div class="setting-row-left">
+            <span class="setting-title" id="settings-display-mode-title">Display Mode</span>
+            <p class="setting-description" id="settings-display-mode-description">
+              Choose how the interface layout is presented.
+            </p>
+          </div>
+
+          <select id="display-mode-select" class="setting-select">
+            <option id="settings-display-option-standard" value="standard">Standard</option>
+            <option id="settings-display-option-simple" value="simple">Simple</option>
+          </select>
+        </div>
+      </div>
 
       <!-- PRIVACY → GOOGLE -->
       <div class="settings-page" id="privacy-google-page">
-        <h1 style="font-size:32px; font-weight:700; margin-bottom:24px;">Google</h1>
+        <h1 id="settings-google-page-title" style="font-size:32px; font-weight:700; margin-bottom:24px;">Google</h1>
 
         <div class="setting-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
-          <span class="setting-title">Google Account</span>
-          <p id="privacy-google-desc-main" style="font-size:14px; color:#444;">
-            Sign In With Google, To View Your Name And Picture In The System.
-          </p>
-          <p id="privacy-google-desc-safety" style="font-size:13px; color:#777;">
-            Safety: We CanNot Access Your Password Or Location.
-          </p>
+          <span class="setting-title" id="settings-google-account-label">Google Account</span>
+          <p id="privacy-google-desc-main" style="font-size:14px; color:#444;"></p>
+          <p id="privacy-google-desc-safety" style="font-size:13px; color:#777;"></p>
           <button id="btn-google-signin-main" style="
             margin-top:8px;
             padding:8px 14px;
@@ -777,7 +634,7 @@ Type 'help' to see available commands.
             cursor:pointer;
             font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           ">
-            Sign In with Google
+            <span id="settings-google-main-button-text">Sign In with Google</span>
           </button>
         </div>
       </div>
@@ -806,7 +663,55 @@ Type 'help' to see available commands.
 
 
 
+<!-- Workspace Window -->
+<div class="window" id="workspace-window" style="top: 150px; left: 240px; width: 760px; height: 620px;">
+  <div class="window-titlebar">
+    <div class="window-controls">
+      <div class="window-control close"></div>
+      <div class="window-control minimize"></div>
+      <div class="window-control maximize"></div>
+    </div>
+    <div class="window-title">Workspace</div>
+    <div style="width: 68px;"></div>
+  </div>
 
+  <div class="window-content">
+    <div class="workspace-app">
+      <div class="workspace-header">
+        <h2 class="workspace-main-title" id="workspace-section-title"></h2>
+        <p class="workspace-main-subtitle" id="workspace-section-subtitle"></p>
+      </div>
+
+      <div class="workspace-grid">
+        <section class="workspace-card">
+          <div class="workspace-card-header">
+            <h3 id="workspace-areas-title"></h3>
+            <p id="workspace-areas-subtitle"></p>
+          </div>
+          <div class="workspace-stack-list" id="workspace-areas-list"></div>
+        </section>
+
+        <section class="workspace-card">
+          <div class="workspace-card-header">
+            <h3 id="workspace-tools-title"></h3>
+            <p id="workspace-tools-subtitle"></p>
+          </div>
+          <div class="workspace-tools-list" id="workspace-tools-list"></div>
+        </section>
+
+        <section class="workspace-card workspace-card-wide">
+          <div class="workspace-card-header">
+            <h3 id="workspace-hardware-title"></h3>
+            <p id="workspace-hardware-subtitle"></p>
+          </div>
+          <div class="workspace-specs-list" id="workspace-hardware-list"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="resize-handle"></div>
+</div>
 
 
 
@@ -822,11 +727,11 @@ Type 'help' to see available commands.
                 <div class="dock-dot"></div>
 
         </div>
-        <div class="dock-item skills" data-window="skills-window">
-            <span>⚡</span>
-            <div class="dock-label">Skills</div>
-                <div class="dock-dot"></div>
-        </div>
+<div class="dock-item workspace" data-window="workspace-window">
+    <span>⚡</span>
+    <div class="dock-label">Workspace</div>
+    <div class="dock-dot"></div>
+</div>
         <div class="dock-item projects" data-window="projects-window">
             <span>📁</span>
             <div class="dock-label">Projects</div>

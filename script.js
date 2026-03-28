@@ -41,7 +41,10 @@ let smoothY = 0;
 let targetX = 0;
 let targetY = 0;
 
-
+let contactAppData = null;
+let terminalAppData = null;
+let settingsAppData = null;
+let mainData = null;
 /* ================= EMERGENCY END DRAG ================= */
 function endDragForcefully() {
     isDragging = false;
@@ -278,26 +281,27 @@ function handleSubmit(e) {
 
     const name = form.elements["contact-name"]?.value.trim() || "";
     const phone = form.elements["contact-phone"]?.value.trim() || "";
-    const subject = form.elements["contact-subject"]?.value.trim() || "New message from your OS";
+    const subject =
+        form.elements["contact-subject"]?.value.trim() ||
+        contactAppData?.Mail?.defaultSubject ||
+        "New message from your OS";
     const message = form.elements["contact-message"]?.value.trim() || "";
 
-    // نرتب جسم الإيميل: المدخلات فوق، الرسالة تحت
     const lines = [];
 
     if (name) lines.push(`Name: ${name}`);
     if (phone) {
         lines.push(`Phone: ${phone}`);
     } else {
-        lines.push("Phone: (not provided)");
+        lines.push(`Phone: ${contactAppData?.Mail?.phoneFallback || "(not provided)"}`);
     }
 
-    lines.push(""); // سطر فاضي
-    lines.push("Message:");
+    lines.push("");
+    lines.push(contactAppData?.Mail?.messageLabel || "Message:");
     lines.push(message || "(no message)");
 
     const body = lines.join("\n");
-
-    const to = "mqmr@mqmr.lol";
+    const to = contactAppData?.Mail?.to || "mqmr@mqmr.lol";
 
     const gmailUrl =
         "https://mail.google.com/mail/?view=cm&fs=1&tf=1" +
@@ -305,22 +309,49 @@ function handleSubmit(e) {
         `&su=${encodeURIComponent(subject)}` +
         `&body=${encodeURIComponent(body)}`;
 
-    // فتح Gmail في نافذة بحجم 550x525
     window.open(
         gmailUrl,
         "gmail-compose",
         "width=550,height=525"
     );
 
-    // ما نعمل reset عشان لو حب يرجع ينسخ البيانات
     return false;
 }
-
 
 /* ================= TERMINAL LOGIC ================= */
 
 const terminalBody = document.getElementById("terminal-body");
 const terminalWindow = document.getElementById("terminal-window");
+
+function getTerminalPromptMarkup() {
+    const ui = terminalAppData?.UI || {};
+    const promptUser = ui.promptUser || "guest";
+    const promptHost = ui.promptHost || "mqmr-os";
+    const promptPath = ui.promptPath || "~";
+
+    return `
+<span class="prompt">
+    <span style="color:#4d99ef;">${promptUser}@${promptHost}:${promptPath}$</span>
+    <span id="terminal-input" contenteditable="true" style="outline:none;"></span>
+</span>
+`;
+}
+
+function buildTerminalWelcome() {
+    const ui = terminalAppData?.UI || {};
+    const welcomeTitle = ui.welcomeTitle || "Welcome to MqMr's OS Terminal";
+    const welcomeSubtitle = ui.welcomeSubtitle || "Type 'help' to see available commands.";
+
+    return `${welcomeTitle}
+${welcomeSubtitle}
+
+${getTerminalPromptMarkup()}`;
+}
+
+function initializeTerminalContent() {
+    if (!terminalBody) return;
+    terminalBody.innerHTML = buildTerminalWelcome();
+}
 
 // نخلي التيرمنال ينزل دايم تحت
 function scrollBottom() {
@@ -347,18 +378,11 @@ function focusTerminalInput() {
     }
 }
 
-// نضيف برومبت جديد
 function newPrompt() {
-    // شيل الـ id من أي input قديم (عشان ما يكون فيه تكرار)
     const old = document.getElementById("terminal-input");
     if (old) old.removeAttribute("id");
 
-    terminalBody.innerHTML += `
-<span class="prompt">
-    <span style="color:#4d99ef;">guest@mqmr-os:~$</span>
-    <span id="terminal-input" contenteditable="true" style="outline:none;"></span>
-</span>
-`;
+    terminalBody.innerHTML += "\n" + getTerminalPromptMarkup();
     scrollBottom();
     setTimeout(focusTerminalInput, 10);
 }
@@ -472,13 +496,11 @@ window.addEventListener("keydown", (e) => {
     }
 });
 
-// أوامر التيرمنال
 if (terminalBody) {
     terminalBody.addEventListener("keydown", function (e) {
         const input = document.getElementById("terminal-input");
         if (!input) return;
 
-        // ما نكتب إلا إذا التيرمنال هي النافذة النشطة
         if (!terminalWindow || !terminalWindow.classList.contains("active")) return;
 
         if (e.key === "Enter") {
@@ -486,66 +508,69 @@ if (terminalBody) {
 
             const rawCmd = input.innerText;
             const cmd = rawCmd.trim().toLowerCase();
-            input.contentEditable = "false"; // نقفل البرومبت القديم
+            input.contentEditable = "false";
 
-            // ========== clear ==========
-            if (cmd === "clear") {
+            const messages = terminalAppData?.Messages || {};
+            const commands = Array.isArray(terminalAppData?.Commands) ? terminalAppData.Commands : [];
+
+            const matchedCommand = commands.find(item => item.command?.toLowerCase() === cmd);
+
+            if (!cmd) {
+                newPrompt();
+                return;
+            }
+
+            if (!matchedCommand) {
+                const commandNotFound = messages.commandNotFound || "Command not found.";
+                terminalBody.innerHTML += `\n${commandNotFound}\n`;
+                newPrompt();
+                return;
+            }
+
+            if (matchedCommand.action === "clear") {
                 terminalBody.innerHTML = "";
                 newPrompt();
                 return;
             }
 
-            // ========== help ==========
-            if (cmd === "help") {
+            if (matchedCommand.action === "help") {
                 const sw = window.softwareInfo || {};
                 const osName = sw.osName || "MqMr's OS";
                 const version = sw.version || "1.0.0v";
 
-                terminalBody.innerHTML += `
-${osName} Terminal – version ${version}
-Available commands:
-  help      - Show this help message
-  clear     - Clear the terminal
-  about     - Open About app
-  skills    - Open Skills app
-  projects  - Open Projects app
-  contact   - Open Contact app
-  settings  - Open Settings app
-  terminal  - Focus Terminal app
-`;
+                let helpHeader = messages.helpHeader || "{osName} Terminal - version {version}";
+                helpHeader = helpHeader
+                    .replace("{osName}", osName)
+                    .replace("{version}", version);
+
+                const helpTitle = messages.helpTitle || "Available commands:";
+
+                const commandLines = commands
+                    .map(item => `  ${String(item.command).padEnd(10, " ")} - ${item.description || ""}`)
+                    .join("\n");
+
+                terminalBody.innerHTML += `\n${helpHeader}\n${helpTitle}\n${commandLines}\n`;
                 newPrompt();
                 return;
             }
 
-            // ========== الأوامر اللي تفتح التطبيقات ==========
-            const appMap = {
-                "about": "about-window",
-                "skills": "skills-window",
-                "projects": "projects-window",
-                "contact": "contact-window",
-                "settings": "settings-window",
-                "terminal": "terminal-window"
-            };
-
-            if (appMap[cmd]) {
-                const ok = openAppById(appMap[cmd]);
+            if (matchedCommand.action === "open_window") {
+                const ok = openAppById(matchedCommand.target);
                 if (!ok) {
-                    terminalBody.innerHTML += `\nCould not open "${cmd}" app.\n`;
+                    const failMsgTemplate = messages.appOpenFailed || 'Could not open "{command}" app.';
+                    const failMsg = failMsgTemplate.replace("{command}", matchedCommand.command || cmd);
+                    terminalBody.innerHTML += `\n${failMsg}\n`;
                 }
                 newPrompt();
                 return;
             }
 
-            // ========== أي شيء ثاني ==========
-            if (cmd !== "") {
-                terminalBody.innerHTML += `\nCommand not found.\n`;
-            }
-
+            const commandNotFound = messages.commandNotFound || "Command not found.";
+            terminalBody.innerHTML += `\n${commandNotFound}\n`;
             newPrompt();
         }
     });
 }
-
 // فوكس تلقائي أول ما يفتح التيرمنال
 setTimeout(() => {
     if (!terminalWindow) return;
@@ -720,10 +745,13 @@ btnContinue.addEventListener("click", () => {
     });
 
     // middle title (General / Display / Privacy ...)
-    if (middleTitle) {
-      const pretty = sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
-      middleTitle.textContent = pretty;
-    }
+if (middleTitle) {
+  const mappedTitle =
+    settingsAppData?.Sections?.[sectionName]?.middleTitle ||
+    sectionName.charAt(0).toUpperCase() + sectionName.slice(1);
+
+  middleTitle.textContent = mappedTitle;
+}
 
     // show only matching middle section
     middleSections.forEach(sec => {
@@ -754,63 +782,167 @@ btnContinue.addEventListener("click", () => {
   activateSection("general");
 
   // ===================== LOAD DATA FROM JSON =====================
-  // ===================== LOAD DATA FROM JSON =====================
-  fetch("settings-data.json")
-    .then(res => res.json())
-    .then(data => {
-      const sw = data.software;
-      if (!sw) return;
+async function loadMainData() {
+  try {
+    const res = await fetch("main-data.json");
+    const data = await res.json();
+    mainData = data;
 
-      // نخزن البيانات في global عشان نستخدمها في التيرمنال وغيره
-      window.softwareInfo = sw;
+    const site = data.site || {};
+    const osName = site.osName || "MqMr's OS";
+    const version = site.version || "1.0.0v";
+    const creator = site.creator || "MqMr";
 
-      // ===== Settings: General → About =====
-      const aboutCreator = document.getElementById("about-creator");
-      const aboutVersion = document.getElementById("about-version");
+    window.softwareInfo = {
+      osName,
+      version,
+      creator
+    };
 
-      if (aboutCreator) aboutCreator.textContent = sw.creator || "MqMr";
-      if (aboutVersion) aboutVersion.textContent = sw.version || "1.0.0v";
+    const aboutCreator = document.getElementById("about-creator");
+    const aboutVersion = document.getElementById("about-version");
+    const swVersion = document.getElementById("sw-version");
+    const swChangelogList = document.getElementById("sw-changelog-list");
+    const swUpcomingList = document.getElementById("sw-upcoming-list");
 
-      // ===== Settings: General → Software Update =====
-      const swVersion = document.getElementById("sw-version");
-      const swUpdatesText = document.getElementById("sw-updates-text");
-      const swChangelogList = document.getElementById("sw-changelog-list");
+    if (aboutCreator) aboutCreator.textContent = creator;
+    if (aboutVersion) aboutVersion.textContent = version;
+    if (swVersion) swVersion.textContent = version;
 
-      if (swVersion) swVersion.textContent = sw.version || "1.0.0v";
-      if (swUpdatesText) swUpdatesText.textContent = sw.availableUpdatesText || "Your software is up to date";
+if (swChangelogList && Array.isArray(data.changelog)) {
+  swChangelogList.innerHTML = "";
 
-      if (swChangelogList && Array.isArray(sw.changelog)) {
-        swChangelogList.innerHTML = "";
-        sw.changelog.forEach(item => {
-          const li = document.createElement("li");
-          li.textContent = `${item.version}: ${item.label}`;
-          swChangelogList.appendChild(li);
-        });
-      }
+  data.changelog.forEach(item => {
+    const li = document.createElement("li");
 
-      // ===== Title & Menubar =====
-      if (sw.osName) {
-        // عنوان التبويب
-        document.title = `${sw.osName} | ${sw.version}`;
+    const versionEl = document.createElement("span");
+    versionEl.className = "changelog-version";
+    versionEl.textContent = item.version || "";
 
-        // اسم النظام في المينوبار (أول strong في menubar-left)
-        const menuLabel = document.querySelector(".menubar-left .menubar-item strong");
-        if (menuLabel) menuLabel.textContent = sw.osName;
-      }
+    const labelEl = document.createElement("span");
+    labelEl.className = "changelog-label";
+    labelEl.textContent = item.label || "";
 
-      // ===== Projects Window title =====
-      const projectsTitle = document.getElementById("projects-version-title");
-      if (projectsTitle) {
-        projectsTitle.textContent = `Coming Soon!, Current Version: ${sw.version}`;
-      }
-    })
-    .catch(err => {
-      console.warn("Could not load settings-data.json", err);
-    });
+    li.appendChild(versionEl);
+    li.appendChild(labelEl);
+    swChangelogList.appendChild(li);
+  });
+
+  const changelogEmbed = swChangelogList.closest(".settings-changelog-embed");
+  if (changelogEmbed) {
+    changelogEmbed.scrollTop = 0;
+  }
+}
+
+if (swUpcomingList && Array.isArray(data.upcoming?.items)) {
+  swUpcomingList.innerHTML = "";
+
+  data.upcoming.items.forEach(item => {
+    const li = document.createElement("li");
+
+    const labelEl = document.createElement("span");
+    labelEl.className = "changelog-label";
+    labelEl.textContent = item.label || "";
+
+    li.appendChild(labelEl);
+    swUpcomingList.appendChild(li);
+  });
+
+  const upcomingEmbed = swUpcomingList.closest(".settings-changelog-embed");
+  if (upcomingEmbed) {
+    upcomingEmbed.scrollTop = 0;
+  }
+}
+
+    const menuLabel = document.querySelector(".menubar-left .menubar-item strong");
+    if (menuLabel) menuLabel.textContent = osName;
+
+    const tabTemplate = data.tabs?.standard || "{osName} | {version}";
+    document.title = tabTemplate
+      .replace("{osName}", osName)
+      .replace("{version}", version);
+
+    console.log("Main data loaded successfully");
+  } catch (err) {
+    console.warn("Could not load main-data.json", err);
+  }
+}
+
+async function loadSettingsApp() {
+  try {
+    const res = await fetch("./Apps/Settings.json");
+    const data = await res.json();
+    settingsAppData = data;
+
+    const w = data.Window || {};
+    const sections = data.Sections || {};
+    const general = data.General || {};
+    const display = data.Display || {};
+    const privacy = data.Privacy || {};
+
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value || "";
+    };
+
+    setText("settings-sidebar-title", w.sidebarTitle);
+    setText("settings-section-general-label", sections.general?.label);
+    setText("settings-section-display-label", sections.display?.label);
+    setText("settings-section-privacy-label", sections.privacy?.label);
+
+    setText("settings-menu-about-label", general.menu?.about);
+    setText("settings-menu-software-label", general.menu?.softwareUpdate);
+    setText("settings-menu-mode-label", display.menu?.mode);
+    setText("settings-menu-google-label", privacy.menu?.google);
+
+    setText("settings-about-page-title", general.aboutPage?.title);
+    setText("settings-about-creator-label", general.aboutPage?.creatorLabel);
+    setText("settings-about-software-label", general.aboutPage?.softwareLabel);
+
+    setText("settings-software-page-title", general.softwarePage?.title);
+    setText("settings-software-update-label", general.softwarePage?.updateLabel);
+    setText("settings-software-available-label", general.softwarePage?.availableUpdatesLabel);
+    setText("settings-software-changelog-label", general.softwarePage?.changeLogsLabel);
+    setText("settings-software-upcoming-label", general.softwarePage?.upcomingLabel);
+    setText("sw-updates-text", general.softwarePage?.availableUpdatesText);
+
+    setText("settings-display-page-title", display.modePage?.title);
+    setText("settings-display-advanced-title", display.modePage?.advancedTitle);
+    setText("settings-display-advanced-description", display.modePage?.advancedDescription);
+    setText("settings-display-mode-title", display.modePage?.displayModeTitle);
+    setText("settings-display-mode-description", display.modePage?.displayModeDescription);
+
+    setText("settings-google-page-title", privacy.googlePage?.title);
+    setText("settings-google-account-label", privacy.googlePage?.accountLabel);
+    setText("privacy-google-desc-main", privacy.googlePage?.signedOutDescription);
+    setText("privacy-google-desc-safety", privacy.googlePage?.signedOutSafety);
+    setText("settings-google-main-button-text", privacy.googlePage?.signInButton);
+
+    setText("display-dialog-title", display.dialog?.title);
+    setText("display-dialog-description", display.dialog?.description);
+    setText("display-dialog-cancel", display.dialog?.cancel);
+    setText("display-dialog-continue", display.dialog?.continue);
+
+    const optionStandard = document.getElementById("settings-display-option-standard");
+    const optionSimple = document.getElementById("settings-display-option-simple");
+
+    if (optionStandard) optionStandard.textContent = display.modePage?.options?.standard || "Standard";
+    if (optionSimple) optionSimple.textContent = display.modePage?.options?.simple || "Simple";
+
+    const settingsWindowTitle = document.querySelector("#settings-window .window-title");
+    if (settingsWindowTitle) settingsWindowTitle.textContent = w.title || "Settings";
+
+    console.log("Settings app loaded successfully");
+  } catch (err) {
+    console.warn("Could not load Apps/Settings.json", err);
+  }
+}
+
+loadMainData();
+loadSettingsApp();
+
+
 })();
-
-
-
 
 
 
@@ -850,7 +982,7 @@ function renderSettingsSidebarCard() {
         margin-bottom:10px;
         color:#111827;
       ">
-        Sign in with Google
+        ${settingsAppData?.Window?.googleCardSignedOutTitle || "Sign in with Google"}
       </p>
       <button id="btn-google-signin-sidebar" style="
         width:100%;
@@ -864,7 +996,7 @@ function renderSettingsSidebarCard() {
         cursor:pointer;
         font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       ">
-        Sign In
+        ${settingsAppData?.Window?.googleCardSignedOutButton || "Sign In"}
       </button>
     `;
   } else {
@@ -899,7 +1031,7 @@ function renderSettingsSidebarCard() {
           cursor:pointer;
           font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         ">
-          Logout
+          ${settingsAppData?.Window?.googleCardSignedInButton || "Logout"}
         </button>
       </div>
     `;
@@ -919,8 +1051,10 @@ function updateGooglePrivacySection() {
   if (descSafety) descSafety.style.display = isSignedIn ? "none" : "";
 
   if (btnMain) {
-    btnMain.textContent = isSignedIn ? "Logout" : "Sign In with Google";
-    btnMain.style.background = isSignedIn ? "#ef4444" : "#007aff";
+btnMain.textContent = isSignedIn
+  ? (settingsAppData?.Privacy?.googlePage?.logoutButton || "Logout")
+  : (settingsAppData?.Privacy?.googlePage?.signInButton || "Sign In with Google");
+      btnMain.style.background = isSignedIn ? "#ef4444" : "#007aff";
   }
 
   // كرت صغير يعرض الإسم + الإيميل داخل Privacy
@@ -1094,3 +1228,351 @@ aboutDockItem.classList.add("open");
   }
 })();
 
+
+
+async function loadAboutMeApp() {
+    try {
+        const res = await fetch("./Apps/AboutMe.json");
+        const data = await res.json();
+
+        const nameEl = document.getElementById("about-name");
+        const subtitleEl = document.getElementById("about-subtitle");
+        const descriptionEl = document.getElementById("about-description");
+        const avatarEl = document.getElementById("about-avatar");
+
+        const instagramBtn = document.getElementById("about-instagram-btn");
+        const discordBtn = document.getElementById("about-discord-btn");
+        const xBtn = document.getElementById("about-x-btn");
+        const youtubeBtn = document.getElementById("about-youtube-btn");
+
+        if (nameEl) nameEl.textContent = data.name || "";
+        if (subtitleEl) subtitleEl.textContent = data.subtitle || "";
+        if (descriptionEl) descriptionEl.textContent = data.description || "";
+        if (avatarEl) avatarEl.src = data.avatar || "";
+
+        if (instagramBtn && data.socials?.instagram) {
+            instagramBtn.onclick = () => window.open(data.socials.instagram, "_blank");
+        }
+
+        if (discordBtn && data.socials?.discord) {
+            discordBtn.onclick = () => window.open(data.socials.discord, "_blank");
+        }
+
+        if (xBtn && data.socials?.x) {
+            xBtn.onclick = () => window.open(data.socials.x, "_blank");
+        }
+
+        if (youtubeBtn && data.socials?.youtube) {
+            youtubeBtn.onclick = () => window.open(data.socials.youtube, "_blank");
+        }
+
+        console.log("AboutMe app loaded successfully");
+    } catch (error) {
+        console.warn("Failed to load Apps/AboutMe.json", error);
+    }
+}
+
+loadAboutMeApp();
+
+async function loadProjectsApp() {
+    try {
+        const res = await fetch("./Apps/Projects.json");
+        const data = await res.json();
+
+        const titleEl = document.getElementById("projects-section-title");
+        const subtitleEl = document.getElementById("projects-section-subtitle");
+        const listEl = document.getElementById("projects-list");
+
+        if (!listEl) return;
+
+        if (titleEl) {
+            titleEl.textContent = data.Section?.title || "Projects";
+        }
+
+        if (subtitleEl) {
+            subtitleEl.textContent = data.Section?.subtitle || "";
+        }
+
+        const appTags = data.AppTags || {};
+        const projects = Array.isArray(data.Projects) ? data.Projects : [];
+
+        listEl.innerHTML = "";
+
+        const visibleProjects = projects.filter(project => project.show !== false);
+
+        visibleProjects.forEach(project => {
+            const tags = Array.isArray(project.tags) ? project.tags : [];
+            const primaryTagKey = tags[0] || null;
+            const primaryTag = primaryTagKey ? appTags[primaryTagKey] : null;
+
+            const projectItem = document.createElement("div");
+            projectItem.className = "project-item";
+
+            if (primaryTag?.bgColor) {
+                projectItem.style.background = primaryTag.bgColor;
+            }
+
+            const nameEl = document.createElement("h3");
+            nameEl.className = "project-name";
+            nameEl.textContent = project.name || "Untitled Project";
+
+            const descEl = document.createElement("p");
+            descEl.className = "project-desc";
+            descEl.textContent = project.description || "";
+
+            const tagsWrap = document.createElement("div");
+            tagsWrap.className = "project-tags";
+
+            tags.forEach((tagKey, index) => {
+                const tagInfo = appTags[tagKey];
+                const tagEl = document.createElement("span");
+                tagEl.className = "project-tag";
+
+                if (tagInfo) {
+                    tagEl.textContent = tagInfo.label || tagKey;
+
+                    if (index === 0 && primaryTag?.textColor) {
+                        tagEl.style.background = primaryTag.textColor;
+                        tagEl.style.color = "#ffffff";
+                    }
+                } else {
+                    tagEl.textContent = tagKey;
+                }
+
+                tagsWrap.appendChild(tagEl);
+            });
+
+            const websiteLink = project.links?.website?.trim();
+            const githubLink = project.links?.github?.trim();
+
+            let actionsWrap = null;
+
+            if (websiteLink || githubLink) {
+                actionsWrap = document.createElement("div");
+                actionsWrap.className = "project-actions";
+
+                if (websiteLink) {
+                    const websiteBtn = document.createElement("a");
+                    websiteBtn.className = "project-action-btn";
+                    websiteBtn.href = websiteLink;
+                    websiteBtn.target = "_blank";
+                    websiteBtn.rel = "noopener noreferrer";
+                    websiteBtn.textContent = "Website";
+                    actionsWrap.appendChild(websiteBtn);
+                }
+
+                if (githubLink) {
+                    const githubBtn = document.createElement("a");
+                    githubBtn.className = "project-action-btn project-action-btn-secondary";
+                    githubBtn.href = githubLink;
+                    githubBtn.target = "_blank";
+                    githubBtn.rel = "noopener noreferrer";
+                    githubBtn.textContent = "GitHub";
+                    actionsWrap.appendChild(githubBtn);
+                }
+            }
+
+            projectItem.appendChild(nameEl);
+            projectItem.appendChild(descEl);
+
+            if (tags.length > 0) {
+                projectItem.appendChild(tagsWrap);
+            }
+
+            if (actionsWrap) {
+                projectItem.appendChild(actionsWrap);
+            }
+
+            listEl.appendChild(projectItem);
+        });
+
+        console.log("Projects app loaded successfully");
+    } catch (error) {
+        console.warn("Failed to load Apps/Projects.json", error);
+    }
+}
+
+loadProjectsApp();
+
+async function loadWorkspaceApp() {
+    try {
+        const res = await fetch("./Apps/Workspace.json");
+        const data = await res.json();
+
+        const sectionTitle = document.getElementById("workspace-section-title");
+        const sectionSubtitle = document.getElementById("workspace-section-subtitle");
+
+        const areasTitle = document.getElementById("workspace-areas-title");
+        const areasSubtitle = document.getElementById("workspace-areas-subtitle");
+        const areasList = document.getElementById("workspace-areas-list");
+
+        const toolsTitle = document.getElementById("workspace-tools-title");
+        const toolsSubtitle = document.getElementById("workspace-tools-subtitle");
+        const toolsList = document.getElementById("workspace-tools-list");
+
+        const hardwareTitle = document.getElementById("workspace-hardware-title");
+        const hardwareSubtitle = document.getElementById("workspace-hardware-subtitle");
+        const hardwareList = document.getElementById("workspace-hardware-list");
+
+        if (sectionTitle) sectionTitle.textContent = data.Section?.title || "Workspace";
+        if (sectionSubtitle) sectionSubtitle.textContent = data.Section?.subtitle || "";
+
+        if (areasTitle) areasTitle.textContent = data.AreasSection?.title || "Build Areas";
+        if (areasSubtitle) areasSubtitle.textContent = data.AreasSection?.subtitle || "";
+        if (toolsTitle) toolsTitle.textContent = data.ToolsSection?.title || "Tools";
+        if (toolsSubtitle) toolsSubtitle.textContent = data.ToolsSection?.subtitle || "";
+        if (hardwareTitle) hardwareTitle.textContent = data.HardwareSection?.title || "Device Specs";
+        if (hardwareSubtitle) hardwareSubtitle.textContent = data.HardwareSection?.subtitle || "";
+
+        if (areasList) {
+            areasList.innerHTML = "";
+            (data.Areas || []).forEach(area => {
+                const card = document.createElement("div");
+                card.className = "workspace-stack-item";
+
+                const title = document.createElement("h4");
+                title.className = "workspace-stack-title";
+                title.textContent = area.title || "Untitled";
+
+                const desc = document.createElement("p");
+                desc.className = "workspace-stack-description";
+                desc.textContent = area.description || "";
+
+                card.appendChild(title);
+                card.appendChild(desc);
+                areasList.appendChild(card);
+            });
+        }
+
+        if (toolsList) {
+            toolsList.innerHTML = "";
+            (data.Tools || []).forEach(tool => {
+                const pill = document.createElement("div");
+                pill.className = "workspace-tool-pill";
+
+                const name = document.createElement("span");
+                name.className = "workspace-tool-name";
+                name.textContent = tool.name || "Unknown Tool";
+
+                const type = document.createElement("span");
+                type.className = "workspace-tool-type";
+                type.textContent = tool.type || "";
+
+                pill.appendChild(name);
+                pill.appendChild(type);
+                toolsList.appendChild(pill);
+            });
+        }
+
+        if (hardwareList) {
+            hardwareList.innerHTML = "";
+            ((data.Hardware && data.Hardware.items) || []).forEach(spec => {
+                const row = document.createElement("div");
+                row.className = "workspace-spec-row";
+
+                const label = document.createElement("div");
+                label.className = "workspace-spec-label";
+                label.textContent = spec.label || "";
+
+                const valueWrap = document.createElement("div");
+                valueWrap.className = "workspace-spec-value";
+
+                if (Array.isArray(spec.values)) {
+                    spec.values.forEach(value => {
+                        const line = document.createElement("div");
+                        line.textContent = value;
+                        valueWrap.appendChild(line);
+                    });
+                } else {
+                    valueWrap.textContent = spec.value || "";
+                }
+
+                row.appendChild(label);
+                row.appendChild(valueWrap);
+                hardwareList.appendChild(row);
+            });
+        }
+
+        console.log("Workspace app loaded successfully");
+    } catch (error) {
+        console.warn("Failed to load Apps/Workspace.json", error);
+    }
+}
+
+loadWorkspaceApp();
+
+
+async function loadContactApp() {
+    try {
+        const res = await fetch("./Apps/Contact.json");
+        const data = await res.json();
+        contactAppData = data;
+
+        const section = data.Section || {};
+        const fields = data.Form?.fields || {};
+        const form = data.Form || {};
+
+        const windowTitle = document.getElementById("contact-window-title");
+        const appTitle = document.getElementById("contact-app-title");
+        const appSubtitle = document.getElementById("contact-app-subtitle");
+
+        const nameLabel = document.getElementById("contact-name-label");
+        const phoneLabel = document.getElementById("contact-phone-label");
+        const subjectLabel = document.getElementById("contact-subject-label");
+        const messageLabel = document.getElementById("contact-message-label");
+
+        const nameInput = document.getElementById("contact-name");
+        const phoneInput = document.getElementById("contact-phone");
+        const subjectInput = document.getElementById("contact-subject");
+        const messageInput = document.getElementById("contact-message");
+
+        const submitText = document.getElementById("contact-submit-text");
+        const submitIcon = document.getElementById("contact-submit-icon");
+
+        if (windowTitle) windowTitle.textContent = section.windowTitle || "Contact";
+        if (appTitle) appTitle.textContent = section.title || "Get in Touch";
+        if (appSubtitle) appSubtitle.textContent = section.subtitle || "";
+
+        if (nameLabel) nameLabel.textContent = fields.name?.label || "Name";
+        if (phoneLabel) phoneLabel.textContent = fields.phone?.label || "Phone Number";
+        if (subjectLabel) subjectLabel.textContent = fields.subject?.label || "Subject";
+        if (messageLabel) messageLabel.textContent = fields.message?.label || "Message";
+
+        if (nameInput) nameInput.placeholder = fields.name?.placeholder || "";
+        if (phoneInput) phoneInput.placeholder = fields.phone?.placeholder || "";
+        if (subjectInput) subjectInput.placeholder = fields.subject?.placeholder || "";
+        if (messageInput) messageInput.placeholder = fields.message?.placeholder || "";
+
+        if (submitText) submitText.textContent = form.submitButton || "Send Message";
+        if (submitIcon) submitIcon.textContent = form.submitIcon || "✈️";
+
+        console.log("Contact app loaded successfully");
+    } catch (error) {
+        console.warn("Failed to load Apps/Contact.json", error);
+    }
+}
+
+loadContactApp();
+
+
+
+async function loadTerminalApp() {
+    try {
+        const res = await fetch("./Apps/Terminal.json");
+        const data = await res.json();
+        terminalAppData = data;
+
+        const windowTitle = document.getElementById("terminal-window-title");
+        if (windowTitle) {
+            windowTitle.textContent = data.Section?.windowTitle || "Terminal";
+        }
+
+        initializeTerminalContent();
+
+        console.log("Terminal app loaded successfully");
+    } catch (error) {
+        console.warn("Failed to load Apps/Terminal.json", error);
+    }
+}
+
+loadTerminalApp();
