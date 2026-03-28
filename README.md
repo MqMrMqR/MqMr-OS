@@ -1,16 +1,60 @@
 # MqMr-OS
-2.1.0v
+2.1.0
+    "changelog": 
 
 
 
-      { "version": "Mar 28 2026 | 2.1.0v", "label": "Fixed Fetching Version (Simple), Changed Profile Picture" },
-      { "version": "Dec 30 2025 | 2.0.0v", "label": "New Display Mode Has Been Added (Phone), Fixed (Project) App " },
-      { "version": "Dec 9 2025 | 1.1.0v", "label": "New Display Mode Has Been Added (Simple) " },
-      { "version": "Nov 30 2025 | 1.0.2v", "label": "Fixed The Terminal, Added a Sign In System, Improved The Design, Added a contact system " },
-      { "version": "Nov 29 2025 | 1.0.1v", "label": "Added New App: Settings, \nChanged the font, \nfixed some issues, \nReleased The Terminal" },
 
-      { "version": "Nov 28 2025 | 1.0.0v", "label": "First Release" }
+     {
+      "version": "Mar 28 2026 | 3.0.0v",
+      "label": "Refactored the (Standard) version by moving all text into a global file for each app, ensuring that both (Simple) and (Phone) versions use the same content too in the next update.\nRemoved the Skills app.\nAdded the Workspace app.\nUpdated the Terminal to fix layout issues and to support adding and removing Skills and Workspace app commands.\nUpdated Settings to improve the Changelog section layout and to add a \"What's Next\" section.\nUpdated the Projects app by redesigning the layout, adding buttons to open project links, and enhancing the badge/tag system."
+    },
+    {
+      "version": "Mar 28 2026 | 2.1.0v",
+      "label": "Fixed Fetching Version (Simple), Changed Profile Picture"
+    },
+    {
+      "version": "Dec 30 2025 | 2.0.0v",
+      "label": "New Display Mode Has Been Added (Phone), Fixed (Project) App"
+    },
+    {
+      "version": "Dec 9 2025 | 1.1.0v",
+      "label": "ew Display Mode Has Been Added (Simple)"
+    },
+    {
+      "version": "Nov 30 2025 | 1.0.2v",
+      "label": "Fixed The Terminal, Added a Sign In System, Improved The Design, Added a contact system"
+    },
+    {
+      "version": "Nov 29 2025 | 1.0.1v",
+      "label": "Added New App: Settings, \nChanged the font, \nfixed some issues, \nReleased The Terminal"
+    },
+    {
+      "version": "Nov 28 2025 | 1.0.0v",
+      "label": "First Release"
+    }
+    
+  
 
 
+  "What’s Next": 
+  
+      {
+        "label": "Clean Up the code."
+      },
+      {
+        "label": "Refactor the (Simple) & (Phone) too."
+      },
+      {
+        "label": "Fix the app-focus system."
+      },
+      {
+        "label": "Fix the app-title position."
+      },
+      {
+        "label": "Add Window Resizing system."
+      }
+    
+  
 
 Created By a Human and an AI
