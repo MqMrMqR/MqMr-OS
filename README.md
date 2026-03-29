@@ -6,7 +6,7 @@
 
     {
       "version": "Mar 29 2026 | 3.1.0v",
-      "label": "Refactored the (Simple) version to use the shared JSON-based app content system.\nRemoved the legacy Skills section from (Simple) and replaced it with the Workspace app.\nSynced the display mode warning dialog in (Simple) with the (Standard) version."
+      "label": "Refactored the (Simple) version to use the shared JSON-based app content system.\nRemoved the legacy Skills section from (Simple) and replaced it with the Workspace app.\nSynced the display mode warning dialog in (Simple) with the (Standard) version.\nChanged Domain from (mqmr.lol) to (mqmr.bio)"
     },
      {
       "version": "Mar 28 2026 | 3.0.0v",
