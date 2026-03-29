@@ -1,10 +1,13 @@
 # MqMr-OS
-3.0.0
+3.1.0
     "changelog": 
 
 
 
-
+    {
+      "version": "Mar 29 2026 | 3.1.0v",
+      "label": "Refactored the (Simple) version to use the shared JSON-based app content system.\nRemoved the legacy Skills section from (Simple) and replaced it with the Workspace app.\nSynced the display mode warning dialog in (Simple) with the (Standard) version."
+    },
      {
       "version": "Mar 28 2026 | 3.0.0v",
       "label": "Refactored the (Standard) version by moving all text into a global file for each app, ensuring that both (Simple) and (Phone) versions use the same content too in the next update.\nRemoved the Skills app.\nAdded the Workspace app.\nUpdated the Terminal to fix layout issues and to support adding and removing Skills and Workspace app commands.\nUpdated Settings to improve the Changelog section layout and to add a \"What's Next\" section.\nUpdated the Projects app by redesigning the layout, adding buttons to open project links, and enhancing the badge/tag system."
