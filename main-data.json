@@ -2,7 +2,9 @@
   "site": {
     "osName": "MqMr's OS",
     "creator": "MqMr",
-    "version": "3.0.0v"
+    "version": "3.1.0v",
+    "osLink": "mqmr.bio"
+    
   },
 
   "tabs": {
@@ -12,7 +14,11 @@
   },
 
   "changelog": [
-   {
+    {
+      "version": "Mar 29 2026 | 3.1.0v",
+      "label": "Refactored the (Simple) version to use the shared JSON-based app content system.\nRemoved the legacy Skills section from (Simple) and replaced it with the Workspace app.\nSynced the display mode warning dialog in (Simple) with the (Standard) version.\nChanged Domain from (mqmr.lol) to (mqmr.bio)"
+    },
+    {
       "version": "Mar 28 2026 | 3.0.0v",
       "label": "Refactored the (Standard) version by moving all text into a global file for each app, ensuring that both (Simple) and (Phone) versions use the same content too in the next update.\nRemoved the Skills app.\nAdded the Workspace app.\nUpdated the Terminal to fix layout issues and to support adding and removing Skills and Workspace app commands.\nUpdated Settings to improve the Changelog section layout and to add a \"What's Next\" section.\nUpdated the Projects app by redesigning the layout, adding buttons to open project links, and enhancing the badge/tag system."
     },
@@ -50,7 +56,7 @@
         "label": "Clean Up the code."
       },
       {
-        "label": "Refactor the (Simple) & (Phone) too."
+        "label": "Refactor the (Phone) display."
       },
       {
         "label": "Fix the app-focus system."
