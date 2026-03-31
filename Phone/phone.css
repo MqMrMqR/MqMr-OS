@@ -200,3 +200,133 @@ body {
   font-size: 14px;
   font-weight: 600;
 }
+
+
+/* ===== PROJECTS (JSON + Advanced) ===== */
+
+.projects-simple {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.projects-simple .card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.projects-simple .card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.projects-simple .card-tagline {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.projects-simple .projects-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.projects-simple .project-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.projects-simple .project-item {
+  padding: 14px;
+  border-radius: 16px;
+  background: #f3f4f6;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+.projects-simple .project-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.10);
+}
+
+.projects-simple .project-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.projects-simple .project-desc {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.projects-simple .project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.projects-simple .project-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+.projects-simple .project-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.projects-simple .project-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  min-width: 78px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(17, 24, 39, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.14),
+    inset 0 0 0 1px rgba(255,255,255,0.10);
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease,
+    background 0.14s ease;
+}
+
+.projects-simple .project-action-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.projects-simple .project-action-btn-secondary {
+  background: rgba(255, 255, 255, 0.72);
+  color: #111827;
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.10),
+    inset 0 0 0 1px rgba(255,255,255,0.45);
+}

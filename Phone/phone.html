@@ -16,98 +16,78 @@
   <main class="phone-app">
 
     <!-- ===== ABOUT ===== -->
-    <section class="card about-card">
+<section class="card about-card">
 
-      <div class="avatar-ring">
-        <img src="../assets/avatar.jpg" alt="MqMr avatar" />
-      </div>
+  <div class="avatar-ring">
+    <img id="about-avatar" src="" alt="MqMr avatar" />
+  </div>
 
-      <h1 class="about-name">MqMr</h1>
-      <p class="about-subtitle">MqMr AKA Ethan</p>
+  <h1 class="about-name" id="about-name"></h1>
+  <p class="about-subtitle" id="about-subtitle"></p>
 
-      <p class="about-desc">
-        Crafting digital experiences with code and creativity.
-      </p>
+  <p class="about-desc" id="about-description"></p>
 
-      <div class="socials">
-        <button onclick="openLink('https://www.instagram.com/_.wp1/')" class="ig">Instagram</button>
-        <button onclick="openLink('https://discord.com/users/1367578118830817420')" class="dc">Discord</button>
-        <button onclick="openLink('https://x.com/mqmrmqr')" class="x">X</button>
-        <button onclick="openLink('https://www.youtube.com/@MqMr')" class="yt">YouTube</button>
-      </div>
+  <div class="socials">
+    <button id="about-instagram-btn" class="ig">Instagram</button>
+    <button id="about-discord-btn" class="dc">Discord</button>
+    <button id="about-x-btn" class="x">X</button>
+    <button id="about-youtube-btn" class="yt">YouTube</button>
+  </div>
 
-    </section>
+</section>
 
     <!-- ===== PROJECTS ===== -->
-    <section class="card projects-card">
+<section class="card projects-card">
+  <div class="projects-simple">
+    <div class="card-header">
+      <h2 class="card-title" id="projects-section-title"></h2>
+      <p class="card-tagline" id="projects-section-subtitle"></p>
+    </div>
 
-      <header>
-        <h2>Projects</h2>
-        <p class="muted" id="phone-projects-version">
-          Coming Soon!, Current Version: —
-        </p>
-      </header>
-
-      <div class="project-item">
-        <h3>MqMr's OS</h3>
-        <p>
-          A macOS–inspired web desktop experience with draggable windows,
-          apps, and a custom settings panel.
-        </p>
-        <span class="tag">Personal Project</span>
-      </div>
-
-      <div class="project-item soon">
-        <h3>Next Big Thing</h3>
-        <p>
-          A new experience currently under construction.
-        </p>
-        <span class="badge">Coming Soon</span>
-      </div>
-
-    </section>
+    <div class="projects-content">
+      <div class="project-list" id="projects-list"></div>
+    </div>
+  </div>
+</section>
 
     <!-- ===== CONTACT ===== -->
 <section class="card contact-card">
 
   <header>
-    <h2>Contact Me</h2>
-    <p class="muted">
-      Have a project in mind or just want to say hi?
-    </p>
+    <h2 id="contact-app-title"></h2>
+    <p class="muted" id="contact-app-subtitle"></p>
   </header>
 
   <form class="contact-form" onsubmit="return handlePhoneContactSubmit(event)">
 
     <div class="contact-field">
-      <label>Name</label>
-      <input type="text" name="name" placeholder="Ethan Graves" required />
+      <label id="contact-name-label" for="contact-name"></label>
+      <input id="contact-name" type="text" name="contact-name" required />
     </div>
 
     <div class="contact-field">
-      <label>Phone Number</label>
-      <input type="text" name="phone" placeholder="(optional)" />
+      <label id="contact-phone-label" for="contact-phone"></label>
+      <input id="contact-phone" type="text" name="contact-phone" />
     </div>
 
     <div class="contact-field">
-      <label>Subject</label>
-      <input type="text" name="subject" placeholder="Project inquiry..." required />
+      <label id="contact-subject-label" for="contact-subject"></label>
+      <input id="contact-subject" type="text" name="contact-subject" required />
     </div>
 
     <div class="contact-field">
-      <label>Message</label>
-      <textarea name="message" rows="4"
-        placeholder="Tell me about your project..." required></textarea>
+      <label id="contact-message-label" for="contact-message"></label>
+      <textarea id="contact-message" name="contact-message" rows="4" required></textarea>
     </div>
 
     <button type="submit" class="contact-submit">
-      ✈️ Send Message
+      <span id="contact-submit-icon">✈️</span>
+      <span id="contact-submit-text">Send Message</span>
     </button>
 
   </form>
 
 </section>
-
 
   </main>
 
