@@ -2,7 +2,7 @@
   "site": {
     "osName": "MqMr's OS",
     "creator": "MqMr",
-    "version": "3.1.0v",
+    "version": "4.0.0v",
     "osLink": "mqmr.bio"
     
   },
@@ -14,6 +14,10 @@
   },
 
   "changelog": [
+    {
+      "version": "Mar 31 2026 | 4.0.0v",
+      "label": "Refactored the (Phone) version to use the shared JSON-based app content system.\nUpgraded the (Phone) Projects app to match the advanced (Standard) design and JSON-driven structure.\nFixed window movement boundaries and corrected drag behavior across the desktop.\nFixed window maximize sizing and layout issues so apps properly fill the workspace.\nImproved maximized app layouts to scale their internal content correctly instead of keeping the old compact size.\nAdded a full Window Resize system with support for resizing from all edges and corners.\nAdded a Windows-style Window Snap system with maximize, half-screen, and quarter-screen snapping.\nAdded Snap Preview feedback while dragging windows.\nImproved restore behavior when dragging snapped or maximized windows.\nExpanded the window controls hit area while preserving the original visual style.\nUpdated Dock indicators so the focused app uses a distinct active dot color.\nChanged Close behavior to fully reset app state while keeping Minimize state-preserving.\nImproved the window close animation to feel more natural and closer to macOS.\nFixed Settings so it fully resets to its default section when closed.\nFixed multiple interaction issues across dragging, maximizing, snapping, resizing, and window state handling."
+    },
     {
       "version": "Mar 29 2026 | 3.1.0v",
       "label": "Refactored the (Simple) version to use the shared JSON-based app content system.\nRemoved the legacy Skills section from (Simple) and replaced it with the Workspace app.\nSynced the display mode warning dialog in (Simple) with the (Standard) version.\nChanged Domain from (mqmr.lol) to (mqmr.bio)"
@@ -56,16 +60,13 @@
         "label": "Clean Up the code."
       },
       {
-        "label": "Refactor the (Phone) display."
+        "label": "Adding Features to the top bar (Standard) and adding features to the reload icon and the back arrow icon."
       },
       {
-        "label": "Fix the app-focus system."
+        "label": "Add Apps Manager into the Settings App."
       },
       {
         "label": "Fix the app-title position."
-      },
-      {
-        "label": "Add Window Resizing system."
       }
     ]
   }

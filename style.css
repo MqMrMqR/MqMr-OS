@@ -103,11 +103,11 @@
 
         .desktop {
             position: fixed;
-            top: 28px;
+            top: 32px;
             left: 0;
             right: 0;
             bottom: 80px;
-            overflow: hidden;
+            overflow: visible;
             
         }
 
@@ -143,70 +143,95 @@
             animation: close 0.18s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
         }
 
-        .window.maximized {
-            top: 28px !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 80px !important;
-            width: 100% !important;
-            height: calc(100vh - 108px) !important;
-            border-radius: 0;
-            transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-
-        .window-titlebar {
-            height: 52px;
-            background: #faf8fb;
-            border-bottom: 0px solid rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            cursor: move;
-            user-select: none;
-                pointer-events: auto;
-
-        }
-
-
+.window.maximized {
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: calc(100vh - 32px) !important;
+    border-radius: 0;
+    transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.window-titlebar {
+    position: relative;
+    height: 52px;
+    background: #faf8fb;
+    border-bottom: 0px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    cursor: move;
+    user-select: none;
+    pointer-events: auto;
+}
 .dock-item.terminal {
     background: linear-gradient(135deg, #222, #555);
 }
-        .window-controls {
-            display: flex;
-            gap: 8px;
-        }
+.window-controls {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 0;
+}
+.window-control {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 8px;
+    background: transparent;
+    transition: background 0.15s ease;
+}
 
-        .window-control {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: filter 0.2s;
-        }
+.window-control::before {
+    content: "";
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transition: filter 0.2s;
+}
 
-        .window-control:hover {
-            filter: brightness(0.9);
-        }
+.window-control:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
 
-        .window-control.close {
-            background: #FF5F57;
-        }
+.window-control:hover::before {
+    filter: brightness(0.9);
+}
 
-        .window-control.minimize {
-            background: #FFBD2E;
-        }
+.window-control.close::before {
+    background: #FF5F57;
+}
 
-        .window-control.maximize {
-            background: #28C840;
-        }
+.window-control.minimize::before {
+    background: #FFBD2E;
+}
 
-        .window-title {
-            flex: 1;
-            text-align: center;
-            font-size: 13px;
-            font-weight: 600;
-            color: #3a4658;
-        }
+.window-control.maximize::before {
+    background: #28C840;
+}
+
+.window-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 13px;
+    font-weight: 600;
+    color: #3a4658;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 180px);
+    pointer-events: none;
+}
+.window-titlebar-spacer {
+    display: none !important;
+}
 
 .window-content {
     flex: 1;
@@ -445,15 +470,76 @@
             opacity: 1;
         }
 
-        .resize-handle {
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            width: 20px;
-            height: 20px;
-            cursor: nwse-resize;
-        }
+.resize-handle {
+    position: absolute;
+    z-index: 20;
+}
 
+/* Edges */
+.resize-handle-n {
+    top: -3px;
+    left: 10px;
+    right: 10px;
+    height: 6px;
+    cursor: ns-resize;
+}
+
+.resize-handle-e {
+    top: 10px;
+    right: -3px;
+    bottom: 10px;
+    width: 6px;
+    cursor: ew-resize;
+}
+
+.resize-handle-s {
+    left: 10px;
+    right: 10px;
+    bottom: -3px;
+    height: 6px;
+    cursor: ns-resize;
+}
+
+.resize-handle-w {
+    top: 10px;
+    left: -3px;
+    bottom: 10px;
+    width: 6px;
+    cursor: ew-resize;
+}
+
+/* Corners */
+.resize-handle-ne {
+    top: -3px;
+    right: -3px;
+    width: 12px;
+    height: 12px;
+    cursor: nesw-resize;
+}
+
+.resize-handle-nw {
+    top: -3px;
+    left: -3px;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+}
+
+.resize-handle-se {
+    right: -3px;
+    bottom: -3px;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+}
+
+.resize-handle-sw {
+    left: -3px;
+    bottom: -3px;
+    width: 12px;
+    height: 12px;
+    cursor: nesw-resize;
+}
 .window.hidden {
     opacity: 0 !important;
     pointer-events: none;
@@ -512,13 +598,18 @@
     height: 8px;
     background: #223041;
     border-radius: 50%;
-    opacity: 0; /* مخفية افتراضياً */
-    transition: opacity 0.2s ease;
-}
-.dock-item.open .dock-dot {
-    opacity: 1; /* تظهر لو التطبيق شغال */
+    opacity: 0;
+    transition: opacity 0.2s ease, background 0.2s ease;
 }
 
+.dock-item.open .dock-dot {
+    opacity: 1;
+}
+
+.dock-item.focused .dock-dot {
+    opacity: 1;
+    background: #aab3bf;
+}
 
         @keyframes fadeIn {
             from {
@@ -545,7 +636,7 @@
         @keyframes close {
             to {
                 opacity: 0;
-                transform: scale(0.92);
+                transform: scale(0.96);
             }
         }
 
@@ -553,14 +644,15 @@
 @keyframes mac-close {
     0% {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: scale(1);
+        filter: blur(0px);
     }
     100% {
         opacity: 0;
-        transform: scale(0.75) translateY(20px);
+        transform: scale(0.9);
+        filter: blur(1px);
     }
 }
-
 /* MINIMIZE — macOS Genie Effect-ish */
 @keyframes mac-minimize {
     0% {
@@ -579,9 +671,8 @@
 
 /* classes أثناء التشغيل */
 .window.closing {
-    animation: mac-close 0.22s cubic-bezier(.25,.1,.25,1) forwards;
+    animation: mac-close 0.18s cubic-bezier(.25,.1,.25,1) forwards;
 }
-
 .window.minimizing {
     animation: mac-minimize 0.28s cubic-bezier(.4,0,.2,1) forwards;
 }
@@ -1602,4 +1693,134 @@
     display: block;
     font-size: 13px;
     color: #6b7280;
+}
+
+
+
+/* ================= MAXIMIZED WINDOW CONTENT TUNING ================= */
+
+.window.maximized .window-content {
+    padding: 40px;
+}
+
+/* About */
+.window.maximized#about-window .window-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.window.maximized#about-window #about-name {
+    font-size: 38px !important;
+}
+
+.window.maximized#about-window #about-subtitle {
+    font-size: 20px !important;
+}
+
+.window.maximized#about-window #about-description {
+    max-width: 820px;
+    font-size: 18px !important;
+    line-height: 1.9 !important;
+}
+
+/* Contact */
+.window.maximized#contact-window .contact-window-content {
+    justify-content: center;
+    align-items: flex-start;
+    padding: 48px 40px 40px;
+}
+
+.window.maximized#contact-window .contact-card {
+    max-width: 760px;
+}
+
+.window.maximized#contact-window .contact-title {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+.window.maximized#contact-window .contact-subtitle {
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.window.maximized#contact-window .contact-form input,
+.window.maximized#contact-window .contact-form textarea {
+    font-size: 15px;
+    padding: 14px 16px;
+}
+
+.window.maximized#contact-window .contact-form textarea {
+    min-height: 180px;
+}
+
+.window.maximized#contact-window .contact-submit-btn {
+    font-size: 15px;
+    padding: 12px 30px;
+}
+
+/* Projects */
+.window.maximized#projects-window .projects-simple .card-title {
+    font-size: 30px;
+}
+
+.window.maximized#projects-window .projects-simple .card-tagline {
+    font-size: 16px;
+}
+
+.window.maximized#projects-window .projects-simple .project-name {
+    font-size: 18px;
+}
+
+.window.maximized#projects-window .projects-simple .project-desc {
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+/* Workspace */
+.window.maximized#workspace-window .workspace-main-title {
+    font-size: 38px;
+}
+
+.window.maximized#workspace-window .workspace-main-subtitle {
+    font-size: 17px;
+}
+
+.window.maximized#workspace-window .workspace-grid {
+    gap: 22px;
+}
+
+
+/* ================= WINDOWS-LIKE SNAP PREVIEW ================= */
+
+.snap-preview {
+    position: fixed;
+    z-index: 9998;
+    pointer-events: none;
+    border-radius: 12px;
+    background: rgba(122, 162, 255, 0.18);
+    border: 1px solid rgba(122, 162, 255, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    transform: scale(0.985);
+    transition:
+        opacity 0.12s ease,
+        transform 0.12s ease,
+        left 0.12s ease,
+        top 0.12s ease,
+        width 0.12s ease,
+        height 0.12s ease;
+}
+
+.snap-preview.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.window.snapped {
+    transition: all 0.18s cubic-bezier(.2,.8,.2,1);
 }

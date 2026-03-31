@@ -27,11 +27,19 @@ let isResizing = false;
 
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let dragPendingRestore = false;
+let pendingPointerX = 0;
+let pendingPointerY = 0;
 
 let startX = 0;
 let startY = 0;
 let startWidth = 0;
 let startHeight = 0;
+let startLeft = 0;
+let startTop = 0;
+let resizeDirection = "";
+let pendingSnapZone = null;
+let titlebarClickTimer = null;
 
 let zIndexCounter = 2000;
 
@@ -45,6 +53,261 @@ let contactAppData = null;
 let terminalAppData = null;
 let settingsAppData = null;
 let mainData = null;
+
+function resetWindowState(win) {
+    if (!win) return;
+
+    win.classList.remove("maximized", "snapped", "active", "minimizing", "closing");
+win.dataset.snapState = "";
+
+    win.style.top = win.dataset.defaultTop || "";
+    win.style.left = win.dataset.defaultLeft || "";
+    win.style.width = win.dataset.defaultWidth || "";
+    win.style.height = win.dataset.defaultHeight || "";
+    win.style.right = "";
+    win.style.bottom = "";
+    win.style.transform = "";
+    win.style.filter = "";
+
+    const content = win.querySelector(".window-content");
+    if (content) {
+        content.scrollTop = 0;
+        content.scrollLeft = 0;
+    }
+
+    if (typeof win.resetAppState === "function") {
+        win.resetAppState();
+    }
+}
+
+function updateFocusedDockDot(activeWindowId) {
+    document.querySelectorAll(".dock-item").forEach(item => {
+        item.classList.remove("focused");
+    });
+
+    if (!activeWindowId) return;
+
+    const activeDockItem = document.querySelector(`.dock-item[data-window="${activeWindowId}"]`);
+    if (activeDockItem) {
+        activeDockItem.classList.add("focused");
+    }
+}
+
+function getDesktopRect() {
+    return document.querySelector(".desktop").getBoundingClientRect();
+}
+
+function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
+function saveWindowRestoreBounds(win) {
+    const desktopRect = getDesktopRect();
+    const rect = win.getBoundingClientRect();
+
+    win.dataset.restoreLeft = (rect.left - desktopRect.left) + "px";
+    win.dataset.restoreTop = (rect.top - desktopRect.top) + "px";
+    win.dataset.restoreWidth = rect.width + "px";
+    win.dataset.restoreHeight = rect.height + "px";
+}
+
+function restoreWindowBounds(win) {
+    win.classList.remove("maximized", "snapped");
+    win.dataset.snapState = "";
+
+    win.style.left = win.dataset.restoreLeft || win.dataset.defaultLeft || "";
+    win.style.top = win.dataset.restoreTop || win.dataset.defaultTop || "";
+    win.style.width = win.dataset.restoreWidth || win.dataset.defaultWidth || "";
+    win.style.height = win.dataset.restoreHeight || win.dataset.defaultHeight || "";
+    win.style.right = "";
+    win.style.bottom = "";
+}
+
+function clearSnapPreview() {
+    pendingSnapZone = null;
+    const preview = document.getElementById("snap-preview");
+    if (!preview) return;
+    preview.classList.remove("visible");
+}
+
+function getSnapZone(clientX, clientY) {
+    const desktopRect = getDesktopRect();
+
+    const edgeX = 28;
+    const edgeY = 28;
+
+    const topBandHeight = 90;
+    const bottomBandHeight = 70;
+    const cornerWidth = Math.min(220, window.innerWidth * 0.22);
+
+    const nearLeft = clientX <= edgeX;
+    const nearRight = clientX >= window.innerWidth - edgeX;
+    const nearTop = clientY <= desktopRect.top + edgeY;
+    const nearBottom = clientY >= window.innerHeight - edgeY;
+
+    const inTopBand = clientY <= desktopRect.top + topBandHeight;
+    const inBottomBand = clientY >= window.innerHeight - bottomBandHeight;
+
+    const inTopLeftCornerZone = inTopBand && clientX <= cornerWidth;
+    const inTopRightCornerZone = inTopBand && clientX >= window.innerWidth - cornerWidth;
+
+    const inBottomLeftCornerZone = inBottomBand && clientX <= cornerWidth;
+    const inBottomRightCornerZone = inBottomBand && clientX >= window.innerWidth - cornerWidth;
+
+    if (inTopLeftCornerZone) return "top-left";
+    if (inTopRightCornerZone) return "top-right";
+    if (inBottomLeftCornerZone) return "bottom-left";
+    if (inBottomRightCornerZone) return "bottom-right";
+
+    if (inTopBand) return "maximize";
+    if (nearLeft) return "left";
+    if (nearRight) return "right";
+
+    return null;
+}
+
+function getSnapPreviewRect(zone) {
+    const desktopRect = getDesktopRect();
+
+    const fullX = 0;
+    const fullY = desktopRect.top;
+    const fullW = window.innerWidth;
+    const fullH = window.innerHeight - desktopRect.top;
+
+    const halfW = fullW / 2;
+    const halfH = fullH / 2;
+
+    switch (zone) {
+        case "maximize":
+            return { left: fullX, top: fullY, width: fullW, height: fullH };
+
+        case "left":
+            return { left: fullX, top: fullY, width: halfW, height: fullH };
+
+        case "right":
+            return { left: halfW, top: fullY, width: halfW, height: fullH };
+
+        case "top-left":
+            return { left: fullX, top: fullY, width: halfW, height: halfH };
+
+        case "top-right":
+            return { left: halfW, top: fullY, width: halfW, height: halfH };
+
+        case "bottom-left":
+            return { left: fullX, top: fullY + halfH, width: halfW, height: halfH };
+
+        case "bottom-right":
+            return { left: halfW, top: fullY + halfH, width: halfW, height: halfH };
+
+        default:
+            return null;
+    }
+}
+
+function showSnapPreview(zone) {
+    const preview = document.getElementById("snap-preview");
+    if (!preview) return;
+
+    if (!zone) {
+        clearSnapPreview();
+        return;
+    }
+
+    const rect = getSnapPreviewRect(zone);
+    if (!rect) {
+        clearSnapPreview();
+        return;
+    }
+
+    pendingSnapZone = zone;
+    preview.style.left = rect.left + "px";
+    preview.style.top = rect.top + "px";
+    preview.style.width = rect.width + "px";
+    preview.style.height = rect.height + "px";
+    preview.classList.add("visible");
+}
+
+function toggleWindowMaximize(win) {
+    if (!win.classList.contains("maximized")) {
+        if (!win.classList.contains("snapped")) {
+            saveWindowRestoreBounds(win);
+        }
+
+        win.classList.remove("snapped");
+        win.dataset.snapState = "";
+        win.style.right = "";
+        win.style.bottom = "";
+        win.classList.add("maximized");
+    } else {
+        restoreWindowBounds(win);
+    }
+}
+
+function snapWindow(win, zone) {
+    if (zone === "maximize") {
+        toggleWindowMaximize(win);
+        return;
+    }
+
+    if (!win.classList.contains("maximized") && !win.classList.contains("snapped")) {
+        saveWindowRestoreBounds(win);
+    }
+
+    const desktopRect = getDesktopRect();
+    const rect = getSnapPreviewRect(zone);
+    if (!rect) return;
+
+    win.classList.remove("maximized");
+    win.classList.add("snapped");
+    win.dataset.snapState = zone;
+
+    win.style.left = (rect.left - desktopRect.left) + "px";
+    win.style.top = (rect.top - desktopRect.top) + "px";
+    win.style.width = rect.width + "px";
+    win.style.height = rect.height + "px";
+    win.style.right = "";
+    win.style.bottom = "";
+}
+
+function restoreForDragIfNeeded(win, pointerX, pointerY) {
+    const wasMaximized = win.classList.contains("maximized");
+    const wasSnapped = win.classList.contains("snapped");
+
+    if (!wasMaximized && !wasSnapped) return null;
+
+    const oldRect = win.getBoundingClientRect();
+    const oldWidth = oldRect.width;
+
+    restoreWindowBounds(win);
+
+    const desktopRect = getDesktopRect();
+    const restoredWidth = parseFloat(win.style.width) || oldRect.width;
+    const restoredHeight = parseFloat(win.style.height) || oldRect.height;
+
+    const pointerRatioX = clamp((pointerX - oldRect.left) / oldWidth, 0.12, 0.88);
+    const newLeftViewport = clamp(
+        pointerX - restoredWidth * pointerRatioX,
+        0,
+        window.innerWidth - restoredWidth
+    );
+
+    const newTopViewport = clamp(
+        pointerY - 18,
+        desktopRect.top,
+        window.innerHeight - restoredHeight
+    );
+
+    win.style.left = (newLeftViewport - desktopRect.left) + "px";
+    win.style.top = (newTopViewport - desktopRect.top) + "px";
+
+    return {
+        left: newLeftViewport,
+        top: newTopViewport,
+        width: restoredWidth,
+        height: restoredHeight
+    };
+}
+
 /* ================= EMERGENCY END DRAG ================= */
 function endDragForcefully() {
     isDragging = false;
@@ -73,7 +336,7 @@ document.querySelectorAll(".dock-item").forEach(item => {
         win.classList.add("active");
         win.style.display = "flex";
         win.style.zIndex = ++zIndexCounter;
-
+updateFocusedDockDot(id);
         // إظهار النقطة تحت التطبيق
         item.classList.add("open");
 
@@ -88,6 +351,13 @@ document.querySelectorAll(".dock-item").forEach(item => {
 /* ================= WINDOW SETUP ================= */
 document.querySelectorAll(".window").forEach(win => {
 
+    if (!win.dataset.defaultTop) {
+        win.dataset.defaultTop = win.style.top || "";
+        win.dataset.defaultLeft = win.style.left || "";
+        win.dataset.defaultWidth = win.style.width || "";
+        win.dataset.defaultHeight = win.style.height || "";
+    }
+
   // عند الضغط على أي مكان داخل النافذة → تصبح هي النافذة النشطة
 win.addEventListener("pointerdown", () => {
     document.querySelectorAll(".window").forEach(w => {
@@ -95,7 +365,7 @@ win.addEventListener("pointerdown", () => {
     });
     win.classList.add("active");
     win.style.zIndex = ++zIndexCounter;
-
+updateFocusedDockDot(win.id);
     if (win.id === "terminal-window") {
         // رجّع الكتابة للتيرمينال
         focusTerminalInput();
@@ -117,7 +387,7 @@ window.addEventListener("pointerdown", (e) => {
 });
 
     const titlebar = win.querySelector(".window-titlebar");
-    const resizeH = win.querySelector(".resize-handle");
+const resizeHandles = win.querySelectorAll(".resize-handle");
 
     const closeBtn = win.querySelector(".window-control.close");
     const minBtn   = win.querySelector(".window-control.minimize");
@@ -128,18 +398,22 @@ window.addEventListener("pointerdown", (e) => {
 
 closeBtn.addEventListener("pointerdown", e => {
     e.stopPropagation();
+
+    win.classList.remove("minimizing");
     win.classList.add("closing");
 
     setTimeout(() => {
         win.classList.add("hidden");
-        win.classList.remove("active", "closing");
+        resetWindowState(win);
 
-        // إزالة النقطة من الـ Dock
         const dockItem = document.querySelector(`.dock-item[data-window='${win.id}']`);
-        dockItem.classList.remove("open");
-    }, 220);
+        if (dockItem) {
+            dockItem.classList.remove("open");
+            const activeWindow = document.querySelector(".window.active:not(.hidden)");
+updateFocusedDockDot(activeWindow ? activeWindow.id : null);
+        }
+    }, 190);
 });
-
     /* ----- MINIMIZE ----- */
 minBtn.addEventListener("pointerdown", e => {
     e.stopPropagation();
@@ -148,54 +422,77 @@ minBtn.addEventListener("pointerdown", e => {
     setTimeout(() => {
         win.classList.add("hidden");
         win.classList.remove("active", "minimizing");
+        const activeWindow = document.querySelector(".window.active:not(.hidden)");
+updateFocusedDockDot(activeWindow ? activeWindow.id : null);
     }, 280); // مدة الأنيميشن
 });
 
-    /* ----- MAXIMIZE ----- */
-    maxBtn.addEventListener("pointerdown", e => {
-        e.stopPropagation();
-        win.classList.toggle("maximized");
-    });
+/* ----- MAXIMIZE ----- */
+maxBtn.addEventListener("pointerdown", e => {
+    e.stopPropagation();
+    toggleWindowMaximize(win);
+});
 
-    /* ----- DRAG START ----- */
+
+
+/* ----- DRAG START / DOUBLE CLICK ----- */
 titlebar.addEventListener("pointerdown", e => {
-    if (e.target.classList.contains("window-control")) return;
-    if (win.classList.contains("maximized")) return;
+    if (e.target.closest(".window-control")) return;
+    if (e.button !== 0) return;
 
-    // جعل باقي النوافذ غير نشطة
     document.querySelectorAll(".window").forEach(w => {
         if (w !== win) w.classList.remove("active");
     });
 
     win.classList.add("active");
-    if (e.target.classList.contains("window-control")) return;
-    if (win.classList.contains("maximized")) return;
+    win.style.zIndex = ++zIndexCounter;
+    updateFocusedDockDot(win.id);
 
-    isDragging = true;
+    if (titlebarClickTimer) {
+        clearTimeout(titlebarClickTimer);
+        titlebarClickTimer = null;
+
+        dragPendingRestore = false;
+        isDragging = false;
+        currentWindow = null;
+
+        toggleWindowMaximize(win);
+        return;
+    }
+
+    titlebarClickTimer = setTimeout(() => {
+        titlebarClickTimer = null;
+    }, 240);
+
     currentWindow = win;
+    isDragging = true;
+
+    pendingPointerX = e.clientX;
+    pendingPointerY = e.clientY;
+
+    dragPendingRestore =
+        win.classList.contains("maximized") ||
+        win.classList.contains("snapped");
 
     const rect = win.getBoundingClientRect();
     dragOffsetX = e.clientX - rect.left;
     dragOffsetY = e.clientY - rect.top;
 
-    // وضع المواضع الحالية حتى لا يحصل jump
     smoothX = rect.left;
     smoothY = rect.top;
     targetX = smoothX;
     targetY = smoothY;
 
-    win.style.zIndex = ++zIndexCounter;
     win.style.transition = "none";
     win.style.willChange = "left, top";
-
-    // شكل الماوس (macOS style)
     document.body.style.cursor = "grabbing";
 
     win.setPointerCapture(e.pointerId);
 });
 
-    /* ----- RESIZE START ----- */
-    resizeH.addEventListener("pointerdown", e => {
+/* ----- RESIZE START ----- */
+resizeHandles.forEach(handle => {
+    handle.addEventListener("pointerdown", e => {
         e.stopPropagation();
         if (win.classList.contains("maximized")) return;
 
@@ -205,13 +502,23 @@ titlebar.addEventListener("pointerdown", e => {
         const rect = win.getBoundingClientRect();
         startWidth = rect.width;
         startHeight = rect.height;
+        startLeft = rect.left;
+        startTop = rect.top;
 
         startX = e.clientX;
         startY = e.clientY;
 
+        resizeDirection = Array.from(handle.classList)
+            .find(cls => cls.startsWith("resize-handle-"))
+            ?.replace("resize-handle-", "") || "";
+
         win.style.zIndex = ++zIndexCounter;
+        win.style.transition = "none";
+        win.style.willChange = "width, height, left, top";
+
         win.setPointerCapture(e.pointerId);
     });
+});
 });
 
 
@@ -239,39 +546,119 @@ requestAnimationFrame(smoothLoop);
 window.addEventListener("pointermove", e => {
 
     /* ---- DRAG ---- */
-    if (isDragging && currentWindow) {
+if (isDragging && currentWindow) {
+    const menubar = document.querySelector(".menubar");
+    const menubarHeight = menubar ? menubar.offsetHeight : 32;
 
-        targetX = Math.max(0, e.clientX - dragOffsetX);
-        targetY = Math.max(32, e.clientY - dragOffsetY);
-        return;
+    if (dragPendingRestore) {
+        const restoredBounds = restoreForDragIfNeeded(currentWindow, e.clientX, e.clientY);
+        dragPendingRestore = false;
+
+        const rect = currentWindow.getBoundingClientRect();
+
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+
+        smoothX = rect.left;
+        smoothY = rect.top;
+
+        if (restoredBounds) {
+            smoothX = restoredBounds.left;
+            smoothY = restoredBounds.top;
+        }
+
+        targetX = smoothX;
+        targetY = smoothY;
     }
 
+    const minX = 0;
+    const minY = menubarHeight;
+
+    const maxX = window.innerWidth - currentWindow.offsetWidth;
+    const maxY = window.innerHeight - currentWindow.offsetHeight;
+
+    targetX = Math.min(Math.max(minX, e.clientX - dragOffsetX), maxX);
+    targetY = Math.min(Math.max(minY, e.clientY - dragOffsetY), maxY);
+
+    const snapZone = getSnapZone(e.clientX, e.clientY);
+    showSnapPreview(snapZone);
+
+    return;
+}
     /* ---- RESIZE ---- */
-    if (isResizing && currentWindow) {
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
+if (isResizing && currentWindow) {
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
 
-        currentWindow.style.width  = Math.max(400, startWidth + dx) + "px";
-        currentWindow.style.height = Math.max(300, startHeight + dy) + "px";
+    const menubar = document.querySelector(".menubar");
+    const menubarHeight = menubar ? menubar.offsetHeight : 32;
+
+    const minWidth = 400;
+    const minHeight = 300;
+
+    let newWidth = startWidth;
+    let newHeight = startHeight;
+    let newLeft = startLeft;
+    let newTop = startTop;
+
+    // East
+    if (resizeDirection.includes("e")) {
+        newWidth = Math.max(minWidth, startWidth + dx);
+        newWidth = Math.min(newWidth, window.innerWidth - startLeft);
     }
-});
+
+    // South
+    if (resizeDirection.includes("s")) {
+        newHeight = Math.max(minHeight, startHeight + dy);
+        newHeight = Math.min(newHeight, window.innerHeight - startTop);
+    }
+
+    // West
+    if (resizeDirection.includes("w")) {
+        const maxLeft = startLeft + startWidth - minWidth;
+        newLeft = Math.max(0, Math.min(startLeft + dx, maxLeft));
+        newWidth = startWidth - (newLeft - startLeft);
+    }
+
+    // North
+    if (resizeDirection.includes("n")) {
+        const maxTop = startTop + startHeight - minHeight;
+        newTop = Math.max(menubarHeight, Math.min(startTop + dy, maxTop));
+        newHeight = startHeight - (newTop - startTop);
+    }
+
+    const desktopRect = document.querySelector(".desktop").getBoundingClientRect();
+
+    currentWindow.style.width = newWidth + "px";
+    currentWindow.style.height = newHeight + "px";
+    currentWindow.style.left = (newLeft - desktopRect.left) + "px";
+    currentWindow.style.top = (newTop - desktopRect.top) + "px";
+}});
 
 
 /* ================= POINTER UP ================= */
 window.addEventListener("pointerup", () => {
-    if (currentWindow) {
-        currentWindow.style.transition = "";
-        currentWindow.style.willChange = "auto";
+    const releasedWindow = currentWindow;
+    const wasDragging = isDragging;
+
+    if (releasedWindow) {
+        releasedWindow.style.transition = "";
+        releasedWindow.style.willChange = "auto";
     }
 
     isDragging = false;
     isResizing = false;
+    dragPendingRestore = false;
+    resizeDirection = "";
     currentWindow = null;
-
-    // رجع شكل المؤشر طبيعي
     document.body.style.cursor = "default";
-});
 
+    if (wasDragging && releasedWindow && pendingSnapZone) {
+        snapWindow(releasedWindow, pendingSnapZone);
+    }
+
+    clearSnapPreview();
+});
 
 /* ================= FORM ================= */
 function handleSubmit(e) {
@@ -301,7 +688,7 @@ function handleSubmit(e) {
     lines.push(message || "(no message)");
 
     const body = lines.join("\n");
-    const to = contactAppData?.Mail?.to || "mqmr@mqmr.lol";
+    const to = contactAppData?.Mail?.to || "mqmr@mqmr.bio";
 
     const gmailUrl =
         "https://mail.google.com/mail/?view=cm&fs=1&tf=1" +
@@ -400,7 +787,7 @@ function openAppById(windowId) {
     win.classList.remove("hidden");
     win.classList.add("active");
     win.style.display = "flex";
-
+updateFocusedDockDot(windowId);
     // ارفع فوق
     if (typeof zIndexCounter !== "undefined") {
         win.style.zIndex = ++zIndexCounter;
@@ -683,7 +1070,7 @@ btnContinue.addEventListener("click", () => {
         window.location.href = "./Simple/simple.html"; 
     } 
     else if (newMode === "phone") {
-        window.location.href = "https://mqmr.lol/Phone/phone.html";
+        window.location.href = "./Phone/phone.html";
     }
 
     closeDialog();
@@ -780,7 +1167,20 @@ if (middleTitle) {
 
   // default state: General → About
   activateSection("general");
+  settingsWindow.resetAppState = function () {
+    activateSection("general");
 
+    const generalSection = settingsWindow.querySelector('.settings-middle-section[data-section="general"]');
+    const aboutBtn = generalSection?.querySelector('.mid-btn[data-page="general-about-page"]');
+    if (aboutBtn) {
+      activateMid(aboutBtn);
+    }
+
+    const mainArea = settingsWindow.querySelector(".settings-main");
+    if (mainArea) {
+      mainArea.scrollTop = 0;
+    }
+  };
   // ===================== LOAD DATA FROM JSON =====================
 async function loadMainData() {
   try {
@@ -1204,6 +1604,7 @@ defaultWindow.style.display = "flex";
 // تفعيل النقطة تحت أيقونة About
 const aboutDockItem = document.querySelector(".dock-item.about");
 aboutDockItem.classList.add("open");
+aboutDockItem.classList.add("focused");
 
 
 
@@ -1223,7 +1624,7 @@ aboutDockItem.classList.add("open");
 
     // لو هو بالفعل في نسخة Phone لا نسوي شي
     if (!currentPath.includes('/Phone/')) {
-      window.location.replace('https://mqmr.lol/Phone/phone.html');
+      window.location.replace('./Phone/phone.html');
     }
   }
 })();
@@ -1576,3 +1977,12 @@ async function loadTerminalApp() {
 }
 
 loadTerminalApp();
+
+
+const terminalWindowEl = document.getElementById("terminal-window");
+if (terminalWindowEl) {
+  terminalWindowEl.resetAppState = function () {
+    initializeTerminalContent();
+  };
+}
+
