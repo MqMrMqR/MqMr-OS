@@ -295,7 +295,7 @@ function handleSimpleContactSubmit(e) {
   lines.push(message || '(no message)');
 
   const body = lines.join('\n');
-  const to = contactAppData?.Mail?.to || 'mqmr@mqmr.lol';
+  const to = contactAppData?.Mail?.to || 'mqmr@mqmr.bio';
 
   const gmailUrl =
     'https://mail.google.com/mail/?view=cm&fs=1&tf=1' +
