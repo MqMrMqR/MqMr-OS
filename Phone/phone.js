@@ -8,7 +8,7 @@ let contactAppData = null;
 
 async function loadMainData() {
   try {
-    const res = await fetch("../main-data.json");
+    const res = await fetchSiteContent("../main-data.json");
     const data = await res.json();
     mainData = data;
 
@@ -72,7 +72,7 @@ async function loadMainData() {
 
 async function loadAboutMeApp() {
   try {
-    const res = await fetch("../Apps/AboutMe.json");
+    const res = await fetchSiteContent("../Apps/AboutMe.json");
     const data = await res.json();
 
     const nameEl = document.getElementById("about-name");
@@ -112,7 +112,7 @@ async function loadAboutMeApp() {
 
 async function loadProjectsApp() {
   try {
-    const res = await fetch("../Apps/Projects.json");
+    const res = await fetchSiteContent("../Apps/Projects.json");
     const data = await res.json();
 
     const titleEl = document.getElementById("projects-section-title");
@@ -228,7 +228,7 @@ async function loadProjectsApp() {
 
 async function loadContactApp() {
   try {
-    const res = await fetch("../Apps/Contact.json");
+    const res = await fetchSiteContent("../Apps/Contact.json");
     const data = await res.json();
     contactAppData = data;
 

@@ -39,7 +39,7 @@ function safeArray(value) {
 /* ================= MAIN DATA ================= */
 async function loadMainData() {
   try {
-    const res = await fetch("../main-data.json");
+    const res = await fetchSiteContent("../main-data.json");
     const data = await res.json();
     mainData = data;
 
@@ -74,7 +74,7 @@ if (osLinkInput) {
 /* ================= ABOUT APP ================= */
 async function loadAboutMeApp() {
   try {
-    const res = await fetch("../Apps/AboutMe.json");
+    const res = await fetchSiteContent("../Apps/AboutMe.json");
     const data = await res.json();
 
     setText("about-card-title", data.appName || "About Me");
@@ -117,7 +117,7 @@ async function loadAboutMeApp() {
 /* ================= PROJECTS APP ================= */
 async function loadProjectsApp() {
   try {
-    const res = await fetch("../Apps/Projects.json");
+    const res = await fetchSiteContent("../Apps/Projects.json");
     const data = await res.json();
 
     setText("projects-card-title", data.Section?.title || "Projects");
@@ -209,7 +209,7 @@ async function loadProjectsApp() {
 /* ================= WORKSPACE APP ================= */
 async function loadWorkspaceApp() {
   try {
-    const res = await fetch("../Apps/Workspace.json");
+    const res = await fetchSiteContent("../Apps/Workspace.json");
     const data = await res.json();
 
     setText("workspace-card-title", data.Section?.title || "Workspace");
@@ -311,7 +311,7 @@ window.handleSimpleContactSubmit = handleSimpleContactSubmit;
 
 async function loadContactApp() {
   try {
-    const res = await fetch("../Apps/Contact.json");
+    const res = await fetchSiteContent("../Apps/Contact.json");
     const data = await res.json();
     contactAppData = data;
 
@@ -346,7 +346,7 @@ async function loadContactApp() {
 /* ================= SETTINGS APP ================= */
 async function loadSettingsApp() {
   try {
-    const res = await fetch("../Apps/Settings.json");
+    const res = await fetchSiteContent("../Apps/Settings.json");
     const data = await res.json();
     settingsAppData = data;
 

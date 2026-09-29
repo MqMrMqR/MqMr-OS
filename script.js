@@ -39,7 +39,7 @@ let startLeft = 0;
 let startTop = 0;
 let resizeDirection = "";
 let pendingSnapZone = null;
-let titlebarClickTimer = null;
+
 
 let zIndexCounter = 2000;
 
@@ -130,7 +130,7 @@ function clearSnapPreview() {
     preview.classList.remove("visible");
 }
 
-function getSnapZone(clientX, clientY) {
+function getSnapZone(clientX, clientY, dragBounds = null) {
     const desktopRect = getDesktopRect();
 
     const edgeX = 28;
@@ -140,19 +140,22 @@ function getSnapZone(clientX, clientY) {
     const bottomBandHeight = 70;
     const cornerWidth = Math.min(220, window.innerWidth * 0.22);
 
-    const nearLeft = clientX <= edgeX;
-    const nearRight = clientX >= window.innerWidth - edgeX;
+    const nearLeft = clientX <= edgeX || (dragBounds && dragBounds.left <= edgeX);
+    const nearRight = clientX >= window.innerWidth - edgeX || (dragBounds && dragBounds.right >= window.innerWidth - edgeX);
     const nearTop = clientY <= desktopRect.top + edgeY;
     const nearBottom = clientY >= window.innerHeight - edgeY;
 
     const inTopBand = clientY <= desktopRect.top + topBandHeight;
-    const inBottomBand = clientY >= window.innerHeight - bottomBandHeight;
+    // Side-edge drops in the lower quarter should also select a bottom tile.
+    const inBottomBand = clientY >= window.innerHeight - bottomBandHeight ||
+        ((nearLeft || nearRight) && (clientY >= desktopRect.top + (window.innerHeight - desktopRect.top) * 0.75 ||
+            (dragBounds && dragBounds.bottom >= window.innerHeight - edgeY)));
 
     const inTopLeftCornerZone = inTopBand && clientX <= cornerWidth;
     const inTopRightCornerZone = inTopBand && clientX >= window.innerWidth - cornerWidth;
 
-    const inBottomLeftCornerZone = inBottomBand && clientX <= cornerWidth;
-    const inBottomRightCornerZone = inBottomBand && clientX >= window.innerWidth - cornerWidth;
+    const inBottomLeftCornerZone = inBottomBand && (nearLeft || clientX <= cornerWidth);
+    const inBottomRightCornerZone = inBottomBand && (nearRight || clientX >= window.innerWidth - cornerWidth);
 
     if (inTopLeftCornerZone) return "top-left";
     if (inTopRightCornerZone) return "top-right";
@@ -310,6 +313,14 @@ function restoreForDragIfNeeded(win, pointerX, pointerY) {
 
 /* ================= EMERGENCY END DRAG ================= */
 function endDragForcefully() {
+    if (currentWindow) {
+        currentWindow.style.transition = "";
+        currentWindow.style.willChange = "auto";
+    }
+    clearSnapPreview();
+    dragPendingRestore = false;
+    resizeDirection = "";
+    document.body.style.cursor = "default";
     isDragging = false;
     isResizing = false;
     currentWindow = null;
@@ -436,6 +447,11 @@ maxBtn.addEventListener("pointerdown", e => {
 
 
 /* ----- DRAG START / DOUBLE CLICK ----- */
+titlebar.addEventListener("dblclick", e => {
+    if (e.target.closest('.window-control')) return;
+    endDragForcefully();
+    toggleWindowMaximize(win);
+});
 titlebar.addEventListener("pointerdown", e => {
     if (e.target.closest(".window-control")) return;
     if (e.button !== 0) return;
@@ -447,22 +463,6 @@ titlebar.addEventListener("pointerdown", e => {
     win.classList.add("active");
     win.style.zIndex = ++zIndexCounter;
     updateFocusedDockDot(win.id);
-
-    if (titlebarClickTimer) {
-        clearTimeout(titlebarClickTimer);
-        titlebarClickTimer = null;
-
-        dragPendingRestore = false;
-        isDragging = false;
-        currentWindow = null;
-
-        toggleWindowMaximize(win);
-        return;
-    }
-
-    titlebarClickTimer = setTimeout(() => {
-        titlebarClickTimer = null;
-    }, 240);
 
     currentWindow = win;
     isDragging = true;
@@ -494,7 +494,9 @@ titlebar.addEventListener("pointerdown", e => {
 resizeHandles.forEach(handle => {
     handle.addEventListener("pointerdown", e => {
         e.stopPropagation();
-        if (win.classList.contains("maximized")) return;
+        if (e.button !== 0 || win.classList.contains("maximized")) return;
+        win.classList.remove('snapped');
+        win.dataset.snapState = '';
 
         isResizing = true;
         currentWindow = win;
@@ -550,6 +552,7 @@ if (isDragging && currentWindow) {
     const menubar = document.querySelector(".menubar");
     const menubarHeight = menubar ? menubar.offsetHeight : 32;
 
+    if (Math.hypot(e.clientX - pendingPointerX, e.clientY - pendingPointerY) < 4 && dragPendingRestore) return;
     if (dragPendingRestore) {
         const restoredBounds = restoreForDragIfNeeded(currentWindow, e.clientX, e.clientY);
         dragPendingRestore = false;
@@ -574,13 +577,19 @@ if (isDragging && currentWindow) {
     const minX = 0;
     const minY = menubarHeight;
 
-    const maxX = window.innerWidth - currentWindow.offsetWidth;
-    const maxY = window.innerHeight - currentWindow.offsetHeight;
+    const maxX = Math.max(minX, window.innerWidth - currentWindow.offsetWidth);
+    const maxY = Math.max(minY, window.innerHeight - currentWindow.offsetHeight);
 
     targetX = Math.min(Math.max(minX, e.clientX - dragOffsetX), maxX);
     targetY = Math.min(Math.max(minY, e.clientY - dragOffsetY), maxY);
 
-    const snapZone = getSnapZone(e.clientX, e.clientY);
+    // Use the intended window rectangle as well as the pointer: grabbing a
+    // titlebar in its middle must not require moving the cursor into a corner.
+    const snapZone = getSnapZone(e.clientX, e.clientY, {
+        left: targetX,
+        right: targetX + currentWindow.offsetWidth,
+        bottom: targetY + currentWindow.offsetHeight
+    });
     showSnapPreview(snapZone);
 
     return;
@@ -807,55 +816,10 @@ updateFocusedDockDot(windowId);
     return true;
 }
 
-// أي ضغط داخل نافذة التيرمنال → فوكس للكتابة
-// أي ضغط داخل نافذة التيرمينال
+// Window dragging is handled once by the shared titlebar handler.
 if (terminalWindow) {
-    terminalWindow.addEventListener("pointerdown", (e) => {
-        const target = e.target;
-
-        // لو الكليك داخل جسم التيرمينال (الأسود) → فوكس بس
-        if (target.closest("#terminal-body")) {
-            focusTerminalInput();
-            return;
-        }
-
-        // لو ضغطنا على أزرار (close / minimize / maximize) أو الـ resize → لا تسوي drag
-        if (
-            target.classList.contains("window-control") ||
-            target.closest(".window-control") ||
-            target.classList.contains("resize-handle")
-        ) {
-            return;
-        }
-
-        if (terminalWindow.classList.contains("maximized")) return;
-
-        // نفس منطق السحب حق باقي النوافذ بالضبط
-        document.querySelectorAll(".window").forEach(w => {
-            if (w !== terminalWindow) w.classList.remove("active");
-        });
-
-        terminalWindow.classList.add("active");
-
-        isDragging = true;
-        currentWindow = terminalWindow;
-
-        const rect = terminalWindow.getBoundingClientRect();
-        dragOffsetX = e.clientX - rect.left;
-        dragOffsetY = e.clientY - rect.top;
-
-        smoothX = rect.left;
-        smoothY = rect.top;
-        targetX = smoothX;
-        targetY = smoothY;
-
-        terminalWindow.style.zIndex = ++zIndexCounter;
-        terminalWindow.style.transition = "none";
-        terminalWindow.style.willChange = "left, top";
-
-        document.body.style.cursor = "grabbing";
-
-        terminalWindow.setPointerCapture(e.pointerId);
+    terminalWindow.addEventListener('pointerdown', e => {
+        if (e.target.closest('#terminal-body')) focusTerminalInput();
     });
 }
 
@@ -878,7 +842,7 @@ window.addEventListener("keydown", (e) => {
     if (!input) return;
 
     // لو الفوكس مو داخل التيرمنال (أو على body مثلاً) رجّعه للـ input
-    if (!terminalWindow.contains(document.activeElement)) {
+    if (document.activeElement === document.body) {
         focusTerminalInput();
     }
 });
@@ -1270,7 +1234,7 @@ if (swUpcomingList && Array.isArray(data.upcoming?.items)) {
 
 async function loadSettingsApp() {
   try {
-    const res = await fetch("./Apps/Settings.json");
+    const res = await fetchSiteContent("./Apps/Settings.json");
     const data = await res.json();
     settingsAppData = data;
 
@@ -1348,26 +1312,23 @@ loadSettingsApp();
 
 
 
-/* ================= GOOGLE SIGN-IN (Popup OAuth) ================= */
+/* ================= SUPABASE GOOGLE SIGN-IN (PKCE) ================= */
 
-// حط هنا الـ Client ID حق مشروعك من Google Console
-const GOOGLE_CLIENT_ID = "543147531406-tvgcuqvlh92c2dfcfs4iqqpfqeb55cam.apps.googleusercontent.com";
-
-let googleUser = null;        // name / email / picture
-let googleTokenClient = null; // OAuth token client
-
-// نحاول نرجّع بيانات المستخدم من localStorage (عشان ما تروح بعد Refresh)
-(function restoreGoogleUser() {
-  try {
-    const saved = localStorage.getItem("mqmr_google_user");
-    if (saved) {
-      googleUser = JSON.parse(saved);
-    }
-  } catch (e) {
-    console.warn("Failed to parse saved Google user", e);
+let googleUser = null;
+function escapeProfile(value) {
+  return String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+async function refreshSiteUser() {
+  const { data, error } = window.siteBackend ? await siteBackend.auth.getUser() : { data: {} };
+  const user = error ? null : data.user;
+  googleUser = user ? {name: escapeProfile(user.user_metadata.full_name || 'Google User'), email: escapeProfile(user.email), picture: escapeProfile(/^https:\/\//.test(user.user_metadata.avatar_url || '') ? user.user_metadata.avatar_url : '')} : null;
+  updateGoogleUI();
+  document.getElementById('admin-link')?.remove();
+  if (user?.app_metadata?.role === 'admin') {
+    const link = document.createElement('a'); link.id = 'admin-link'; link.href = 'admin.html'; link.textContent = 'Admin';
+    document.querySelector('.menubar-right').prepend(link);
   }
-})();
-
+}
 // يرسم الكرت اللي في يسار نافذة الإعدادات
 function renderSettingsSidebarCard() {
   const box = document.getElementById("settings-google-card-inner");
@@ -1507,87 +1468,23 @@ function updateGoogleUI() {
   });
 }
 
-// تهيئة OAuth Client من Google (Popup فيه حساباتك)
-function setupGoogleOAuth() {
-  if (!window.google || !google.accounts || !google.accounts.oauth2) {
-    console.warn("Google OAuth not available yet");
-    return;
-  }
-
-  googleTokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: "openid profile email",
-    callback: (tokenResponse) => {
-      // بعد ما يرجع لنا access_token نجيب بيانات المستخدم من Google
-      fetchGoogleProfile(tokenResponse.access_token);
-    },
-  });
+async function startGoogleLogin() {
+  try { await signInToSite(); } catch (error) { alert(error.message); }
 }
-
-// جلب بيانات المستخدم من Google
-async function fetchGoogleProfile(accessToken) {
-  try {
-    const res = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch Google profile");
-    }
-
-    const data = await res.json();
-
-    googleUser = {
-      name: data.name || data.given_name || "Google User",
-      email: data.email || "",
-      picture: data.picture || "",
-    };
-
-    localStorage.setItem("mqmr_google_user", JSON.stringify(googleUser));
-    updateGoogleUI();
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-// يبدأ تسجيل الدخول → يفتح Popup بحسابات قوقل
-function startGoogleLogin() {
-  if (!googleTokenClient) {
-    alert("Google Sign-In is still loading, try again in a second.");
-    return;
-  }
-
-  // select_account عشان يطلع لك صفحة الحسابات كل مرة
-  googleTokenClient.requestAccessToken({
-    prompt: "select_account",
-  });
-}
-
-// خروج (Logout)
-function logoutGoogle() {
+async function logoutGoogle() {
+  if (!window.siteBackend) return;
+  const { error } = await siteBackend.auth.signOut();
+  if (error) { alert(error.message); return; }
   googleUser = null;
-  localStorage.removeItem("mqmr_google_user");
   updateGoogleUI();
+  document.getElementById('admin-link')?.remove();
 }
-
-// ننتظر مكتبة Google تنتهي تحميل
-function initGoogleOAuthPolling(tries = 0) {
-  if (window.google && google.accounts && google.accounts.oauth2) {
-    setupGoogleOAuth();
-    return;
-  }
-  if (tries > 20) {
-    console.warn("Could not init Google OAuth");
-    return;
-  }
-  setTimeout(() => initGoogleOAuthPolling(tries + 1), 300);
-}
-
-// أول مرة نحمل الصفحة
 updateGoogleUI();
-initGoogleOAuthPolling();
+if (window.siteBackend) {
+  siteBackend.auth.onAuthStateChange(() => { setTimeout(refreshSiteUser, 0); });
+  refreshSiteUser();
+}
+
 
 
 
@@ -1633,7 +1530,7 @@ aboutDockItem.classList.add("focused");
 
 async function loadAboutMeApp() {
     try {
-        const res = await fetch("./Apps/AboutMe.json");
+        const res = await fetchSiteContent("./Apps/AboutMe.json");
         const data = await res.json();
 
         const nameEl = document.getElementById("about-name");
@@ -1677,7 +1574,7 @@ loadAboutMeApp();
 
 async function loadProjectsApp() {
     try {
-        const res = await fetch("./Apps/Projects.json");
+        const res = await fetchSiteContent("./Apps/Projects.json");
         const data = await res.json();
 
         const titleEl = document.getElementById("projects-section-title");
@@ -1797,7 +1694,7 @@ loadProjectsApp();
 
 async function loadWorkspaceApp() {
     try {
-        const res = await fetch("./Apps/Workspace.json");
+        const res = await fetchSiteContent("./Apps/Workspace.json");
         const data = await res.json();
 
         const sectionTitle = document.getElementById("workspace-section-title");
@@ -1905,7 +1802,7 @@ loadWorkspaceApp();
 
 async function loadContactApp() {
     try {
-        const res = await fetch("./Apps/Contact.json");
+        const res = await fetchSiteContent("./Apps/Contact.json");
         const data = await res.json();
         contactAppData = data;
 
@@ -1959,7 +1856,7 @@ loadContactApp();
 
 async function loadTerminalApp() {
     try {
-        const res = await fetch("./Apps/Terminal.json");
+        const res = await fetchSiteContent("./Apps/Terminal.json");
         const data = await res.json();
         terminalAppData = data;
 
@@ -1985,4 +1882,3 @@ if (terminalWindowEl) {
     initializeTerminalContent();
   };
 }
-
