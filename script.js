@@ -328,8 +328,10 @@ function endDragForcefully() {
 
 window.addEventListener("lostpointercapture", endDragForcefully, true);
 window.addEventListener("pointercancel", endDragForcefully, true);
-window.addEventListener("blur", endDragForcefully, true);
-window.addEventListener("mouseleave", endDragForcefully, true);
+// Only losing browser focus ends a drag; blurring a child input must not.
+window.addEventListener("blur", endDragForcefully);
+// Child mouseleave events (e.g. exiting the title text) must not cancel a drag.
+window.addEventListener("mouseleave", endDragForcefully);
 
 
 document.querySelectorAll(".dock-item").forEach(item => {
@@ -487,7 +489,7 @@ titlebar.addEventListener("pointerdown", e => {
     win.style.willChange = "left, top";
     document.body.style.cursor = "grabbing";
 
-    win.setPointerCapture(e.pointerId);
+    titlebar.setPointerCapture(e.pointerId);
 });
 
 /* ----- RESIZE START ----- */
