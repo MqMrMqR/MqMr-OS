@@ -1,0 +1,10 @@
+dist/
+.sites-review/
+.sites-runtime/
+.openai/
+*-verified.png
+*.zip
+*.tar.gz
+node_modules/
+.env*
+!.env.example

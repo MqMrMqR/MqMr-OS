@@ -1,3 +1,15 @@
+.desktop-menu { position: relative; }
+.desktop-menu summary { cursor: pointer; list-style: none; padding: 5px 8px; border-radius: 6px; }
+.desktop-menu[open] summary, .desktop-menu summary:hover { background: #ffffff55; }
+.desktop-menu-panel { position: absolute; top: 30px; left: 0; width: 235px; max-height: calc(100vh - 50px); overflow: auto; padding: 6px; border: 1px solid #ffffff80; border-radius: 12px; background: #f8fafcf5; box-shadow: 0 14px 40px #0003; }
+.desktop-menu-panel button { display: block; width: 100%; border: 0; border-radius: 6px; padding: 9px 12px; text-align: left; background: transparent; color: #172033; font: inherit; cursor: pointer; }
+.desktop-menu-panel button:hover, .desktop-menu-panel button:focus-visible { background: #dbeafe; }
+.solid-menubar .menubar { background: #f8fafc; }
+.menubar [hidden] { display: none !important; }
+.window.snapped { min-width: 0; min-height: 0; }
+.window-titlebar, .resize-handle { touch-action: none; }
+@media (max-width: 760px) { .menubar-left { gap: 8px !important; } .menubar-icons { display: none; } .menu-list { gap: 0 !important; } .desktop-menu summary { padding: 5px; } #clock { font-size: 11px; } }
+@media (prefers-reduced-motion: reduce) { .window, .snap-preview { transition: none !important; animation: none !important; } }
         * {
             margin: 0;
             padding: 0;

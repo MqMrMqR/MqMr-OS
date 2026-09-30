@@ -2,7 +2,7 @@
   "site": {
     "osName": "MqMr's OS",
     "creator": "MqMr",
-    "version": "4.0.0v",
+    "version": "4.1.0v",
     "osLink": "mqmr.bio"
     
   },
@@ -14,6 +14,10 @@
   },
 
   "changelog": [
+    {
+      "version": "Sep 30 2026 | 4.1.0v",
+      "label": "Added a macOS-inspired Wallpaper collection in Settings with six backgrounds.\nAdded iPadOS, macOS, and Transparency window focus styles; tiled apps remain opaque.\nInactive apps require a focus click before interacting, with keyboard focus protection.\nAdded Show Desktop and restore through the Apple icon, OS name, and Win / Command + D.\nAdded default Dock auto-hide and separate maximized-app Dock behavior with edge reveal.\nAdded a protected visual Admin editor with live text, color, typography, radius, and spacing controls, draft undo, backups, and conflict-aware publishing.\nConnected Google sign-in and shared content to Supabase with server-enforced admin access.\nFixed drag cancellation, titlebar double-click, lower-corner snapping, and tiled-window resizing after viewport changes.\nFixed shared main-data loading and Terminal focus and text rendering."
+    },
     {
       "version": "Mar 31 2026 | 4.0.0v",
       "label": "Refactored the (Phone) version to use the shared JSON-based app content system.\nUpgraded the (Phone) Projects app to match the advanced (Standard) design and JSON-driven structure.\nFixed window movement boundaries and corrected drag behavior across the desktop.\nFixed window maximize sizing and layout issues so apps properly fill the workspace.\nImproved maximized app layouts to scale their internal content correctly instead of keeping the old compact size.\nAdded a full Window Resize system with support for resizing from all edges and corners.\nAdded a Windows-style Window Snap system with maximize, half-screen, and quarter-screen snapping.\nAdded Snap Preview feedback while dragging windows.\nImproved restore behavior when dragging snapped or maximized windows.\nExpanded the window controls hit area while preserving the original visual style.\nUpdated Dock indicators so the focused app uses a distinct active dot color.\nChanged Close behavior to fully reset app state while keeping Minimize state-preserving.\nImproved the window close animation to feel more natural and closer to macOS.\nFixed Settings so it fully resets to its default section when closed.\nFixed multiple interaction issues across dragging, maximizing, snapping, resizing, and window state handling."

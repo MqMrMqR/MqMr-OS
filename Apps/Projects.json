@@ -1,6 +1,7 @@
 {
   "AppName": "Projects",
   "AppVersion": "2.0.0",
+    "AppIcon": "📁",
   "AppTags": {
     "game": {
       "label": "Game",
@@ -43,7 +44,7 @@
       "tags": ["website", "soon"],
       "show": true,
       "links": {
-        "website": "https://mqmr.lol",
+        "website": "https://mqmr.bio",
         "github": "https://github.com/MqMrMqR/MqMr-OS"
       }
     },

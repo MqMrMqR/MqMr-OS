@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MqMr OS · Visual editor</title><link rel="stylesheet" href="admin.css?v=5"></head>
+<body>
+<header class="editor-toolbar"><a href="index.html">← Desktop</a><strong>MqMr OS <span>Visual editor</span></strong><span class="toolbar-space"></span><button id="undo" disabled>Undo</button><button id="discard" disabled>Discard</button><button id="save" class="primary" disabled>Publish changes</button><button id="logout" hidden>Sign out</button></header>
+<section id="auth-gate"><h1>Your desktop, editable.</h1><p>Sign in with the administrator account to edit text and appearance directly on the site.</p><button id="login" class="primary" hidden>Sign in with Google</button><button id="retry">Retry connection</button></section>
+<p id="status" role="status">Checking your session…</p>
+<main id="editor" hidden>
+<div class="preview-area"><div class="preview-toolbar"><label><input type="checkbox" id="select-mode" checked> Select elements</label><span>Turn selection off to use the apps.</span><button id="preview-reload">Reload preview</button></div><iframe id="preview" title="Editable desktop preview"></iframe></div>
+<aside class="inspector"><div class="inspector-heading"><span class="inspector-icon">◈</span><div><h1>Inspector</h1><p>Click text or an element in the desktop.</p></div></div>
+<div id="selection-empty" class="empty-selection">Select an element to change its text, colors, type, and spacing. Changes remain a draft until you publish.</div>
+<section id="selection-panel" hidden><p id="selected-tag" class="eyebrow"></p><code id="selected-selector"></code><label for="selected-text">Text</label><textarea id="selected-text" rows="4"></textarea><p id="text-source" class="hint"></p>
+<h2>Colors</h2><label class="property-row">Text color<input id="style-color" type="color"></label><label class="property-row">Background<input id="style-background" type="color"></label>
+<h2>Typography</h2><label class="property-row">Size (px)<input id="style-size" type="number" min="8" max="80"></label><label class="property-row">Weight<select id="style-weight"><option>400</option><option>500</option><option>600</option><option>700</option><option>800</option></select></label><label class="property-row">Alignment<select id="style-align"><option>left</option><option>center</option><option>right</option></select></label>
+<h2>Shape & spacing</h2><label class="property-row">Corners (px)<input id="style-radius" type="number" min="0" max="60"></label><label class="property-row">Padding (px)<input id="style-padding" type="number" min="0" max="60"></label><button id="reset-style">Reset this element’s overrides</button></section>
+<details class="advanced"><summary>Content documents & backup</summary><p class="hint">Content edits are shared by Desktop, Simple, and Phone. Visual overrides apply to Desktop.</p><label for="document">Document</label><select id="document"><option>main-data.json</option><option>Apps/AboutMe.json</option><option>Apps/Projects.json</option><option>Apps/Workspace.json</option><option>Apps/Contact.json</option><option>Apps/Settings.json</option><option>Apps/Terminal.json</option></select><label for="content">JSON</label><textarea id="content" rows="12" spellcheck="false"></textarea><button id="apply-json">Apply to draft</button><button id="backup">Download all drafts</button></details>
+</aside></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js"></script><script src="site-backend.js?v=7"></script><script src="admin.js?v=7"></script>
+</body></html>
