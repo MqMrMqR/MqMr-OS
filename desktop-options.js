@@ -29,6 +29,11 @@
   }
   window.focusDesktopWindow = focus;
   function sync() {
+    // Return keyboard and content access to the next app after close/minimize.
+    if (!active()) {
+      const next = windows.filter(visible).sort((a,b) => (+b.style.zIndex || 0) - (+a.style.zIndex || 0))[0];
+      if (next) { next.classList.add('active'); updateFocusedDockDot(next.id); }
+    }
     for (const win of windows) {
       const focused = visible(win) && win.classList.contains('active');
       const content = win.querySelector('.window-content'); if (content) content.inert = !focused;
@@ -51,7 +56,7 @@
   }
   document.addEventListener('pointerdown', event => {
     const win = event.target.closest?.('.window');
-    if (!win || !visible(win) || win.classList.contains('active') || (event.target.closest('.window-titlebar') && !event.target.closest('.window-control'))) return;
+    if (!win || !visible(win) || win.classList.contains('active') || event.target.closest('.window-titlebar')) return;
     event.preventDefault(); event.stopImmediatePropagation(); blockedClick = win; focus(win);
   }, true);
   document.addEventListener('click', event => {
@@ -80,15 +85,30 @@
   const reveal = document.createElement('div'); reveal.className = 'dock-reveal-edge'; reveal.setAttribute('aria-hidden','true'); document.body.append(reveal);
   reveal.onpointerenter = () => dock.classList.add('dock-revealed'); dock.onpointerleave = () => dock.classList.remove('dock-revealed');
   document.addEventListener('pointermove', event => { if (event.clientY < innerHeight - 125 && !dock.contains(event.target)) dock.classList.remove('dock-revealed'); });
+  const wallpaper = document.querySelector('.wallpaper');
+  const wallpaperTransition = document.createElement('div'); wallpaperTransition.className = 'wallpaper-transition'; wallpaperTransition.setAttribute('aria-hidden','true'); wallpaper.append(wallpaperTransition);
+  const originalBackground = 'url(assets/macos_big_sur_style_abstract_wallpaper.png) center/cover';
+  let currentBackground, wallpaperAnimation;
   function apply() {
-    document.querySelector('.wallpaper').style.background = backgrounds[prefs.background] || '';
+    const background = backgrounds[prefs.background] || originalBackground;
+    if (background !== currentBackground) {
+      wallpaperAnimation?.cancel();
+      wallpaperTransition.style.background = currentBackground || background;
+      wallpaper.style.background = background;
+      wallpaperAnimation = currentBackground ? wallpaperTransition.animate([{opacity:1},{opacity:0}], {duration:matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450, easing:'ease-in-out',fill:'forwards'}) : null;
+      if (!wallpaperAnimation) wallpaperTransition.style.opacity = '0';
+      currentBackground = background;
+    }
     document.body.dataset.focusStyle = prefs.focus;
     document.body.classList.toggle('solid-menubar', !!prefs.solid);
     document.querySelector('.menubar-icons').hidden = !!prefs.hideIcons; document.querySelector('#clock').hidden = !!prefs.hideClock;
     document.querySelector('.wallpaper-preview').style.background = backgrounds[prefs.background] || 'url(assets/macos_big_sur_style_abstract_wallpaper.png) center/cover';
     document.querySelectorAll('[data-wallpaper]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.wallpaper === (prefs.background || 'Original'))));
-    document.querySelectorAll('[data-focus-style]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.focusStyle === prefs.focus)));
-    document.querySelector('#pref-solid').checked = !!prefs.solid; document.querySelector('#pref-icons').checked = !prefs.hideIcons; document.querySelector('#pref-clock').checked = !prefs.hideClock;
+    for (const [id,on] of [['pref-solid',!!prefs.solid],['pref-icons',!prefs.hideIcons],['pref-clock',!prefs.hideClock]]) {
+      const button = document.getElementById(id); button.classList.toggle('is-on',on); button.setAttribute('aria-pressed',String(on));
+    }
+    document.querySelector('#pref-focus').value = prefs.focus;
+    document.querySelector('#focus-description').textContent = {ipad:'A three-dot indicator marks the active app. All windows stay opaque.',mac:'Only the active app shows its window controls. All windows stay opaque.',transparency:'Inactive floating windows dim. Tiled windows stay opaque.'}[prefs.focus];
     document.querySelector('#pref-dock').value = prefs.dock || 'visible'; document.querySelector('#pref-max-dock').value = prefs.maxDock || 'inherit';
     try { localStorage.setItem('mqmr_appearance',JSON.stringify(prefs)); } catch {} sync();
   }
@@ -97,14 +117,8 @@
     const swatch = document.createElement('span'); swatch.style.background = background || 'url(assets/macos_big_sur_style_abstract_wallpaper.png) center/cover';
     button.append(swatch,document.createTextNode(name)); button.onclick = () => { prefs.background = name; apply(); }; document.querySelector('#wallpaper-grid').append(button);
   }
-  for (const [key,label,description] of [['ipad','iPadOS','Three-dot indicator. All apps stay opaque.'],['mac','macOS','Active title bar and colored controls. All apps stay opaque.'],['transparency','Transparency','Dim inactive floating apps. Tiled apps stay opaque.']]) {
-    const button = document.createElement('button'); button.type = 'button'; button.dataset.focusStyle = key; button.className = 'focus-choice';
-    const demo = document.createElement('span'); demo.className = 'focus-demo ' + key; demo.textContent = key === 'ipad' ? '•••' : '● ● ●';
-    const title = document.createElement('strong'); title.textContent = label; const text = document.createElement('span'); text.textContent = description;
-    button.append(demo,title,text); button.onclick = () => { prefs.focus = key; apply(); }; document.querySelector('#focus-choices').append(button);
-  }
-  for (const [id,key,invert] of [['pref-solid','solid',false],['pref-icons','hideIcons',true],['pref-clock','hideClock',true]]) document.getElementById(id).onchange = event => { prefs[key] = invert ? !event.target.checked : event.target.checked; apply(); };
-  for (const [id,key] of [['pref-dock','dock'],['pref-max-dock','maxDock']]) document.getElementById(id).onchange = event => { prefs[key] = event.target.value; apply(); };
+  for (const [id,key,invert] of [['pref-solid','solid',false],['pref-icons','hideIcons',true],['pref-clock','hideClock',true]]) document.getElementById(id).onclick = event => { const on = event.currentTarget.getAttribute('aria-pressed') !== 'true'; prefs[key] = invert ? !on : on; apply(); };
+  for (const [id,key] of [['pref-dock','dock'],['pref-max-dock','maxDock'],['pref-focus','focus']]) document.getElementById(id).onchange = event => { prefs[key] = event.target.value; apply(); };
   const windowAction = zone => { if (active()) snapWindow(active(),zone); };
   const menus = {
     File: [['About',() => openAppById('about-window')],['Projects',() => openAppById('projects-window')],['Contact',() => openAppById('contact-window')]],
@@ -136,3 +150,4 @@
   },100); });
   apply();
 })();
+

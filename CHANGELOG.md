@@ -1,5 +1,15 @@
 # Changelog
 
+## Desktop refinements — 2026-09-30
+
+- Maximized apps fill the screen below the menu bar, independently of Dock visibility. Dock hide options remain available.
+- Grouped Display, Wallpaper, Window focus, Menu bar, and Desktop & Dock inside Appearance.
+- Fixed overflowing navigation widths and unified compact setting rows, Apple-style select controls, and switches.
+- Added wallpaper crossfades with reduced-motion support.
+- macOS focus hides inactive window controls while preserving the title-bar layout.
+- Visible window controls close or minimize inactive tiled apps on the first press. Content still requires a focus click before interaction.
+- Closing or minimizing the active app transfers focus to the next visible app; restored closing/minimizing animations.
+
 ## 4.1.0 — 2026-09-30
 
 - Added Wallpaper, Appearance, and Desktop & Dock sections in Settings.
@@ -15,3 +25,4 @@
 - Fixed main-data loading to use shared content and Terminal input focus and safe plain-text output.
 
 Browser shortcuts reserved by the operating system may be intercepted before a web page receives them; the menu buttons always remain available.
+
