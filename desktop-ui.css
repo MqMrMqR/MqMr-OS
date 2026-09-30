@@ -1,0 +1,57 @@
+/* Opaque tiled apps, three focus treatments, and macOS-inspired preferences. */
+body[data-focus-style="ipad"] .window, body[data-focus-style="mac"] .window,
+body[data-focus-style="transparency"] .window.snapped { opacity:1; background:#fff; }
+body[data-focus-style="transparency"] .window:not(.active):not(.snapped) { opacity:.65; }
+.window-titlebar { flex-shrink:0; }
+.window.active { animation:none; }
+.window-focus-indicator { display:none; position:absolute; left:50%; top:5px; transform:translateX(-50%); border:0; border-radius:8px; padding:5px 12px; gap:3px; background:transparent; cursor:pointer; z-index:2; }
+.window-focus-indicator span { width:4px; height:4px; border-radius:50%; background:#9b9da4; }
+body[data-focus-style="ipad"] .window-focus-indicator { display:flex; }
+body[data-focus-style="ipad"] .window.active .window-focus-indicator { background:#e4edff; }
+body[data-focus-style="ipad"] .window.active .window-focus-indicator span { background:#2563eb; }
+body[data-focus-style="ipad"] .window-title { padding-top:13px; }
+body[data-focus-style="ipad"] .window.active { box-shadow:0 0 0 2px #ffffffaa,0 20px 60px #0004; }
+body[data-focus-style="mac"] .window:not(.active) .window-titlebar { background:#eeeef0; color:#8a8a90; }
+body[data-focus-style="mac"] .window:not(.active) .window-control { background:#c7c7cc; }
+body[data-focus-style="mac"] .window.active .window-titlebar { background:#fafafa; color:#202026; }
+.window-focus-shield { position:absolute; inset:52px 0 0; width:100%; border:0; background:transparent; cursor:default; z-index:50; border-radius:0; }
+.window-focus-shield[hidden] { display:none; }
+.window-focus-shield:focus-visible { outline:3px solid #3981f7; outline-offset:-3px; }
+.menubar-left > [role="button"] { cursor:pointer; }
+:is(button,select,a,[role="button"]):focus-visible { outline:3px solid #3981f7; outline-offset:3px; }
+.dock { transition:transform .22s ease,opacity .22s ease; }
+body.dock-auto .dock:not(.dock-revealed):not(:focus-within) { transform:translate(-50%,calc(100% + 19px)); opacity:0; pointer-events:none; }
+.dock-reveal-edge { position:fixed; bottom:0; left:25%; width:50%; height:8px; z-index:10001; }
+body:not(.dock-auto) .dock-reveal-edge { display:none; }
+body.dock-reserved .window.maximized { height:calc(100vh - 152px) !important; }
+.dock-item { cursor:pointer; }
+.settings-btn,.mid-btn { font:inherit; text-align:left; width:100%; border:0; background:transparent; cursor:pointer; }
+#settings-window .window-content { min-height:0; }
+#settings-window .window-content > :first-child { flex-shrink:0; overflow:auto; }
+.settings-middle { flex-shrink:0; overflow:auto; }
+.settings-main { min-width:0; }
+.settings-page h1 { font-size:30px; letter-spacing:-.8px; margin-bottom:12px; color:#202027; }
+.preference-intro { font-size:13px; line-height:1.65; color:#707078; margin:10px 0 22px; }
+.settings-page .preference-heading { font-size:15px; margin:22px 0 12px; }
+.wallpaper-preview { height:155px; border:5px solid #292a30; border-radius:14px; box-shadow:0 8px 22px #0002; background-size:cover; }
+.wallpaper-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.wallpaper-choice { border:2px solid transparent; padding:4px; border-radius:12px; font:12px system-ui; background:transparent; cursor:pointer; color:#505058; }
+.wallpaper-choice span { display:block; height:72px; border-radius:8px; margin-bottom:6px; }
+.wallpaper-choice[aria-pressed="true"] { border-color:#3478f6; background:#e9f0ff; color:#145acb; }
+.focus-choices { display:grid; gap:10px; margin-bottom:20px; }
+.focus-choice { display:grid; grid-template-columns:80px 1fr; gap:5px 14px; padding:15px; text-align:left; background:white; color:#202027; border:1px solid #dedee4; border-radius:13px; cursor:pointer; }
+.focus-choice[aria-pressed="true"] { border:2px solid #3478f6; padding:14px; background:#f2f6ff; }
+.focus-demo { grid-row:span 2; border:1px solid #dedee4; border-radius:8px; padding:16px 5px; text-align:center; color:#327af6; background:#edf2fa; }
+.focus-demo.mac { color:#f06659; } .focus-demo.transparency { opacity:.5; }
+.focus-choice > span:last-child { font-size:12px; line-height:1.5; color:#74747e; }
+.preference-card { background:#fff; border:1px solid #e0e0e6; border-radius:13px; padding:0 16px; margin:18px 0; font-size:13px; }
+.preference-card > strong { display:block; margin-top:16px; }
+.preference-card p { color:#74747e; font-size:12px; line-height:1.6; margin:12px 0 16px; }
+.preference-row { display:flex; justify-content:space-between; align-items:center; gap:16px; min-height:60px; padding:12px 0; border-bottom:1px solid #eeeef2; }
+.preference-row:last-child { border-bottom:0; }
+.preference-row select { max-width:185px; font:12px system-ui; padding:7px; border:1px solid #d6d6de; border-radius:8px; background:#fafafa; }
+.preference-row input { accent-color:#3478f6; width:18px; height:18px; }
+.preference-action { padding:10px 15px; border:1px solid #d5d5df; border-radius:8px; background:white; color:#2868d3; cursor:pointer; }
+@media(max-width:1000px) { #settings-window .settings-middle { width:150px !important; } #settings-window .settings-main { padding:22px !important; } }
+@media(max-width:760px) { #settings-window { min-width:0; } #settings-window .window-content > :first-child { width:145px !important; } #settings-window .settings-middle { width:110px !important; } .wallpaper-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .preference-row { flex-direction:column; align-items:flex-start; } }
+@media(prefers-reduced-motion:reduce) { .dock { transition:none; } }

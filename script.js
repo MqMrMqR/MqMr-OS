@@ -54,6 +54,21 @@ let terminalAppData = null;
 let settingsAppData = null;
 let mainData = null;
 
+function safeWebLink(value) {
+    try { const url = new URL(String(value)); return ['https:', 'http:'].includes(url.protocol) ? url.href : ''; } catch { return ''; }
+}
+
+function fitWindowToDesktop(win) {
+    if (win.classList.contains('snapped') || win.classList.contains('maximized')) return;
+    const rect = win.getBoundingClientRect();
+    const reserve = document.body.classList.contains('dock-reserved') ? 120 : 0;
+    const width = Math.min(rect.width, Math.max(320, innerWidth - 32));
+    const height = Math.min(rect.height, Math.max(250, innerHeight - 64 - reserve));
+    win.style.width = width + 'px'; win.style.height = height + 'px';
+    win.style.left = Math.max(16, Math.min(rect.left, innerWidth - width - 16)) + 'px';
+    win.style.top = Math.max(16, Math.min(rect.top - 32, innerHeight - 32 - reserve - height - 16)) + 'px';
+}
+
 function resetWindowState(win) {
     if (!win) return;
 
@@ -666,6 +681,10 @@ window.addEventListener("pointerup", () => {
 
     if (wasDragging && releasedWindow && pendingSnapZone) {
         snapWindow(releasedWindow, pendingSnapZone);
+    } else if (wasDragging && releasedWindow) {
+        const desktopRect = getDesktopRect();
+        releasedWindow.style.left = (targetX - desktopRect.left) + 'px';
+        releasedWindow.style.top = (targetY - desktopRect.top) + 'px';
     }
 
     clearSnapPreview();
@@ -729,8 +748,8 @@ function getTerminalPromptMarkup() {
 
     return `
 <span class="prompt">
-    <span style="color:#4d99ef;">${promptUser}@${promptHost}:${promptPath}$</span>
-    <span id="terminal-input" contenteditable="true" style="outline:none;"></span>
+    <span style="color:#4d99ef;">${escapeProfile(promptUser)}@${escapeProfile(promptHost)}:${escapeProfile(promptPath)}$</span>
+    <span id="terminal-input" contenteditable="plaintext-only" style="outline:none;"></span>
 </span>
 `;
 }
@@ -740,8 +759,8 @@ function buildTerminalWelcome() {
     const welcomeTitle = ui.welcomeTitle || "Welcome to MqMr's OS Terminal";
     const welcomeSubtitle = ui.welcomeSubtitle || "Type 'help' to see available commands.";
 
-    return `${welcomeTitle}
-${welcomeSubtitle}
+    return `${escapeProfile(welcomeTitle)}
+${escapeProfile(welcomeSubtitle)}
 
 ${getTerminalPromptMarkup()}`;
 }
@@ -763,7 +782,7 @@ function focusTerminalInput() {
     if (!input) return;
 
     // فقط فوكس ع العنصر
-    //input.focus();
+    if (terminalWindow?.classList.contains('active') && !terminalWindow.classList.contains('hidden')) input.focus();
 
     // لو فيه نص، حط المؤشر في آخره
     if (input.innerText && input.innerText.length > 0) {
@@ -780,7 +799,7 @@ function newPrompt() {
     const old = document.getElementById("terminal-input");
     if (old) old.removeAttribute("id");
 
-    terminalBody.innerHTML += "\n" + getTerminalPromptMarkup();
+    terminalBody.insertAdjacentHTML('beforeend', "\n" + getTerminalPromptMarkup());
     scrollBottom();
     setTimeout(focusTerminalInput, 10);
 }
@@ -798,6 +817,7 @@ function openAppById(windowId) {
     win.classList.remove("hidden");
     win.classList.add("active");
     win.style.display = "flex";
+    fitWindowToDesktop(win);
 updateFocusedDockDot(windowId);
     // ارفع فوق
     if (typeof zIndexCounter !== "undefined") {
@@ -861,6 +881,7 @@ if (terminalBody) {
 
             const rawCmd = input.innerText;
             const cmd = rawCmd.trim().toLowerCase();
+            input.textContent = rawCmd;
             input.contentEditable = "false";
 
             const messages = terminalAppData?.Messages || {};
@@ -875,7 +896,7 @@ if (terminalBody) {
 
             if (!matchedCommand) {
                 const commandNotFound = messages.commandNotFound || "Command not found.";
-                terminalBody.innerHTML += `\n${commandNotFound}\n`;
+                terminalBody.append(document.createTextNode(`\n${commandNotFound}\n`));
                 newPrompt();
                 return;
             }
@@ -902,7 +923,7 @@ if (terminalBody) {
                     .map(item => `  ${String(item.command).padEnd(10, " ")} - ${item.description || ""}`)
                     .join("\n");
 
-                terminalBody.innerHTML += `\n${helpHeader}\n${helpTitle}\n${commandLines}\n`;
+                terminalBody.append(document.createTextNode(`\n${helpHeader}\n${helpTitle}\n${commandLines}\n`));
                 newPrompt();
                 return;
             }
@@ -912,14 +933,14 @@ if (terminalBody) {
                 if (!ok) {
                     const failMsgTemplate = messages.appOpenFailed || 'Could not open "{command}" app.';
                     const failMsg = failMsgTemplate.replace("{command}", matchedCommand.command || cmd);
-                    terminalBody.innerHTML += `\n${failMsg}\n`;
+                    terminalBody.append(document.createTextNode(`\n${failMsg}\n`));
                 }
                 newPrompt();
                 return;
             }
 
             const commandNotFound = messages.commandNotFound || "Command not found.";
-            terminalBody.innerHTML += `\n${commandNotFound}\n`;
+            terminalBody.append(document.createTextNode(`\n${commandNotFound}\n`));
             newPrompt();
         }
     });
@@ -1150,7 +1171,7 @@ if (middleTitle) {
   // ===================== LOAD DATA FROM JSON =====================
 async function loadMainData() {
   try {
-    const res = await fetch("main-data.json");
+    const res = await fetchSiteContent("main-data.json");
     const data = await res.json();
     mainData = data;
 
@@ -1327,7 +1348,7 @@ async function refreshSiteUser() {
   updateGoogleUI();
   document.getElementById('admin-link')?.remove();
   if (user?.app_metadata?.role === 'admin') {
-    const link = document.createElement('a'); link.id = 'admin-link'; link.href = 'admin.html'; link.textContent = 'Admin';
+    const link = document.createElement('a'); link.id = 'admin-link'; link.href = 'admin.html?version=5'; link.textContent = 'Admin';
     document.querySelector('.menubar-right').prepend(link);
   }
 }
@@ -1512,11 +1533,11 @@ aboutDockItem.classList.add("focused");
 
 
 (function redirectToPhoneIfMobile() {
-  const isPhone =
-    /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|Mobile/i.test(
+  const isPhone = window.top === window && (
+    /Android|iPhone|iPod|Opera Mini|IEMobile|Mobile/i.test(
       navigator.userAgent
     ) ||
-    window.innerWidth <= 768;
+    window.innerWidth <= 600);
 
   if (isPhone) {
     const currentPath = window.location.pathname;
@@ -1551,19 +1572,19 @@ async function loadAboutMeApp() {
         if (avatarEl) avatarEl.src = data.avatar || "";
 
         if (instagramBtn && data.socials?.instagram) {
-            instagramBtn.onclick = () => window.open(data.socials.instagram, "_blank");
+            instagramBtn.onclick = () => { const url = safeWebLink(data.socials.instagram); if (url) window.open(url, "_blank", "noopener,noreferrer"); };
         }
 
         if (discordBtn && data.socials?.discord) {
-            discordBtn.onclick = () => window.open(data.socials.discord, "_blank");
+            discordBtn.onclick = () => { const url = safeWebLink(data.socials.discord); if (url) window.open(url, "_blank", "noopener,noreferrer"); };
         }
 
         if (xBtn && data.socials?.x) {
-            xBtn.onclick = () => window.open(data.socials.x, "_blank");
+            xBtn.onclick = () => { const url = safeWebLink(data.socials.x); if (url) window.open(url, "_blank", "noopener,noreferrer"); };
         }
 
         if (youtubeBtn && data.socials?.youtube) {
-            youtubeBtn.onclick = () => window.open(data.socials.youtube, "_blank");
+            youtubeBtn.onclick = () => { const url = safeWebLink(data.socials.youtube); if (url) window.open(url, "_blank", "noopener,noreferrer"); };
         }
 
         console.log("AboutMe app loaded successfully");
@@ -1642,8 +1663,8 @@ async function loadProjectsApp() {
                 tagsWrap.appendChild(tagEl);
             });
 
-            const websiteLink = project.links?.website?.trim();
-            const githubLink = project.links?.github?.trim();
+            const websiteLink = safeWebLink(project.links?.website);
+            const githubLink = safeWebLink(project.links?.github);
 
             let actionsWrap = null;
 

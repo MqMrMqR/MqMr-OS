@@ -1,0 +1,15 @@
+const fs = require('node:fs');
+const vm = require('node:vm');
+const assert = require('node:assert/strict');
+const rules = [];
+const sheet = {cssRules:rules,deleteRule(index){rules.splice(index,1);},insertRule(rule,index){rules.splice(index,0,rule);}};
+const context = {window:{},document:{createElement:()=>({sheet}),head:{append(){}},body:{},querySelector:()=>null},MutationObserver:class{observe(){}},requestAnimationFrame(){},fetchSiteContent:()=>Promise.resolve({json:()=>Promise.resolve({})}),console};
+vm.createContext(context); vm.runInContext(fs.readFileSync('site-design.js','utf8'),context);
+const design = context.window.siteDesign;
+assert(design.validSelector('#about-name'));
+assert(design.validSelector('#projects-list > div:nth-of-type(1) > h3:nth-of-type(1)'));
+for (const selector of ['body{color:red}/*','a[href]','#x, body','script','#__proto__','body > div:nth-of-type(0)']) assert(!design.validSelector(selector),selector);
+for (const [property,value] of [['color','red;display:none'],['background-color','url(https://example.com)'],['font-size','2000px'],['padding','-10px'],['font-weight','1000']]) assert(!design.properties[property](value),property);
+design.apply({rules:{'#about-name':{'color':'#123abc','font-size':'28px','position':'fixed','background-color':'url(https://example.com)'},'body{display:none}':{'color':'#000000'}}});
+assert.equal(rules.length,1); assert(rules[0].includes('color:#123abc')); assert(rules[0].includes('font-size:28px')); assert(!rules[0].includes('position')); assert(!rules[0].includes('url('));
+console.log('Visual editor selector and style validation passed.');
