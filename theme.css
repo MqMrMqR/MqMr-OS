@@ -1,0 +1,67 @@
+/* Semantic colors shared by every display mode. */
+:root { --os-bg:#f7f7f9; --os-panel:#fff; --os-sidebar:#f2f2f5; --os-title:#faf8fb; --os-text:#202027; --os-muted:#667085; --os-border:#d9dce4; --os-input:#fff; --os-hover:#e9edf4; --os-menu:#fafafaf5; --os-accent:#007aff; }
+:root[data-theme="dark"] { --os-bg:#202125; --os-panel:#292b31; --os-sidebar:#24262b; --os-title:#303238; --os-text:#f2f3f7; --os-muted:#a8aeba; --os-border:#454955; --os-input:#30333b; --os-hover:#393e49; --os-menu:#282b32f5; --os-accent:#0a84ff; }
+.window,.window-content:not(#terminal-body),.settings-main { background-color:var(--os-bg) !important; color:var(--os-text); }
+.window-titlebar { background-color:var(--os-title) !important; color:var(--os-text) !important; }
+.window-title { color:var(--os-text) !important; }
+body[data-focus-style="mac"] .window:not(.active) .window-titlebar { background-color:var(--os-sidebar) !important; color:var(--os-muted) !important; }
+body[data-focus-style="mac"] .window:not(.active) .window-title { color:var(--os-muted) !important; }
+#settings-window .window-content > :first-child,.settings-middle { background-color:var(--os-sidebar) !important; border-color:var(--os-border) !important; }
+#settings-middle-title { border-color:var(--os-border) !important; }
+.settings-btn,.mid-btn,.mode-pill { color:var(--os-text); }
+.settings-btn.active,.mid-btn.active { color:white !important; background:var(--os-accent); }
+:is(.settings-btn,.mid-btn,.setting-row,.mode-pill):hover:not(.active) { background:var(--os-hover); }
+.settings-page h1,.setting-title,.preference-heading { color:var(--os-text) !important; }
+.setting-answer,.setting-description,.preference-intro { color:var(--os-muted); }
+.settings-main .setting-select,.setting-select { background-color:var(--os-input); border-color:var(--os-border); color:var(--os-text); }
+.settings-main .setting-select:focus,.setting-select:focus { background-color:var(--os-input); }
+.desktop-menu-panel,.desktop-context-menu { background:var(--os-menu); border-color:var(--os-border); color:var(--os-text); }
+.desktop-menu-panel button,.desktop-context-menu button { color:var(--os-text); }
+.desktop-menu-panel button:hover,.desktop-menu-panel button:focus-visible,.desktop-context-menu button:hover,.desktop-context-menu button:focus-visible { background:var(--os-accent); color:white; outline:none; }
+.desktop-context-menu { position:fixed; z-index:11000; min-width:220px; padding:6px; border:1px solid var(--os-border); border-radius:12px; box-shadow:0 16px 45px #0005; backdrop-filter:blur(20px); }
+.desktop-context-menu[hidden] { display:none; }
+.desktop-context-menu button { display:block; width:100%; padding:9px 12px 9px 30px; font:inherit; font-size:13px; border:0; border-radius:6px; background:transparent; text-align:left; cursor:pointer; position:relative; }
+.desktop-context-menu [aria-checked="true"]::before { content:'✓'; position:absolute; left:10px; }
+.theme-previews { display:flex; gap:14px; margin:22px 14px; }
+.theme-preview { flex:1; height:100px; border:1px solid var(--os-border); border-radius:10px; overflow:hidden; background:#f7f7f9; color:#25262b; font-size:12px; }
+.theme-preview::before { content:'● ● ●'; display:block; padding:8px 12px; color:#ff635b; background:#eeeeF2; }
+.theme-preview span { display:block; padding:16px; }
+.theme-preview.dark { background:#202125; color:#f2f3f7; } .theme-preview.dark::before { background:#303238; }
+:root[data-theme="dark"] body { color:var(--os-text); }
+:root[data-theme="dark"] .menubar { background:#20232ab8; color:var(--os-text); border-color:#ffffff12; }
+:root[data-theme="dark"] .solid-menubar .menubar { background:#24262b; }
+:root[data-theme="dark"] #admin-link { color:#a9caff; }
+:root[data-theme="dark"] .dock { background:#24262b99; border-color:#ffffff22; }
+:root[data-theme="dark"] .dock-dot { background:#aaaeb9; }
+:root[data-theme="dark"] .dock-item.focused .dock-dot { background:white; }
+:root[data-theme="dark"] .icon svg,:root[data-theme="dark"] .mid-chevron svg { stroke:var(--os-muted); }
+:root[data-theme="dark"] .window.active { box-shadow:0 0 0 1px #ffffff30,0 20px 60px #0006; }
+:root[data-theme="dark"] .window-focus-indicator span { background:#9da5b6; }
+:root[data-theme="dark"] .window.active .window-focus-indicator { background:#0a84ff30; }
+:root[data-theme="dark"] .window.active .window-focus-indicator span { background:#79b7ff; }
+:root[data-theme="dark"] .switch-toggle:not(.is-on) { background:#505462; box-shadow:inset 0 0 0 1px #767c8e; }
+:root[data-theme="dark"] :is(.card,.portfolio-card,.safari-app,.safari-content,.simple-settings-panel,.workspace-stack-item,.workspace-spec-row,.project-item,.settings-changelog-embed,.simple-embed,.settings-changelog-list li,.simple-embed-list li,.simple-plain-list li,.embed-project-item,.preference-card) { background-color:var(--os-panel); border-color:var(--os-border); color:var(--os-text); }
+:root[data-theme="dark"] :is(.contact-form input,.contact-form textarea,.contact-field input,.contact-field textarea,.urlbar-inner,.mode-pill) { background-color:var(--os-input); border-color:var(--os-border); color:var(--os-text); }
+:root[data-theme="dark"] :is(.contact-title,.contact-field label,.card-title,.project-name,.workspace-main-title,.workspace-card-header h3,.workspace-stack-title,.workspace-tool-name,.workspace-spec-label,.changelog-version,.about-name,.embed-project-name,.embed-line-title,.simple-embed-title,.settings-section-title,.simple-settings-title) { color:var(--os-text); }
+:root[data-theme="dark"] :is(.contact-subtitle,.card-tagline,.project-desc,.workspace-main-subtitle,.workspace-card-header p,.workspace-stack-description,.workspace-tool-type,.workspace-spec-value,.changelog-label,.about-subtitle,.about-desc,.about-description,.embed-project-desc,.embed-line-text,.muted,.project-item p,.hero-subtitle,.simple-settings-body,.safari-title,.projects-version) { color:var(--os-muted); }
+:root[data-theme="dark"] :is(.project-action-btn-secondary,.embed-action-btn-secondary,.project-tag,.project-label,.tag) { background:var(--os-hover); color:var(--os-text); }
+:root[data-theme="dark"] .modal-panel { background:var(--os-panel); }
+:root[data-theme="dark"] .modal-title { color:var(--os-text); }
+:root[data-theme="dark"] .modal-btn-secondary { background:var(--os-hover); color:var(--os-text); }
+:root[data-theme="dark"] :is(.wallpaper-choice[aria-pressed="true"],#settings-google-card-inner) { background-color:#0a84ff20; border-color:#548dff; color:#bcd5ff; }
+:root[data-theme="dark"] .wallpaper-choice { color:var(--os-muted); }
+:root[data-theme="dark"] .phone-app { background:var(--os-bg); }
+:root[data-theme="dark"] body:has(.phone-app),:root[data-theme="dark"] body:has(#editor) { background:var(--os-bg); }
+:root[data-theme="dark"] :is(.editor-toolbar,.inspector,#auth-gate) { background:var(--os-panel); border-color:var(--os-border); }
+:root[data-theme="dark"] :is(#status,.preview-toolbar) { background:var(--os-sidebar); border-color:var(--os-border); color:var(--os-muted); }
+:root[data-theme="dark"] :is(.inspector input,.inspector select,body:has(#editor) textarea,body:has(#editor) button:not(.primary)) { background:var(--os-input); border-color:var(--os-border); color:var(--os-text); }
+/* Existing profile and app templates include inline colors. */
+:root[data-theme="dark"] #settings-google-card-inner { background:#26354a !important; border-color:#455b7a !important; }
+:root[data-theme="dark"] #settings-google-card-inner :is(div,p) { color:var(--os-text) !important; }
+:root[data-theme="dark"] #settings-middle-title { border-bottom-color:var(--os-border) !important; }
+:root[data-theme="dark"] :is(#about-name,#about-subtitle,#about-description,.settings-page p,.workspace-card,.workspace-tool-pill,.safari-titlebar,.urlbar,.simple-settings-sidebar,.simple-settings-content) { color:var(--os-text); }
+:root[data-theme="dark"] :is(#about-subtitle,#about-description,.settings-page p) { color:var(--os-muted) !important; }
+:root[data-theme="dark"] :is(.workspace-card,.workspace-tool-pill,.safari-titlebar,.urlbar,.simple-settings-sidebar,.simple-settings-content) { background:var(--os-panel); border-color:var(--os-border); }
+:root[data-theme="dark"] .safari-urlbar { background:var(--os-sidebar); border-color:var(--os-border); }
+:root[data-theme="dark"] .safari-urlbar :is(.urlbar-inner:hover,.urlbar-inner:focus-within) { background:var(--os-input); }
+:root[data-theme="dark"] :is(.toolbar-icon svg,.toolbar-icon:hover svg) { stroke:var(--os-muted); }
