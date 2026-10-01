@@ -6,9 +6,9 @@ Inbox is a desktop app (`inbox.html` can also open directly). It has a three-col
 
 The ordinary Supabase Google sign-in keeps its existing identity scopes. Inbox separately requests `gmail.modify` through Google Identity Services on the explicit Add Google account action. Each Google account must consent; accounts can be switched independently. Access tokens live in browser memory, go directly to Gmail API, and disappear on reload/closing the page. They are never persisted or sent to Supabase.
 
-Gmail API was enabled in Google Cloud project `mqmrs-os`. Public OAuth client ID is in `inbox-config.js`. `https://mqmr.bio` is authorized. Local testing also needs `http://127.0.0.1:8765` added to the same client's JavaScript origins. Never put the OAuth client secret into static files.
+Gmail API was enabled in Google Cloud project `mqmrs-os`. Public OAuth client ID is in `inbox-config.js`. `https://mqmr.bio` and local origin `http://127.0.0.1:8765` are authorized; the local origin was saved and verified on 2026-10-01. Never put the OAuth client secret into static files.
 
-At inspection, the OAuth project was External / Testing with no test users; the owner authorized declaring `gmail.modify` and adding `mqmrpc@gmail.com` as a test user. This does not publish the app.
+The OAuth project remains External / Testing. With owner approval, `gmail.modify` was saved and `mqmrpc@gmail.com` was added as a test user. This does not publish the app.
 
 Production availability of `gmail.modify` depends on Google's restricted-scope verification and the project's audience/test-user configuration. Keep testing restricted to approved test users until Google accepts the app. The client-only design avoids transmitting Gmail data through this site's backend; Google still determines verification requirements.
 
@@ -34,11 +34,11 @@ Cloudflare-assigned nameservers:
 - `alan.ns.cloudflare.com`
 - `rihana.ns.cloudflare.com`
 
-Compare all records with Namecheap before replacing `dns1.registrar-servers.com` and `dns2.registrar-servers.com`. Do not switch delegation while DNS records are incomplete. If DNSSEC is enabled, arrange the registrar DS transition before delegation and re-enable it after activation.
+On 2026-10-01, all Namecheap records were compared with Cloudflare. Namecheap had both a stale parking-page www CNAME and the GitHub Pages www CNAME; Cloudflare retains only the correct `mqmrmqr.github.io` target. All four apex A records and Resend MX/SPF/DKIM/DMARC match. Namecheap DNSSEC was already off. Custom DNS was saved with the two Cloudflare nameservers above. Public delegation now resolves to these servers and Cloudflare reports the domain active. A DNS-record snapshot is saved locally in `dns-records-before-activation.txt`.
 
-Worker: **mqmr-mail-inbound**, source `cloudflare-mail-worker.js`. It has only an email handler; no public mail-ingestion HTTP endpoint. Deploy the source, then save a strong user-generated secret `MAIL_INGEST_SECRET` in both the Worker and Supabase Edge Function secrets. The same value must be used on both sides, never in the repository.
+Worker: **mqmr-mail-inbound**, source `cloudflare-mail-worker.js`. It has only an email handler; no public mail-ingestion HTTP endpoint or scheduled test job. The source is deployed. The user saved `MAIL_INGEST_SECRET` in the Worker and Supabase; Supabase's digest differs from `RESEND_API_KEY`. Values were not read, and equality between the two services remains unverified until an inbound delivery succeeds.
 
-After domain activation, enable Cloudflare Email Routing and create the required apex MX/SPF records using its wizard while preserving Resend's `send` subdomain records. Route **Catch-all -> Send to Worker -> mqmr-mail-inbound**. All local parts then arrive in the owner's domain Inbox; extra Cloudflare rules are not needed for sender aliases. Do not enable catch-all before Worker credentials and storage are verified.
+With explicit owner approval, Cloudflare Email Routing is enabled and **Catch-all -> Send to Worker -> mqmr-mail-inbound** is active. Its wizard added apex Cloudflare MX/SPF and DKIM records while preserving Resend's `send` subdomain records. Public MX resolution confirms all three Cloudflare routes. This routes all local parts to the Worker; extra Cloudflare rules are not needed for sender aliases. Actual Worker-to-storage delivery remains pending the test below.
 
 The Worker accepts mqmr.bio recipients only, limits messages to 10 MB, hashes the raw message plus recipient for duplicate identity, and signs the envelope with HMAC and a timestamp. Supabase checks signatures and a five-minute window, parses MIME using pinned `postal-mime@3.0.0`, and stores body/attachments privately. Delivery/storage errors are surfaced rather than reported as success. Attachments occupy database space; add object storage and retention controls before high-volume use.
 
@@ -46,7 +46,9 @@ The Worker accepts mqmr.bio recipients only, limits messages to 10 MB, hashes th
 
 Run `node verify-mail.cjs`, `node verify-mail-worker.mjs`, existing desktop/theme/editor verification scripts and `node build-static.mjs`.
 
-The browser verified owner-only mailbox loading and initial alias, Inbox dark styling, and dark Projects computed colors. Sending and receiving end-to-end need saved secrets, active Cloudflare delegation/routing and an explicitly approved test email. Gmail end-to-end needs OAuth consent from a test user. Do not claim these work before those tests succeed.
+The browser verified owner-only mailbox loading and initial alias, Inbox dark styling, dark Projects computed colors, and successful connection/loading of Gmail for the approved test account on 2026-10-01. Gmail send/modify operations and multiple-account switching have not been tested against live accounts.
+
+The approved domain test from `mqmr@mqmr.bio` to itself failed at Resend authentication (HTTP 401 / validation_error), before a provider message ID was returned. Resend's new key has no recorded activity, while its domain is verified. The user must replace Supabase `RESEND_API_KEY` with a valid Resend credential. The backend now exposes only the provider HTTP status and an allowlisted error code, never the raw provider body or credentials. End-to-end domain send/receive and matching ingestion secrets are not yet verified. Do not claim these work until the self-test arrives in Inbox.
 
 ## References
 

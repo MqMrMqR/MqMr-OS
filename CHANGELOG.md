@@ -7,6 +7,7 @@
 - Added owner-only @mqmr.bio mail storage, sender aliases and Resend delivery with validation, rate limiting and idempotency.
 - Added a Cloudflare email Worker and signed Supabase ingestion with HMAC, timestamp bounds, size limits and duplicate handling.
 - Fixed Projects cards in dark appearance.
+- Added safe Resend rejection diagnostics with provider HTTP status and allowlisted error codes; provider bodies and credentials remain private.
 - Provider activation, credentials, DNS delegation and Google OAuth review remain deployment prerequisites; see INBOX-SETUP.md.
 
 ## Desktop menus and themes — 2026-10-01
