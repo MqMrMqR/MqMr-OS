@@ -1,5 +1,13 @@
 # Changelog
 
+## Desktop menus and themes — 2026-10-01
+
+- Extended auto-hide Dock activation 18px above its resting top edge while preserving horizontal and bottom bounds.
+- Added persistent Align to Grid with collision resolution, Clean Up, Sort by Name, Select All and Appearance actions in a desktop context menu.
+- Added icon context-menu opening, Shift+F10, arrow/Home/End navigation and Escape dismissal.
+- Added Light, Dark and Automatic appearance in Settings; shared semantic colors across Desktop, Simple, Phone and Admin with system-theme and cross-tab updates.
+- Added regression checks for grid collisions, stable alignment, theme persistence and preference isolation.
+
 ## Desktop icons and motion — 2026-10-01
 
 - Added desktop app icons with double-click/Enter opening, rubber-band selection, Shift/Ctrl/Command multi-selection, bounded group dragging, and device-local position persistence.
@@ -35,4 +43,3 @@
 - Fixed main-data loading to use shared content and Terminal input focus and safe plain-text output.
 
 Browser shortcuts reserved by the operating system may be intercepted before a web page receives them; the menu buttons always remain available.
-

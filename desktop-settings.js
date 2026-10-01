@@ -10,6 +10,7 @@
   const displayLabel = middle.querySelector('#settings-menu-mode-label');
   displayLabel.id = 'settings-menu-display-label'; displayLabel.textContent = 'Display';
   for (const [id,name,path] of [
+    ['theme-page','Theme','M12 3a9 9 0 1 0 9 9H12z'],
     ['wallpaper-page','Wallpaper','M3 3h18v18H3z M3 16l6-6 5 5 3-3 4 4'],
     ['focus-page','Window focus','M3 5h18v14H3z M3 9h18'],
     ['topbar-page','Menu bar','M3 5h18v14H3z M3 9h18 M6 7h1 M10 7h1'],
@@ -22,9 +23,9 @@
   const row = (title,description,control) => `<div class="setting-row setting-row-inline"><div class="setting-row-left"><span class="setting-title">${title}</span><p class="setting-description">${description}</p></div>${control}</div>`;
   const toggle = (id,label) => `<button type="button" class="switch-toggle" id="${id}" aria-label="${label}" aria-pressed="false"><span class="switch-thumb"></span></button>`;
   document.querySelector('.settings-main').insertAdjacentHTML('beforeend', `
+    <section class="settings-page" id="theme-page"><h1>Theme</h1>${row('Appearance','Choose light, dark, or follow your device.','<select class="setting-select" id="pref-theme" aria-label="Theme"><option value="light">Light</option><option value="dark">Dark</option><option value="auto">Automatic</option></select>')}<div class="theme-previews" aria-hidden="true"><div class="theme-preview"><span>Light</span></div><div class="theme-preview dark"><span>Dark</span></div></div><p class="preference-intro">Applies to apps, Settings, menus and the Dock. Your choice is saved on this device.</p></section>
     <section class="settings-page" id="wallpaper-page"><h1>Wallpaper</h1><p class="preference-intro">Choose a background for this desktop.</p><div class="wallpaper-preview" aria-hidden="true"></div><h2 class="preference-heading">Collections</h2><div id="wallpaper-grid" class="wallpaper-grid"></div></section>
     <section class="settings-page" id="focus-page"><h1>Window focus</h1>${row('Focus style','Choose how the active window is highlighted.','<select class="setting-select" id="pref-focus" aria-label="Focus style"><option value="ipad">iPadOS</option><option value="mac">macOS</option><option value="transparency">Transparency</option></select>')}<p class="preference-intro" id="focus-description"></p>${row('Interaction','Click an inactive app once to focus it, then use its content. Tiled windows stay opaque.','')}</section>
     <section class="settings-page" id="topbar-page"><h1>Menu bar</h1>${row('Solid menu bar','Use an opaque background.',toggle('pref-solid','Solid menu bar'))}${row('Show status icons','Display Wi-Fi and battery indicators.',toggle('pref-icons','Show status icons'))}${row('Show clock','Display the date and time.',toggle('pref-clock','Show clock'))}</section>
     <section class="settings-page" id="dock-page"><h1>Desktop & Dock</h1>${row('Dock by default','Choose when the Dock is visible.','<select class="setting-select" id="pref-dock" aria-label="Dock by default"><option value="visible">Always visible</option><option value="auto">Automatically hide</option></select>')}${row('When an app is maximized','Windows always fill the screen. The Dock appears over them.','<select class="setting-select" id="pref-max-dock" aria-label="Dock when maximized"><option value="inherit">Use default setting</option><option value="hidden">Hide Dock</option><option value="visible">Keep Dock visible</option></select>')}<p class="preference-intro">Move to the Dock’s usual position or focus it with the keyboard to reveal it.</p></section>`);
 })();
-

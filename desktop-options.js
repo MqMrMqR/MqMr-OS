@@ -11,6 +11,8 @@
   let prefs = {};
   try { const saved = JSON.parse(localStorage.getItem('mqmr_appearance') || '{}'); if (saved && typeof saved === 'object' && !Array.isArray(saved)) prefs = saved; } catch {}
   if (!['ipad','mac','transparency'].includes(prefs.focus)) prefs.focus = 'ipad';
+  prefs.theme = MqMrTheme.get();
+  window.addEventListener('mqmr-theme-change',event => { prefs.theme=event.detail.preference; document.querySelector('#pref-theme').value=prefs.theme; });
   const windows = [...document.querySelectorAll('.window')];
   const visible = win => !win.classList.contains('hidden') && win.style.display !== 'none' && win.style.display !== '';
   const active = () => windows.find(win => visible(win) && win.classList.contains('active'));
@@ -104,7 +106,7 @@
   function measureDock() { const width = dock.offsetWidth, height = dock.offsetHeight, bottom = parseFloat(getComputedStyle(dock).bottom) || 0; dockBounds = {left:(innerWidth-width)/2,right:(innerWidth+width)/2,top:innerHeight-bottom-height,bottom:innerHeight-bottom}; }
   measureDock(); window.addEventListener('resize',measureDock); new ResizeObserver(measureDock).observe(dock);
   document.addEventListener('pointermove', event => {
-    const inside = event.clientX >= dockBounds.left && event.clientX <= dockBounds.right && event.clientY >= dockBounds.top && event.clientY <= dockBounds.bottom;
+    const inside = event.clientX >= dockBounds.left && event.clientX <= dockBounds.right && event.clientY >= dockBounds.top - 18 && event.clientY <= dockBounds.bottom;
     dock.classList.toggle('dock-revealed',inside || dock.contains(event.target));
   });
   document.addEventListener('pointerleave',() => dock.classList.remove('dock-revealed'));
@@ -131,6 +133,7 @@
       const button = document.getElementById(id); button.classList.toggle('is-on',on); button.setAttribute('aria-pressed',String(on));
     }
     document.querySelector('#pref-focus').value = prefs.focus;
+    document.querySelector('#pref-theme').value = MqMrTheme.get();
     document.querySelector('#focus-description').textContent = {ipad:'A three-dot indicator marks the active app. All windows stay opaque.',mac:'Only the active app shows its window controls. All windows stay opaque.',transparency:'Inactive floating windows dim. Tiled windows stay opaque.'}[prefs.focus];
     document.querySelector('#pref-dock').value = prefs.dock || 'visible'; document.querySelector('#pref-max-dock').value = prefs.maxDock || 'inherit';
     try { localStorage.setItem('mqmr_appearance',JSON.stringify(prefs)); } catch {} sync();
@@ -142,6 +145,7 @@
   }
   for (const [id,key,invert] of [['pref-solid','solid',false],['pref-icons','hideIcons',true],['pref-clock','hideClock',true]]) document.getElementById(id).onclick = event => { const on = event.currentTarget.getAttribute('aria-pressed') !== 'true'; prefs[key] = invert ? !on : on; apply(); };
   for (const [id,key] of [['pref-dock','dock'],['pref-max-dock','maxDock'],['pref-focus','focus']]) document.getElementById(id).onchange = event => { prefs[key] = event.target.value; apply(); };
+  document.querySelector('#pref-theme').onchange = event => { MqMrTheme.set(event.target.value); apply(); };
   const windowAction = zone => { if (active()) snapWindow(active(),zone); };
   const menus = {
     File: [['About',() => openAppById('about-window')],['Projects',() => openAppById('projects-window')],['Contact',() => openAppById('contact-window')]],
@@ -173,4 +177,3 @@
   },100); });
   apply();
 })();
-

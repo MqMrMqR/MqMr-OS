@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'), vm=require('node:vm'), fs=require('node:fs');
+let data=JSON.stringify({focus:'mac',theme:'auto'}), mediaListener;
+const listeners={}, root={dataset:{},style:{}}, media={matches:true,addEventListener(type,fn){mediaListener=fn;}};
+const window={addEventListener(type,fn){listeners[type]=fn;},dispatchEvent(){}};
+vm.runInNewContext(fs.readFileSync('theme.js','utf8'),{window,document:{documentElement:root},matchMedia:()=>media,localStorage:{getItem:()=>data,setItem:(key,value)=>data=value},CustomEvent:class{constructor(type,options){this.detail=options.detail;}}});
+assert.equal(root.dataset.theme,'dark');
+window.MqMrTheme.set('light');assert.equal(root.dataset.theme,'light');assert.equal(JSON.parse(data).focus,'mac');
+media.matches=false;mediaListener();assert.equal(root.dataset.theme,'light');
+window.MqMrTheme.set('auto');media.matches=true;mediaListener();assert.equal(root.dataset.theme,'dark');
+window.MqMrTheme.set('invalid');assert.equal(window.MqMrTheme.get(),'auto');
+listeners.storage({key:'mqmr_appearance',newValue:JSON.stringify({theme:'light'})});assert.equal(root.dataset.theme,'light');
+console.log('Theme persistence, preference isolation, automatic system changes and cross-tab sync passed.');
