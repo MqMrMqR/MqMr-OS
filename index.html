@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="style.css?v=20261001-6">
     <link rel="stylesheet" href="desktop-ui.css?v=9">
 
-<link rel="stylesheet" href="theme.css?v=1">
+<link rel="stylesheet" href="theme.css?v=2">
 </head>
 <body>
     <div class="wallpaper"></div>
@@ -84,6 +84,7 @@
 
 
     <div class="desktop">
+<div class="window" id="inbox-window" style="display:none;top:60px;left:100px;width:1100px;height:650px;"><div class="window-titlebar"><div class="window-controls"><div class="window-control close"></div><div class="window-control minimize"></div><div class="window-control maximize"></div></div><div class="window-title">Inbox</div></div><div class="window-content inbox-window-content"><iframe src="inbox.html" title="Inbox" referrerpolicy="same-origin"></iframe></div></div>
         <!-- About Window -->
         <div class="window" id="about-window" style="top: 100px; left: 100px; width: 400px; height: 500px;">
             <div class="window-titlebar">
@@ -794,6 +795,7 @@
 </div>
 
 
+<div class="dock-item inbox" data-window="inbox-window" style="background:linear-gradient(135deg,#68c9ff,#007aff)"><span>📬</span><div class="dock-label">Inbox</div><div class="dock-dot"></div></div>
 <div class="dock-item settings" data-window="settings-window">
     <span>⚙️</span>
     <div class="dock-label">Settings</div>

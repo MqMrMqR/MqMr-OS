@@ -1,5 +1,15 @@
 # Changelog
 
+## Inbox — 2026-10-01
+
+- Added an Apple-style Inbox desktop app with multiple Google accounts, separate Gmail consent, search, folders, read/unread, stars, archive, recoverable Trash, replies and attachment downloads/sending.
+- Google tokens stay in browser memory and do not pass through Supabase; ordinary site sign-in scopes are unchanged.
+- Added owner-only @mqmr.bio mail storage, sender aliases and Resend delivery with validation, rate limiting and idempotency.
+- Added a Cloudflare email Worker and signed Supabase ingestion with HMAC, timestamp bounds, size limits and duplicate handling.
+- Fixed Projects cards in dark appearance.
+- Added safe Resend rejection diagnostics with provider HTTP status and allowlisted error codes; provider bodies and credentials remain private.
+- Provider activation, credentials, DNS delegation and Google OAuth review remain deployment prerequisites; see INBOX-SETUP.md.
+
 ## Desktop menus and themes — 2026-10-01
 
 - Extended auto-hide Dock activation 18px above its resting top edge while preserving horizontal and bottom bounds.
