@@ -12,7 +12,9 @@ body[data-focus-style="ipad"] .window.active .window-focus-indicator span { back
 body[data-focus-style="ipad"] .window-title { padding-top:13px; }
 body[data-focus-style="ipad"] .window.active { box-shadow:0 0 0 2px #ffffffaa,0 20px 60px #0004; }
 body[data-focus-style="mac"] .window:not(.active) .window-titlebar { background:#eeeef0; color:#8a8a90; }
-body[data-focus-style="mac"] .window:not(.active) .window-control { visibility:hidden; pointer-events:none; }
+.window-control { transition:opacity .16s ease,visibility .16s; }
+body[data-focus-style="mac"] .window:not(.active) .window-control { opacity:0; visibility:hidden; pointer-events:none; }
+body[data-focus-style="mac"] .window.active .window-control { opacity:1; visibility:visible; }
 body[data-focus-style="mac"] .window.active .window-titlebar { background:#fafafa; color:#202026; }
 .window-focus-shield { position:absolute; inset:52px 0 0; width:100%; border:0; background:transparent; cursor:default; z-index:50; border-radius:0; }
 .window-focus-shield[hidden] { display:none; }
@@ -21,8 +23,6 @@ body[data-focus-style="mac"] .window.active .window-titlebar { background:#fafaf
 :is(button,select,a,[role="button"]):focus-visible { outline:3px solid #3981f7; outline-offset:3px; }
 .dock { transition:transform .22s ease,opacity .22s ease; }
 body.dock-auto .dock:not(.dock-revealed):not(:focus-within) { transform:translate(-50%,calc(100% + 19px)); opacity:0; pointer-events:none; }
-.dock-reveal-edge { position:fixed; bottom:0; left:25%; width:50%; height:8px; z-index:10001; }
-body:not(.dock-auto) .dock-reveal-edge { display:none; }
 .dock-item { cursor:pointer; }
 .settings-btn,.mid-btn { font:inherit; text-align:left; border:0; background:transparent; cursor:pointer; box-sizing:border-box; }
 .settings-btn { width:100%; }
@@ -62,5 +62,17 @@ body:not(.dock-auto) .dock-reveal-edge { display:none; }
 .preference-action { padding:10px 15px; border:1px solid #d5d5df; border-radius:8px; background:white; color:#2868d3; cursor:pointer; }
 @media(max-width:1000px) { #settings-window .settings-middle { width:150px !important; } #settings-window .settings-main { padding:22px !important; } }
 @media(max-width:760px) { #settings-window { min-width:0; } #settings-window .window-content > :first-child { width:135px !important; } #settings-window .settings-middle { width:140px !important; } #settings-window .settings-main { padding:16px !important; } .wallpaper-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .setting-row-inline:has(select) { flex-direction:column; align-items:flex-start; } .settings-main .setting-select { max-width:100%; width:100%; } }
-@media(prefers-reduced-motion:reduce) { .dock { transition:none; } }
+@media(prefers-reduced-motion:reduce) { .dock,.window-control { transition:none; } }
+.desktop-minimizing { pointer-events:none; }
+.desktop-icons { position:absolute; inset:16px 16px 48px; z-index:1; outline:none; user-select:none; touch-action:none; }
+.desktop-icon { position:absolute; width:88px; height:92px; display:flex; flex-direction:column; align-items:center; gap:5px; padding:6px 3px; border:1px solid transparent; border-radius:8px; cursor:default; }
+.desktop-icon-symbol { width:52px; height:52px; display:grid; place-items:center; font-size:29px; border-radius:12px; box-shadow:0 3px 10px #0003,inset 0 0 0 1px #ffffff30; pointer-events:none; }
+.desktop-icon-label { max-width:100%; padding:2px 5px; border-radius:4px; color:white; font-size:12px; line-height:16px; text-shadow:0 1px 3px #000c; text-align:center; pointer-events:none; }
+.desktop-icon[aria-selected="true"] { border-color:#ffffff50; background:#ffffff26; }
+.desktop-icon[aria-selected="true"] .desktop-icon-label { background:#1674e9; text-shadow:none; }
+.desktop-icon:focus-visible { outline:2px solid #ffffffcc; outline-offset:2px; }
+.dragging-icons { cursor:grabbing; } .dragging-icons .desktop-icon[aria-selected="true"] { cursor:grabbing; }
+.desktop-selection { position:absolute; background:#2788ff30; border:1px solid #7bb6ff; border-radius:2px; pointer-events:none; z-index:2; }
+.desktop-selection[hidden] { display:none; }
+.desktop-status { position:absolute; width:1px; height:1px; clip-path:inset(50%); overflow:hidden; }
 

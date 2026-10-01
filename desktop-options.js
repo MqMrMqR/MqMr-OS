@@ -21,7 +21,7 @@
     item.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); item.click(); } };
     item.addEventListener('click',() => fitWindowToDesktop(document.getElementById(item.dataset.window)));
   });
-  let desktopSnapshot = null, blockedClick = null;
+  let desktopSnapshot = null, desktopTransition = false, blockedClick = null;
   function focus(win) {
     if (!win || !visible(win)) return;
     windows.forEach(other => other.classList.toggle('active', other === win));
@@ -68,11 +68,28 @@
   document.addEventListener('pointerdown', event => { if (!event.target.closest?.('.window')) blockedClick = null; }, true);
   const observer = new MutationObserver(sync); windows.forEach(win => observer.observe(win, {attributes:true,attributeFilter:['class']}));
   window.toggleShowDesktop = () => {
+    if (desktopTransition) return;
     if (desktopSnapshot && !windows.some(visible)) {
       const snapshot = desktopSnapshot; desktopSnapshot = null;
       snapshot.apps.forEach(win => { win.classList.remove('hidden'); win.style.display = 'flex'; }); focus(snapshot.focus || snapshot.apps.at(-1));
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) snapshot.apps.forEach(win => win.animate([
+        {opacity:0,transform:'scale(0.1) translateY(120vh)'},
+        {opacity:.8,transform:'scale(0.9) translateY(10px)'},
+        {opacity:1,transform:'scale(1) translateY(0)'}
+      ],{duration:280,easing:'cubic-bezier(.4,0,.2,1)'}));
     } else {
-      desktopSnapshot = {apps:windows.filter(visible),focus:active()}; desktopSnapshot.apps.forEach(win => win.classList.add('hidden')); updateFocusedDockDot(null);
+      desktopSnapshot = {apps:windows.filter(win => visible(win) && !win.classList.contains('closing') && !win.classList.contains('minimizing')),focus:active()};
+      const snapshot = desktopSnapshot; desktopTransition = true;
+      snapshot.apps.forEach(win => win.classList.add('minimizing','desktop-minimizing'));
+      const finish = () => {
+        snapshot.apps.forEach(win => {
+          // A Dock/app click during the transition cancels hiding that app.
+          if (win.classList.contains('desktop-minimizing')) win.classList.add('hidden');
+          win.classList.remove('desktop-minimizing','minimizing');
+        });
+        desktopTransition = false; sync(); if (!active()) updateFocusedDockDot(null);
+      };
+      setTimeout(finish,matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 280);
     }
     sync();
   };
@@ -80,14 +97,20 @@
     item.setAttribute('role','button'); item.tabIndex = 0; item.setAttribute('aria-label','Show or restore desktop'); item.title = 'Show / restore desktop'; item.onclick = window.toggleShowDesktop;
     item.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleShowDesktop(); } };
   });
-  document.querySelector('#show-desktop-setting').onclick = window.toggleShowDesktop;
   document.addEventListener('keydown', event => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') { event.preventDefault(); toggleShowDesktop(); } });
-  const reveal = document.createElement('div'); reveal.className = 'dock-reveal-edge'; reveal.setAttribute('aria-hidden','true'); document.body.append(reveal);
-  reveal.onpointerenter = () => dock.classList.add('dock-revealed'); dock.onpointerleave = () => dock.classList.remove('dock-revealed');
-  document.addEventListener('pointermove', event => { if (event.clientY < innerHeight - 125 && !dock.contains(event.target)) dock.classList.remove('dock-revealed'); });
+  // Measure its resting box, ignoring the auto-hide transform. No invisible
+  // hit layer: windows and desktop icons beneath the Dock still receive clicks.
+  let dockBounds;
+  function measureDock() { const width = dock.offsetWidth, height = dock.offsetHeight, bottom = parseFloat(getComputedStyle(dock).bottom) || 0; dockBounds = {left:(innerWidth-width)/2,right:(innerWidth+width)/2,top:innerHeight-bottom-height,bottom:innerHeight-bottom}; }
+  measureDock(); window.addEventListener('resize',measureDock); new ResizeObserver(measureDock).observe(dock);
+  document.addEventListener('pointermove', event => {
+    const inside = event.clientX >= dockBounds.left && event.clientX <= dockBounds.right && event.clientY >= dockBounds.top && event.clientY <= dockBounds.bottom;
+    dock.classList.toggle('dock-revealed',inside || dock.contains(event.target));
+  });
+  document.addEventListener('pointerleave',() => dock.classList.remove('dock-revealed'));
   const wallpaper = document.querySelector('.wallpaper');
   const wallpaperTransition = document.createElement('div'); wallpaperTransition.className = 'wallpaper-transition'; wallpaperTransition.setAttribute('aria-hidden','true'); wallpaper.append(wallpaperTransition);
-  const originalBackground = 'url(assets/macos_big_sur_style_abstract_wallpaper.png) center/cover';
+  const originalBackground = 'url(assets/mqmr-waves.webp) center/cover';
   let currentBackground, wallpaperAnimation;
   function apply() {
     const background = backgrounds[prefs.background] || originalBackground;
@@ -102,7 +125,7 @@
     document.body.dataset.focusStyle = prefs.focus;
     document.body.classList.toggle('solid-menubar', !!prefs.solid);
     document.querySelector('.menubar-icons').hidden = !!prefs.hideIcons; document.querySelector('#clock').hidden = !!prefs.hideClock;
-    document.querySelector('.wallpaper-preview').style.background = backgrounds[prefs.background] || 'url(assets/macos_big_sur_style_abstract_wallpaper.png) center/cover';
+    document.querySelector('.wallpaper-preview').style.background = backgrounds[prefs.background] || originalBackground;
     document.querySelectorAll('[data-wallpaper]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.wallpaper === (prefs.background || 'Original'))));
     for (const [id,on] of [['pref-solid',!!prefs.solid],['pref-icons',!prefs.hideIcons],['pref-clock',!prefs.hideClock]]) {
       const button = document.getElementById(id); button.classList.toggle('is-on',on); button.setAttribute('aria-pressed',String(on));
@@ -114,7 +137,7 @@
   }
   for (const [name,background] of Object.entries(backgrounds)) {
     const button = document.createElement('button'); button.type = 'button'; button.className = 'wallpaper-choice'; button.dataset.wallpaper = name;
-    const swatch = document.createElement('span'); swatch.style.background = background || 'url(assets/macos_big_sur_style_abstract_wallpaper.png) center/cover';
+    const swatch = document.createElement('span'); swatch.style.background = background || originalBackground;
     button.append(swatch,document.createTextNode(name)); button.onclick = () => { prefs.background = name; apply(); }; document.querySelector('#wallpaper-grid').append(button);
   }
   for (const [id,key,invert] of [['pref-solid','solid',false],['pref-icons','hideIcons',true],['pref-clock','hideClock',true]]) document.getElementById(id).onclick = event => { const on = event.currentTarget.getAttribute('aria-pressed') !== 'true'; prefs[key] = invert ? !on : on; apply(); };
@@ -123,7 +146,7 @@
   const menus = {
     File: [['About',() => openAppById('about-window')],['Projects',() => openAppById('projects-window')],['Contact',() => openAppById('contact-window')]],
     Edit: [['Settings',() => openAppById('settings-window')]],
-    View: [['Show / restore desktop',window.toggleShowDesktop],...Object.keys(backgrounds).map(name => ['Background: ' + name,() => { prefs.background = name; apply(); }])],
+    View: Object.keys(backgrounds).map(name => ['Background: ' + name,() => { prefs.background = name; apply(); }]),
     Go: [['Workspace',() => openAppById('workspace-window')],['Terminal',() => openAppById('terminal-window')]],
     Window: [['Maximize / restore',() => { if (active()) toggleWindowMaximize(active()); }],...['left','right','top-left','top-right','bottom-left','bottom-right'].map(zone => ['Tile ' + zone,() => windowAction(zone)])],
     Help: [['Settings & release notes',() => openAppById('settings-window')]]

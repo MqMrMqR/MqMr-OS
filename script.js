@@ -360,7 +360,7 @@ document.querySelectorAll(".dock-item").forEach(item => {
         });
 
         // فعّل هذه النافذة فقط
-        win.classList.remove("hidden");
+        win.classList.remove("hidden", "minimizing", "desktop-minimizing", "closing");
         win.classList.add("active");
         win.style.display = "flex";
         win.style.zIndex = ++zIndexCounter;
@@ -431,6 +431,7 @@ closeBtn.addEventListener("pointerdown", e => {
     win.classList.add("closing");
 
     setTimeout(() => {
+        if (!win.classList.contains('closing')) return;
         win.classList.add("hidden");
         resetWindowState(win);
 
@@ -448,6 +449,7 @@ minBtn.addEventListener("pointerdown", e => {
     win.classList.add("minimizing");
 
     setTimeout(() => {
+        if (!win.classList.contains('minimizing')) return;
         win.classList.add("hidden");
         win.classList.remove("active", "minimizing");
         const activeWindow = document.querySelector(".window.active:not(.hidden)");
@@ -814,7 +816,7 @@ function openAppById(windowId) {
         if (w !== win) w.classList.remove("active");
     });
 
-    win.classList.remove("hidden");
+    win.classList.remove("hidden", "minimizing", "desktop-minimizing", "closing");
     win.classList.add("active");
     win.style.display = "flex";
     fitWindowToDesktop(win);
@@ -1905,3 +1907,4 @@ if (terminalWindowEl) {
     initializeTerminalContent();
   };
 }
+

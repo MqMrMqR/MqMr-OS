@@ -1,5 +1,15 @@
 # Changelog
 
+## Desktop icons and motion — 2026-10-01
+
+- Added desktop app icons with double-click/Enter opening, rubber-band selection, Shift/Ctrl/Command multi-selection, bounded group dragging, and device-local position persistence.
+- Added arrow-key navigation, Alt+arrow positioning, Ctrl/Command+A selection, and Escape cancellation.
+- Show Desktop now uses the original minimize animation and restores positions with a matching return animation; removed its Settings row and View-menu entry.
+- macOS window controls fade in and out with reduced-motion support.
+- Auto-hidden Dock reveals at its actual resting height and width, rather than at the bottom screen edge.
+- Replaced the Original wallpaper with a clean generated wave illustration, delivered as a compact WebP.
+- Fixed an app reopening during minimize/close being hidden by an old timer.
+
 ## Desktop refinements — 2026-09-30
 
 - Maximized apps fill the screen below the menu bar, independently of Dock visibility. Dock hide options remain available.
