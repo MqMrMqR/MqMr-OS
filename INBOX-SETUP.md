@@ -8,6 +8,8 @@ The ordinary Supabase Google sign-in keeps its existing identity scopes. Inbox s
 
 Gmail API was enabled in Google Cloud project `mqmrs-os`. Public OAuth client ID is in `inbox-config.js`. `https://mqmr.bio` is authorized. Local testing also needs `http://127.0.0.1:8765` added to the same client's JavaScript origins. Never put the OAuth client secret into static files.
 
+At inspection, the OAuth project was External / Testing with no test users; the owner authorized declaring `gmail.modify` and adding `mqmrpc@gmail.com` as a test user. This does not publish the app.
+
 Production availability of `gmail.modify` depends on Google's restricted-scope verification and the project's audience/test-user configuration. Keep testing restricted to approved test users until Google accepts the app. The client-only design avoids transmitting Gmail data through this site's backend; Google still determines verification requirements.
 
 Supported: account switching, Inbox/All Mail/Starred/Sent/Drafts/Junk/Trash lists, Gmail search, read/unread, stars, archive, recoverable Trash/restore, plaintext message reading, replies, sending and attachment downloads. Existing drafts are readable, but draft editing/saving, labels management and background notifications are future work. HTML-only mail is rendered as safe text with no scripts or remote tracking images. Attachment total is limited to 10 MB.
