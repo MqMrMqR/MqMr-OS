@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin Panel · MqR</title>
+  <link rel="stylesheet" href="profile.css">
+  <script type="module" src="editor.js"></script>
+</head>
+<body>
+  <div class="site editor-site">
+    <header class="masthead">
+      <a class="wordmark" href="./">MqR</a>
+      <div class="masthead-actions"><a class="connect-button" href="./">View profile</a><button class="access-button" type="button" id="lock-editor" hidden>Lock</button></div>
+    </header>
+    <main class="editor-layout">
+      <h1>Admin Panel</h1>
+      <p class="editor-status" id="editor-status" role="status">Checking access…</p>
+      <form id="profile-editor" method="post" hidden>
+        <fieldset>
+          <legend>Profile</legend>
+          <div class="editor-pair">
+            <label>Name <input id="edit-name" required maxlength="32"></label>
+            <label>Display handle <input id="edit-handle" required maxlength="24"></label>
+          </div>
+          <label>Intro <textarea id="edit-note" required maxlength="150" rows="2"></textarea></label>
+        </fieldset>
+        <fieldset>
+          <legend>Social profiles</legend>
+          <div id="edit-links"></div>
+        </fieldset>
+        <button class="access-button" id="save-profile" type="submit">Save profile</button>
+      </form>
+    </main>
+  </div>
+</body>
+</html>

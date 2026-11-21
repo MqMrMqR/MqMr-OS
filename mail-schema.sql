@@ -22,13 +22,7 @@ create table if not exists public.mail_outbox (
 alter table public.mail_addresses enable row level security;
 alter table public.mail_messages enable row level security;
 alter table public.mail_outbox enable row level security;
--- Client reads require the verified owner role; mutations use the validated API.
-create policy owner_reads_mail on public.mail_messages for select to authenticated
- using ((select auth.jwt()->>'email')='mqmrpc@gmail.com' and (select auth.jwt()->'app_metadata'->>'role')='admin');
-create policy owner_reads_addresses on public.mail_addresses for select to authenticated
- using ((select auth.jwt()->>'email')='mqmrpc@gmail.com' and (select auth.jwt()->'app_metadata'->>'role')='admin');
-revoke all on public.mail_addresses,public.mail_messages,public.mail_outbox from anon,authenticated;
-grant select on public.mail_addresses,public.mail_messages to authenticated;
+-- Only the edge functions access these tables.
+revoke all on public.mail_addresses,public.mail_messages,public.mail_outbox from public,anon,authenticated;
 grant all on public.mail_addresses,public.mail_messages,public.mail_outbox to service_role;
 insert into public.mail_addresses(address) values('mqmr@mqmr.bio') on conflict do nothing;
-create policy server_only_outbox on public.mail_outbox for all to authenticated using(false) with check(false);
