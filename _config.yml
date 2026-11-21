@@ -1,0 +1,13 @@
+# GitHub Pages publishes the static site from main through Jekyll.
+exclude:
+  - README.md
+  - build-static.mjs
+  - cloudflare-mail-worker.js
+  - mail-domain.ts
+  - mail-ingest.ts
+  - mail-schema.sql
+  - preview-inbox.js
+  - supabase
+  - tools
+  - verify-mail-worker.mjs
+  - verify-mail.cjs

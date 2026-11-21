@@ -1,13 +1,26 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.49.8';
 const url=Deno.env.get('SUPABASE_URL')!, key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
+const ownerId = '5922fd59-f07a-4ec9-8939-abc615b7c640';
+
+// Decode only after getUser has verified this exact token with Supabase Auth.
+function usedPasswordAndTotp(token: string): boolean {
+ try {
+  const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  const { sub, amr, aal } = JSON.parse(atob(payload));
+  if (sub !== ownerId || aal !== 'aal2' || !Array.isArray(amr)) return false;
+  return amr.some(entry => entry?.method === 'password') && amr.some(entry => entry?.method === 'totp');
+ } catch {
+  return false;
+ }
+}
 const origins=new Set(['https://mqmr.bio','https://www.mqmr.bio','http://127.0.0.1:8765','http://localhost:8765']);
 const email=/^[^\s<>@\r\n]+@[^\s<>@\r\n]+\.[^\s<>@\r\n]+$/;
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const fail=(error:any)=>{if(error)throw new Error('Mail storage request failed.');};
 Deno.serve(async req=>{
  const origin=req.headers.get('origin')||'';
- const headers={'Content-Type':'application/json','Access-Control-Allow-Origin':origins.has(origin)?origin:'https://mqmr.bio','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin'};
+ const headers={'Content-Type':'application/json','Cache-Control':'no-store','Access-Control-Allow-Origin':origins.has(origin)?origin:'https://mqmr.bio','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'POST, OPTIONS','Vary':'Origin'};
  const result=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers});
  if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
  if(req.method!=='POST')return result({error:'Method not allowed'},405);
@@ -15,7 +28,7 @@ Deno.serve(async req=>{
  const token=req.headers.get('authorization')?.replace(/^Bearer\s+/i,'');if(!token)return result({error:'Sign in required'},401);
  const {data:{user},error:authError}=await db.auth.getUser(token);
  if(authError||!user)return result({error:'Sign in required'},401);
- if(user.email!=='mqmrpc@gmail.com'||user.app_metadata?.role!=='admin')return result({error:'Domain mail is restricted to its owner'},403);
+ if(user.id!==ownerId||user.email!=='mqmrpc@gmail.com'||user.app_metadata?.role!=='admin'||!usedPasswordAndTotp(token))return result({error:'Unlock the mailbox with your password and authenticator code'},403);
  try{
   if(Number(req.headers.get('content-length')||0)>15000000)return result({error:'Message is too large'},413);
   const raw=await req.text();if(raw.length>15000000)return result({error:'Message is too large'},413);const input=JSON.parse(raw);

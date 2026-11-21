@@ -1,10 +1,8 @@
 dist/
+.openai/
 .sites-review/
 .sites-runtime/
-.openai/
-*-verified.png
-*.zip
-*.tar.gz
+.preview/
 node_modules/
 .env*
 !.env.example
