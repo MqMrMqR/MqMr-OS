@@ -30,7 +30,7 @@
   const inline = bodies => bodies.map(body => decode(body.data)).join('');
   return { text: inline(text), html: inline(html), files };
  }
- async function resolveParts(payload, fetchPart) {
+ async function resolveParts(payload, fetchPart, { includeHtml = false } = {}) {
   const { text, html, files } = collectParts(payload);
   const resolve = async bodies => {
    const decoded = [];
@@ -38,14 +38,27 @@
    return decoded.join('');
   };
   const plain = await resolve(text);
-  return { text: plain, html: plain ? '' : await resolve(html), files };
+  const formatted = !plain || includeHtml ? await resolve(html).catch(error => {
+   if (!plain) throw error;
+   return '';
+  }) : '';
+  return { text: plain, html: formatted, files };
  }
- function mime({from,to,subject,text,replyId,files=[]}){
+ function mime({from,to,subject,text,html,replyId,files=[]}){
  const boundary='mqmr_'+crypto.randomUUID();
+ const alternative='mqmr_alt_'+crypto.randomUUID();
  const lines=[`From: ${clean(from)}`,`To: ${clean(to)}`,`Subject: ${subjectWords(subject)}`, 'MIME-Version: 1.0'];
  if(replyId){lines.push(`In-Reply-To: ${clean(replyId)}`,`References: ${clean(replyId)}`);}
- lines.push(`Content-Type: multipart/mixed; boundary="${boundary}"`,'',`--${boundary}`,'Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',wrap(encode(text)));
- files.forEach(file=>lines.push(`--${boundary}`,`Content-Type: ${/^[\w.+-]+\/[\w.+-]+$/.test(file.type)?file.type:'application/octet-stream'}`,`Content-Disposition: attachment; filename="attachment"; filename*=UTF-8''${encodeURIComponent(clean(file.name))}`,'Content-Transfer-Encoding: base64','',wrap(file.content)));
+ lines.push(`Content-Type: multipart/mixed; boundary="${boundary}"`,'',`--${boundary}`);
+ if(html)lines.push(`Content-Type: multipart/alternative; boundary="${alternative}"`,'',`--${alternative}`);
+ lines.push('Content-Type: text/plain; charset=UTF-8','Content-Transfer-Encoding: base64','',wrap(encode(text)));
+ if(html)lines.push(`--${alternative}`,'Content-Type: text/html; charset=UTF-8','Content-Transfer-Encoding: base64','',wrap(encode(html)),`--${alternative}--`);
+ files.forEach(file=>{
+  const filename=clean(file.name);
+  const fallback=filename.replace(/[^a-zA-Z0-9_. -]/g, '_').slice(0,128)||'attachment';
+  const extended=encodeURIComponent(filename).replace(/['()*]/g,c=>'%'+c.charCodeAt(0).toString(16));
+  lines.push(`--${boundary}`,`Content-Type: ${/^[\w.+-]+\/[\w.+-]+$/.test(file.type)?file.type:'application/octet-stream'}`,`Content-Disposition: attachment; filename*=UTF-8''${extended}; filename="${fallback}"`,'Content-Transfer-Encoding: base64','',wrap(file.content));
+ });
  lines.push(`--${boundary}--`,'');return url64(lines.join('\r\n'));
  }
  const api={decode,encode,url64,b64bytes,clean,header,parts,resolveParts,mime}; if(typeof module!=='undefined')module.exports=api;else window.MailCore=api;

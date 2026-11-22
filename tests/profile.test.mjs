@@ -1,6 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeAppearance, titleText } from '../profile-appearance.js';
+import { themePresets } from '../profile-themes.js';
+
+test('presets provide distinct complete light and dark palettes', () => {
+  assert.equal(themePresets.length, 16);
+  assert.equal(new Set(themePresets.map(theme => theme.colors.panel)).size, 16);
+  for (const theme of themePresets) {
+    const normalized = normalizeAppearance(theme);
+    assert.deepEqual(normalized.colors, theme.colors);
+    assert.deepEqual(normalized.social, theme.social);
+  }
+});
 
 test('saved semicolon preference carries over to the configurable title ending', () => {
   const profile = { name: 'Ethan', handle: 'MqMr', appearance: normalizeAppearance(undefined, false) };
