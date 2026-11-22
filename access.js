@@ -1,4 +1,5 @@
 import { isLocalPreview } from './preview-mode.js';
+import { deviceSessionsAvailable, rememberDevice, rememberedOwnerClient } from './device-client.js';
 
 if (window.self !== window.top) throw new Error('Open MqR directly to sign in.');
 
@@ -31,6 +32,7 @@ function openAccess(forEditor) {
   password.autocomplete = isLocalPreview ? 'off' : 'current-password';
   hint.hidden = !isLocalPreview || editor;
   hint.textContent = hint.hidden ? '' : 'Use a sample password to open the inbox preview.';
+  if (!isLocalPreview) deviceSessionsAvailable().then(available => { $('#remember-field').hidden = !available; });
   dialog.showModal();
   (email.required && !email.value ? email : password).focus();
 }
@@ -65,8 +67,19 @@ async function cancelPendingLogin() {
   if (client) await client.auth.signOut({ scope: 'local' }).catch(() => {});
 }
 
-$('#open-access').addEventListener('click', () => openAccess(false));
-$('#open-connect').addEventListener('click', () => openAccess(true));
+async function openPrivate(forEditor) {
+  if (!isLocalPreview && await deviceSessionsAvailable()) {
+    const remembered = await rememberedOwnerClient().catch(() => null);
+    if (remembered) {
+      location.assign(forEditor ? 'editor.html' : 'inbox.html');
+      return;
+    }
+  }
+  openAccess(forEditor);
+}
+
+$('#open-access').addEventListener('click', () => openPrivate(false));
+$('#open-connect').addEventListener('click', () => openPrivate(true));
 $('#close-access').addEventListener('click', () => dialog.close());
 dialog.addEventListener('cancel', event => { if (busy) event.preventDefault(); });
 dialog.addEventListener('close', async () => {
@@ -186,6 +199,17 @@ verification.addEventListener('submit', async event => {
     if (result.error || !ownerCheck(result.data.user, data.access_token, true)) {
       status.textContent = 'Could not verify the owner session.';
       return;
+    }
+    if ($('#remember-device').checked) {
+      const remembered = await rememberDevice(data).catch(() => false);
+      if (!remembered) {
+        $('#remember-device').checked = false;
+        status.textContent = 'Could not remember this device. Enter another code to continue for this tab.';
+        return;
+      }
+      const { sessionStorageKey } = await import('./mail-access.js');
+      await client.auth.stopAutoRefresh();
+      sessionStorage.removeItem(sessionStorageKey);
     }
     client = null;
     location.assign(destination());

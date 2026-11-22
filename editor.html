@@ -27,6 +27,8 @@
             <label>Display handle <input id="edit-handle" required maxlength="24"></label>
           </div>
           <label>Intro <textarea id="edit-note" required maxlength="150" rows="2"></textarea></label>
+          <label class="check-row"><input id="edit-semicolon" type="checkbox"> Show semicolon</label>
+          <p class="editor-example"><output id="edit-title-preview"></output></p>
         </fieldset>
         <fieldset>
           <legend>Social profiles</legend>
@@ -34,6 +36,11 @@
         </fieldset>
         <button class="access-button" id="save-profile" type="submit">Save profile</button>
       </form>
+      <section id="devices-panel" hidden aria-labelledby="devices-heading">
+        <h2 id="devices-heading">Remembered devices</h2>
+        <p id="devices-status" role="status"></p>
+        <ul id="device-list"></ul>
+      </section>
     </main>
   </div>
 </body>

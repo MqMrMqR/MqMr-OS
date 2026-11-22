@@ -41,9 +41,16 @@ test('fresh schema replay, owner-only writes, conflict guard and lazy attachment
     assert.equal((await db.query("update public.profile_homepage set payload='{}' where revision=1 returning revision")).rows.length, 0);
     await assert.rejects(db.query('select public.mail_read($1)', [id]), { code: '42501' });
     await assert.rejects(db.query('select * from public.site_content'), { code: '42501' });
+    await assert.rejects(db.query('select * from public.device_sessions'), { code: '42501' });
+    await db.query("update public.profile_homepage set payload=jsonb_build_object('photo', repeat('a', 24000))");
+    await assert.rejects(db.query("update public.profile_homepage set payload=jsonb_build_object('photo', repeat('a', 128000))"), { code: '23514' });
+    await db.query("update public.profile_homepage set payload='{\"name\":\"New\"}'");
     await db.exec('set role anon');
     assert.deepEqual((await db.query('select payload from public.profile_homepage')).rows[0].payload, { name: 'New' });
+    await assert.rejects(db.query('select * from public.device_sessions'), { code: '42501' });
     await db.exec('set role service_role');
+    await db.query("insert into public.device_sessions(cookie_hash, credentials, label, expires_at) values (repeat('a',64),'sealed','Test browser',now()+interval '14 days')");
+    assert.equal((await db.query('select label from public.device_sessions')).rows[0].label, 'Test browser');
     const detail = await db.query('select public.mail_read($1) as message', [id]);
     assert.deepEqual(detail.rows[0].message.attachments, [{ id: '1', name: 'note.txt' }]);
     const file = await db.query("select public.mail_attachment($1,'1') as data", [id]);

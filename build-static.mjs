@@ -7,7 +7,7 @@ const preview = process.argv.includes('--preview');
 const previewRoot = join(root, '.preview');
 const output = preview ? join(previewRoot, 'site') : join(root, 'dist');
 const publicFiles = [
-  'index.html', 'profile.css', 'access.js', 'mail-access.js', 'profiles',
+  'index.html', 'profile.css', 'access.js', 'mail-access.js', 'device-client.js', 'profiles',
   'profile-content.js', 'profile-page.js', 'editor.html', 'editor.js',
   'inbox.html', 'inbox.css', 'inbox.js', 'private-inbox.js', 'inbox-config.js',
   'mail-core.js', 'privacy.html', 'CNAME'

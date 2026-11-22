@@ -5,6 +5,30 @@
  const mailbox = $('#mailbox');
  const preview = mailbox.dataset.preview === 'true';
  let previewOpened = false, lastMessageButton = null;
+ const onMobile = matchMedia('(max-width: 760px)');
+ const sidebar = $('.mail-sidebar');
+ const drawer = $('#mobile-mailboxes');
+ const drawerButton = $('#open-folders');
+ function placeSidebar() {
+  if (onMobile.matches) drawer.append(sidebar);
+  else {
+   if (drawer.open) drawer.close();
+   mailbox.insertBefore(sidebar, $('.mail-main'));
+  }
+ }
+ placeSidebar();
+ onMobile.addEventListener('change', placeSidebar);
+ drawerButton.onclick = () => {
+  drawer.showModal();
+  drawerButton.setAttribute('aria-expanded', 'true');
+ };
+ $('#close-folders').onclick = () => drawer.close();
+ drawer.onclose = () => drawerButton.setAttribute('aria-expanded', 'false');
+ drawer.onclick = event => {
+  if (event.target !== drawer) return;
+  const bounds = drawer.getBoundingClientRect();
+  if (event.clientX > bounds.right) drawer.close();
+ };
  const showList = () => { delete mailbox.dataset.reading; };
  const resetReader = () => {
   readerTicket++;
@@ -15,15 +39,19 @@
  $('#back-to-list').onclick = () => { showList(); lastMessageButton?.focus(); };
  const folders={INBOX:'Inbox',ALL:'All Mail',STARRED:'Starred',SENT:'Sent',DRAFT:'Drafts',SPAM:'Junk',TRASH:'Trash'};
  const accounts = new Map();
+ const lists = new Map();
+ const summaries = new Map();
+ const bodies = new Map();
+ const listFreshness = 12000;
  let current = null, folder = 'INBOX', view = null, readerTicket = 0;
  let draft = null, composing = false, sending = false;
  const text=(tag,value,className)=>{const el=document.createElement(tag);el.textContent=value||'';if(className)el.className=className;return el;};
  const status=value=>$('#mail-status').textContent=value;
  const fail=error=>status(error.message||'Mail could not load. Please try again.');
- function controls(){const connected=current&&accounts.has(current);$('#compose').disabled=!connected;$('#disconnect').disabled=!connected||current==='domain';$('#aliases').hidden=current!=='domain';}
+ function controls(){const connected=current&&accounts.has(current);$('#compose').disabled=$('#mobile-compose').disabled=!connected;$('#disconnect').disabled=!connected||current==='domain';$('#aliases').hidden=current!=='domain';}
  function renderAccounts(){const box=$('#accounts');box.replaceChildren();accounts.forEach((account,key)=>{const button=text('button',account.email,'account-button');button.setAttribute('aria-current',String(key===current));button.onclick=()=>selectAccount(key);box.append(button);});controls();}
- function renderFolders(){const box=$('#folders');box.replaceChildren();Object.entries(folders).forEach(([id,name])=>{if(current==='domain'&&['DRAFT','SPAM'].includes(id))return;const button=text('button',name);button.setAttribute('aria-current',String(folder===id));button.onclick=()=>{folder=id;showList();renderFolders();load();};box.append(button);});$('#mailbox-title').textContent=folders[folder];}
- function selectAccount(key){current=key;folder='INBOX';$('#search').value='';renderAccounts();renderFolders();load();}
+ function renderFolders(){const box=$('#folders');box.replaceChildren();Object.entries(folders).forEach(([id,name])=>{if(current==='domain'&&['DRAFT','SPAM'].includes(id))return;const button=text('button',name);button.setAttribute('aria-current',String(folder===id));button.onclick=()=>{if(drawer.open)drawer.close();folder=id;renderFolders();load();};box.append(button);});$('#mailbox-title').textContent=folders[folder];}
+ function selectAccount(key){if(drawer.open)drawer.close();current=key;folder='INBOX';$('#search').value='';renderAccounts();renderFolders();load();}
  async function gmail(path,options={},key=current){const account=accounts.get(key);if(!account||Date.now()>=account.expires)throw Error('Mail access expired. Use Add Google account to reconnect.');const response=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/'+path,{...options,headers:{Authorization:'Bearer '+account.token,'Content-Type':'application/json',...options.headers}});if(response.status===401){account.expires=0;throw Error('Mail access expired. Reconnect this Google account.');}const data=await response.json();if(!response.ok)throw Error(data.error?.message||'Google mail request failed.');return data;}
  async function domain(action,data={}){const result=await siteBackend.functions.invoke('mail-domain',{body:{action,...data}});if(result.error){let detail;try{detail=await result.error.context?.json();}catch{}throw Error(detail?.error||'Domain mail is unavailable. Please check its connection.');}if(result.data?.error)throw Error(result.data.error);return result.data;}
  $('#connect').onclick=async()=>{
@@ -32,34 +60,106 @@
   google.accounts.oauth2.initTokenClient({client_id:InboxConfig.googleClientId,scope:'https://www.googleapis.com/auth/gmail.modify',include_granted_scopes:false,error_callback:()=>status('Google connection was closed. You can try again.'),callback:async result=>{
    if(result.error){status('Google mail permission was not granted.');return;}
    if(!google.accounts.oauth2.hasGrantedAllScopes(result,'https://www.googleapis.com/auth/gmail.modify')){status('Grant Gmail access to connect this account.');return;}
-   try{const response=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile',{headers:{Authorization:'Bearer '+result.access_token}});const profile=await response.json();if(!response.ok)throw Error(profile.error?.message||'Google account could not connect.');accounts.set(profile.emailAddress,{email:profile.emailAddress,token:result.access_token,expires:Date.now()+Number(result.expires_in)*1000});selectAccount(profile.emailAddress);}catch(error){fail(error);}
+   try{const response=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile',{headers:{Authorization:'Bearer '+result.access_token}});const profile=await response.json();if(!response.ok)throw Error(profile.error?.message||'Google account could not connect.');forgetAccount(profile.emailAddress);accounts.set(profile.emailAddress,{email:profile.emailAddress,token:result.access_token,expires:Date.now()+Number(result.expires_in)*1000});selectAccount(profile.emailAddress);}catch(error){fail(error);}
   }}).requestAccessToken({prompt:'select_account'});
  };
  $('#disconnect').onclick = () => {
   if (!current || current === 'domain') return;
+  forgetAccount(current);
   accounts.delete(current);
   selectAccount('domain');
  };
- function summary(message,key){if(key==='domain')return message;return {id:message.id,threadId:message.threadId,from:header(message,'From'),to:header(message,'To'),subject:header(message,'Subject')||'(No subject)',snippet:message.snippet,date:Number(message.internalDate),unread:message.labelIds?.includes('UNREAD'),starred:message.labelIds?.includes('STARRED'),raw:message};}
+ function summary(message,key){if(key==='domain')return message;return {id:message.id,threadId:message.threadId,from:header(message,'From'),to:header(message,'To'),subject:header(message,'Subject')||'(No subject)',snippet:message.snippet,date:Number(message.internalDate),unread:message.labelIds?.includes('UNREAD'),starred:message.labelIds?.includes('STARRED')};}
  function renderRow(message){const button=text('button','',`message-row${message.unread?' unread':''}`);button.dataset.id=message.id;const top=text('div','','message-top');top.append(text('span',message.from,'message-sender'),text('span',new Date(message.date||message.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'}),'message-date'));button.append(top,text('div',message.subject,'message-subject'),text('div',message.snippet,'message-snippet'));for (const label of [top.firstElementChild, ...button.children].filter(Boolean)) label.dir = 'auto';button.onclick=()=>read(message,button);$('#messages').append(button);}
- async function load(append = false) {
+ function cacheKey(...parts) { return JSON.stringify(parts); }
+ function remember(cache, id, entry, limit) {
+  cache.delete(id);
+  cache.set(id, entry);
+  if (cache.size > limit) cache.delete(cache.keys().next().value);
+ }
+ function forgetAccount(key) {
+  for (const cache of [lists, summaries, bodies]) {
+   for (const [id, entry] of cache) if (entry.key === key) cache.delete(id);
+  }
+ }
+ function paintRows(request) {
+  const selected = lastMessageButton?.dataset.id;
+  const focused = document.activeElement?.dataset.id;
+  const box = $('#messages');
+  box.replaceChildren();
+  request.rows.forEach(renderRow);
+  for (const button of box.children) {
+   if (button.dataset.id === selected) {
+    button.classList.add('selected');
+    lastMessageButton = button;
+   }
+   if (button.dataset.id === focused) button.focus({ preventScroll: true });
+  }
+ }
+ function cacheList(request) {
+  if (request.rows.length > 150) {
+   lists.delete(request.id);
+   return;
+  }
+  remember(lists, request.id, {
+   key: request.key, rows: request.rows, page: request.page, time: Date.now()
+  }, 12);
+ }
+ async function gmailSummaries(ids, request, force) {
+  const { key, controller } = request;
+  const rows = new Array(ids.length);
+  let index = 0;
+  const worker = async () => {
+   while (!controller.signal.aborted && index < ids.length) {
+    const position = index++;
+    const messageId = ids[position].id;
+    const id = cacheKey(key, messageId);
+    const cached = summaries.get(id);
+    if (!force && cached && Date.now() - cached.time < listFreshness) {
+     rows[position] = cached.value;
+     continue;
+    }
+    const message = await gmail(`messages/${messageId}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject`,
+     { signal: controller.signal }, key);
+    rows[position] = summary(message, key);
+    if (!controller.signal.aborted) remember(summaries, id, { key, value: rows[position], time: Date.now() }, 250);
+   }
+  };
+  await Promise.all(Array.from({ length: Math.min(6, ids.length) }, worker));
+  return rows;
+ }
+ async function load(append = false, force = false) {
   if (!current || (append && (!view?.page || view.loading))) return;
+  let cached;
   if (!append) {
-   view = { key: current, folder, query: $('#search').value.trim(), page: null, loading: false };
+   view?.controller.abort();
+   const query = $('#search').value.trim();
+   const id = cacheKey(current, folder, query);
+   const activeAccount = accounts.get(current);
+   cached = (current === 'domain' || activeAccount?.expires > Date.now()) && lists.get(id);
+   view = { id, key: current, folder, query, page: cached?.page, rows: cached?.rows || [], controller: new AbortController() };
    resetReader();
-   $('#messages').replaceChildren();
+   $('.message-list').scrollTop = 0;
+   $('#mailbox-count').textContent = current === 'domain' ? (preview ? 'preview@example.test' : 'All addresses at @mqmr.bio') : current;
+   paintRows(view);
+   status(cached && !view.rows.length ? 'No messages in this mailbox.' : '');
+   if (!force && cached && Date.now() - cached.time < listFreshness) {
+    $('#more').hidden = !view.page;
+    return;
+   }
   }
 
   const request = view;
-  const { key, query, folder: targetFolder, page } = request;
+  const { key, query, folder: targetFolder, controller } = request;
+  const page = append ? request.page : null;
   request.loading = true;
-  $('#more').hidden = true;
-  status('Loading mail…');
+  $('#more').disabled = true;
+  if (!cached || !request.rows.length || force) status(append ? 'Loading more…' : 'Loading mail…');
   try {
-   let messages, next;
+   let rows, next;
    if (key === 'domain') {
     const result = await domain('list', { folder: targetFolder, search: query, cursor: page });
-    messages = result.messages;
+    rows = result.messages;
     next = result.next;
    } else {
     const params = new URLSearchParams({ maxResults: '25' });
@@ -67,35 +167,33 @@
     if (targetFolder === 'SPAM' || targetFolder === 'TRASH') params.set('includeSpamTrash', 'true');
     if (query) params.set('q', query);
     if (page) params.set('pageToken', page);
-    const result = await gmail('messages?' + params, {}, key);
-    const ids = result.messages || [];
+    const result = await gmail('messages?' + params, { signal: controller.signal }, key);
     next = result.nextPageToken;
-    messages = [];
-    for (let i = 0; i < ids.length && view === request; i += 5) {
-     const batch = await Promise.all(ids.slice(i, i + 5).map(item =>
-      gmail(`messages/${item.id}?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject`, {}, key)));
-     messages.push(...batch);
-    }
+    rows = await gmailSummaries(result.messages || [], request, force);
    }
-   if (view !== request) return;
-   const rows = messages.map(message => summary(message, key));
-   rows.forEach(renderRow);
-   request.page = next;
-   $('#mailbox-count').textContent = key === 'domain' ? (preview ? 'preview@example.test' : 'All addresses at @mqmr.bio') : key;
+   if (view !== request || controller.signal.aborted) return;
+   const existingIds = new Set(append ? request.rows.map(row => row.id) : []);
+   request.rows = [...(append ? request.rows : []), ...rows.filter(row => !existingIds.has(row.id))];
+   request.page = next || null;
+   paintRows(request);
+   cacheList(request);
    status(rows.length ? '' : append ? 'No more messages.' : 'No messages in this mailbox.');
    if (preview && !previewOpened) {
     previewOpened = true;
     if (rows.length && matchMedia('(min-width: 761px)').matches) read(rows[0], $('#messages').firstElementChild);
    }
   } catch (error) {
-   if (view === request) fail(error);
+   if (view === request && !controller.signal.aborted) fail(error);
   } finally {
-   request.loading = false;
-   if (view === request) $('#more').hidden = !request.page;
+   if (request.controller === controller) request.loading = false;
+   if (view === request && request.controller === controller) {
+    $('#more').hidden = !request.page;
+    $('#more').disabled = false;
+   }
   }
  }
 
- $('#refresh').onclick = () => load();
+ $('#refresh').onclick = () => load(false, true);
  $('#more').onclick = () => load(true);
  $('#search').onkeydown = event => { if (event.key === 'Enter') load(); };
  $('#search').onsearch = () => load();
@@ -108,27 +206,66 @@
   return template.content.textContent;
  }
 
+ async function messageContent(key, messageId) {
+  const id = cacheKey(key, messageId);
+  const cached = bodies.get(id);
+  if (cached && Date.now() - cached.time < 60000) return cached.value;
+  const account = accounts.get(key);
+  const full = key === 'domain'
+   ? await domain('read', { id: messageId })
+   : await gmail('messages/' + messageId + '?format=full', {}, key);
+  const content = key === 'domain' ? { text: full.text_body, html: full.html_body, files: full.attachments || [] }
+   : await resolveParts(full.payload, id => gmail(`messages/${messageId}/attachments/${encodeURIComponent(id)}`, {}, key));
+  const value = { full, content };
+  if (accounts.get(key) === account && JSON.stringify(value).length < 250000) {
+   remember(bodies, id, { key, time: Date.now(), value }, 12);
+  }
+  return value;
+ }
+
+ function updateRows(key, message, flags, remove = false) {
+  // Do not let a list request started before a mutation restore older flags.
+  const request = view;
+  if (request?.key === key && request.loading) {
+   request.controller.abort();
+   request.controller = new AbortController();
+   request.loading = false;
+   $('#more').disabled = false;
+   $('#more').hidden = !request.page;
+  }
+  Object.assign(message, flags);
+  for (const [id, entry] of lists) {
+   if (entry.key !== key) continue;
+   if (remove) lists.delete(id);
+   else {
+    entry.time = 0;
+    entry.rows.forEach(row => { if (row.id === message.id) Object.assign(row, flags); });
+   }
+  }
+  summaries.delete(cacheKey(key, message.id));
+  if (request?.key !== key) return;
+  if (remove) {
+   request.rows = request.rows.filter(row => row.id !== message.id);
+   paintRows(request);
+  } else {
+   request.rows.forEach(row => { if (row.id === message.id) Object.assign(row, flags); });
+   for (const row of $('#messages').children) {
+    if (row.dataset.id === message.id && 'unread' in flags) row.classList.toggle('unread', flags.unread);
+   }
+  }
+ }
+
  async function read(message, button) {
   const context = view;
   const { key, folder: targetFolder } = context;
   const ticket = ++readerTicket;
   const active = () => view === context && ticket === readerTicket;
-  status('Opening message…');
+  if (!bodies.has(cacheKey(key, message.id))) status('Opening message…');
   try {
-   const full = key === 'domain'
-    ? await domain('read', { id: message.id })
-    : await gmail('messages/' + message.id + '?format=full', {}, key);
-   if (!active()) return;
-   const content = key === 'domain' ? { text: full.text_body, html: full.html_body, files: full.attachments || [] }
-    : await resolveParts(full.payload, id => gmail(`messages/${message.id}/attachments/${encodeURIComponent(id)}`, {}, key));
-   if (!active()) return;
-   if (message.unread) {
-    await modify(message.id, { unread: false }, key);
-    message.unread = false;
-    button.classList.remove('unread');
-   }
+   const { full, content } = await messageContent(key, message.id);
    if (!active()) return;
 
+   button = [...$('#messages').children].find(row => row.dataset.id === message.id) || button;
    document.querySelectorAll('.message-row').forEach(row => row.classList.toggle('selected', row === button));
    lastMessageButton = button;
    mailbox.dataset.reading = 'true';
@@ -137,7 +274,10 @@
    title.tabIndex = -1;
    title.dir = 'auto';
    reader.replaceChildren(title);
-   if (matchMedia('(max-width: 760px)').matches) title.focus();
+   if (onMobile.matches) {
+    $('.reader-pane').scrollTop = 0;
+    title.focus({ preventScroll: true });
+   }
    reader.append(text('div', `From: ${message.from}
 To: ${message.to}
 ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'));
@@ -158,18 +298,27 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
    action(message.starred ? 'Unstar' : 'Star', async control => {
     const starred = !message.starred;
     await modify(message.id, { starred }, key);
-    message.starred = starred;
+    const remove = !starred && view === context && targetFolder === 'STARRED';
+    updateRows(key, message, { starred }, remove);
     control.textContent = starred ? 'Unstar' : 'Star';
-    if (active() && targetFolder === 'STARRED' && !starred) load();
+    if (active() && remove) resetReader();
    });
+   const marking = message.unread ? modify(message.id, { unread: false }, key)
+    .then(() => updateRows(key, message, { unread: false }))
+    .catch(error => { if (active()) fail(error); }) : null;
    action('Mark unread', async () => {
+    await marking;
     await modify(message.id, { unread: true }, key);
-    message.unread = true;
-    button.classList.add('unread');
+    updateRows(key, message, { unread: true });
    });
    const changeAndRefresh = async change => {
     await modify(message.id, change, key);
-    if (active()) load();
+    if (view === context) updateRows(key, message, {}, true);
+    else for (const [id, entry] of lists) if (entry.key === key) lists.delete(id);
+    if (active()) {
+     resetReader();
+     status(context.rows.length ? '' : 'No messages in this mailbox.');
+    }
    };
    if (targetFolder === 'TRASH') action('Restore', () => changeAndRefresh({ trash: false }));
    else action('Move to Trash', () => changeAndRefresh({ trash: true }));
@@ -204,7 +353,15 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
   } catch (error) { if (active()) fail(error); }
  }
  async function modify(id,change,key=current){if(key==='domain')return domain('modify',{id,...change});if('trash'in change)return gmail(`messages/${id}/${change.trash?'trash':'untrash'}`,{method:'POST'},key);const addLabelIds=[],removeLabelIds=[];if('starred'in change)(change.starred?addLabelIds:removeLabelIds).push('STARRED');if('unread'in change)(change.unread?addLabelIds:removeLabelIds).push('UNREAD');if(change.archive)removeLabelIds.push('INBOX');return gmail(`messages/${id}/modify`,{method:'POST',body:JSON.stringify({addLabelIds,removeLabelIds})},key);}
- async function addresses(){const result=await domain('addresses');return result.addresses;}
+ let addressCache, addressRequest;
+ async function addresses() {
+  if (addressCache && Date.now() - addressCache.time < 60000) return addressCache.items;
+  addressRequest ??= domain('addresses').then(result => {
+   addressCache = { time: Date.now(), items: result.addresses };
+   return addressCache.items;
+  }).finally(() => { addressRequest = null; });
+  return addressRequest;
+ }
  const composeDialog = $('#compose-dialog');
  const composerFields = () => ({
   from: $('#from').value,
@@ -251,6 +408,7 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
   draft = null;
  }
  $('#compose').onclick = () => compose();
+ $('#mobile-compose').onclick = () => compose();
  $('#close-compose').onclick = closeDraft;
  composeDialog.addEventListener('cancel', event => { event.preventDefault(); closeDraft(); });
 
@@ -285,6 +443,8 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
    }
    composeDialog.close();
    draft = null;
+   for (const [cacheId, entry] of lists) if (entry.key === account) lists.delete(cacheId);
+   if (current === account && folder === 'SENT') await load(false, true);
    status(preview ? 'Sample message saved to Sent.' : 'Message sent.');
   } catch (error) { $('#compose-status').textContent = error.message; }
   finally {
@@ -293,7 +453,18 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
   }
  };
  async function listAliases(){const items=await addresses();$('#alias-list').replaceChildren(...items.map(a=>text('li',a.address)));}
- $('#aliases').onclick=async()=>{try{await listAliases();$('#alias-dialog').showModal();}catch(error){fail(error);}};$('#close-aliases').onclick=()=>$('#alias-dialog').close();$('#alias-form').onsubmit=async event=>{event.preventDefault();try{await domain('add-address',{name:$('#alias-name').value});await listAliases();$('#alias-name').value='';$('#alias-status').textContent='Address added.';}catch(error){$('#alias-status').textContent=error.message;}};
+ $('#aliases').onclick=async()=>{try{await listAliases();if(drawer.open)drawer.close();$('#alias-dialog').showModal();}catch(error){fail(error);}};
+ $('#close-aliases').onclick=()=>$('#alias-dialog').close();
+ $('#alias-form').onsubmit=async event=>{
+  event.preventDefault();
+  try {
+   await domain('add-address',{name:$('#alias-name').value});
+   addressCache = null;
+   await listAliases();
+   $('#alias-name').value='';
+   $('#alias-status').textContent='Address added.';
+  } catch(error) { $('#alias-status').textContent=error.message; }
+ };
  if (preview) $('#disconnect').hidden = true;
  accounts.set('domain', { email: preview ? 'Sample mailbox' : 'All @mqmr.bio' });
  selectAccount('domain');

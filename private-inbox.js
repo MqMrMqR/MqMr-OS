@@ -1,4 +1,4 @@
-import { isOwner, verifiedOwnerClient } from './mail-access.js';
+import { isOwner, lockOwner, verifiedOwnerClient } from './mail-access.js';
 import { isLocalPreview } from './preview-mode.js';
 
 const mailbox = document.querySelector('#mailbox');
@@ -39,10 +39,7 @@ async function unlock() {
       button.disabled = true;
       try {
         if (isLocalPreview) sessionStorage.removeItem('mqmr-inbox-preview');
-        else {
-          const { error } = await client.auth.signOut({ scope: 'local' });
-          if (error) throw error;
-        }
+        else await lockOwner(client);
         mailbox.hidden = true;
         redirect();
       } catch {
