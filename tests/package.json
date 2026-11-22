@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test migrations.test.mjs ingest.test.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.17",
+    "postal-mime": "4.2.1"
+  }
+}

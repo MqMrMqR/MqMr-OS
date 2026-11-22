@@ -117,7 +117,7 @@ a { color: var(--purple); text-underline-offset: 3px; }
   background: #18171a;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  font: .9rem/1.75 var(--mono);
+  font: .95rem/1.75 system-ui, sans-serif;
 }
 .mail-empty { margin: 3rem auto; color: var(--os-muted); text-align: center; }
 .file-list { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
@@ -132,6 +132,8 @@ dialog :is(input, select, textarea) { display: block; width: 100%; min-width: 0;
 dialog textarea { min-height: 7rem; resize: vertical; }
 dialog footer { text-align: right; }
 #alias-dialog form { margin-top: 1rem; }
+.privacy-page main { width: min(760px, calc(100% - 3rem)); margin: 3.75rem auto; }
+.privacy-page h2 { margin-top: 2rem; }
 
 @media (min-width: 761px) {
   .mail-app { height: 100dvh; }

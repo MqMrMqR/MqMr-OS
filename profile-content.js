@@ -53,26 +53,44 @@ export function validateProfile(data) {
   return profile;
 }
 
-export async function loadProfile() {
-  if (isLocalPreview) {
-    const saved = localStorage.getItem(storageKey);
-    return saved ? validateProfile(JSON.parse(saved)) : validateProfile(defaults);
-  }
-  const response = await fetch(url + '/rest/v1/profile_homepage?select=payload&singleton=eq.true', {
+function readLocalProfile() {
+  const saved = localStorage.getItem(storageKey);
+  if (!saved) return { profile: validateProfile(defaults), revision: null };
+  const record = JSON.parse(saved);
+  return { profile: validateProfile(record.profile || record), revision: record.revision || 1 };
+}
+
+export async function loadProfileRecord() {
+  if (isLocalPreview) return readLocalProfile();
+  const response = await fetch(url + '/rest/v1/profile_homepage?select=payload,revision&singleton=eq.true', {
     headers: { apikey: publishableKey },
-    signal: AbortSignal.timeout(2500)
+    cache: 'no-store',
+    signal: AbortSignal.timeout(5500)
   });
   if (!response.ok) throw new Error('The profile settings could not be loaded.');
   const [record] = await response.json();
-  return validateProfile(record?.payload || defaults);
+  return { profile: validateProfile(record?.payload || defaults), revision: record?.revision ?? null };
 }
 
-export async function saveProfile(data, client) {
+export async function loadProfile() {
+  return (await loadProfileRecord()).profile;
+}
+
+export async function saveProfile(data, client, revision) {
   const profile = validateProfile(data);
+  const conflict = () => new Error('The profile changed in another tab. Your edits are still here. Review the latest version before saving again.');
   if (isLocalPreview) {
-    localStorage.setItem(storageKey, JSON.stringify(profile));
-    return;
+    if (readLocalProfile().revision !== revision) throw conflict();
+    const next = (revision || 0) + 1;
+    localStorage.setItem(storageKey, JSON.stringify({ profile, revision: next }));
+    return next;
   }
-  const { error } = await client.from('profile_homepage').upsert({ singleton: true, payload: profile });
+  const table = client.from('profile_homepage');
+  const request = revision === null
+    ? table.insert({ singleton: true, payload: profile })
+    : table.update({ payload: profile }).eq('singleton', true).eq('revision', revision);
+  const { data: saved, error } = await request.select('revision').maybeSingle();
+  if (error?.code === '23505' || (!error && !saved)) throw conflict();
   if (error) throw new Error('Could not publish. Recheck your session and try again.');
+  return saved.revision;
 }

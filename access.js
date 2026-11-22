@@ -1,5 +1,7 @@
 import { isLocalPreview } from './preview-mode.js';
 
+if (window.self !== window.top) throw new Error('Open MqR directly to sign in.');
+
 const $ = selector => document.querySelector(selector);
 const dialog = $('#access');
 const form = $('#access-form');
