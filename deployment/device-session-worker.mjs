@@ -20,8 +20,13 @@ export default {
     try {
       const upstream = await fetch(backend + route, {
         method: request.method, headers, body: request.body,
-        redirect: 'error', cache: 'no-store', ...(request.body && { duplex: 'half' })
+        redirect: 'manual', cache: 'no-store', ...(request.body && { duplex: 'half' })
       });
+      if (upstream.status >= 300 && upstream.status < 400) {
+        return Response.json({ error: 'Unexpected session server redirect.' }, {
+          status: 502, headers: { 'Cache-Control': 'no-store' }
+        });
+      }
       const output = new Headers({
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store',

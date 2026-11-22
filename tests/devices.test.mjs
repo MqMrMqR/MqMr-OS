@@ -28,6 +28,7 @@ test('same-origin proxy forwards only the private session cookie and preserves i
   const cookie = '__Host-mqr-device=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Strict';
   globalThis.fetch = async (url, input) => {
     assert.match(url, /\/functions\/v1\/device-sessions\/lock$/);
+    assert.equal(input.redirect, 'manual');
     assert.equal(input.headers.get('cookie'), '__Host-mqr-device=fixture');
     assert.equal(await new Response(input.body).text(), '{}');
     const headers = new Headers();
@@ -41,6 +42,13 @@ test('same-origin proxy forwards only the private session cookie and preserves i
   assert.equal(result.status, 200);
   assert.equal(result.headers.get('set-cookie'), cookie);
   assert.equal(result.headers.get('cache-control'), 'no-store');
+});
+
+test('same-origin proxy rejects redirects without forwarding their destination', async () => {
+  globalThis.fetch = async () => Response.redirect('https://unrelated.example.test/', 307);
+  const result = await proxy.fetch(new Request('https://mqmr.bio/api/device-session/status'));
+  assert.equal(result.status, 502);
+  assert.equal(result.headers.get('location'), null);
 });
 
 test('remembered devices require MFA, encrypt tokens, proxy authorized mail, and revoke access', async () => {
