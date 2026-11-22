@@ -1,7 +1,9 @@
 import { isLocalPreview } from './preview-mode.js';
 import { isOwner, lockOwner, verifiedOwnerClient } from './mail-access.js';
-import { loadProfileRecord, platforms, saveProfile } from './profile-content.js';
+import { loadProfileRecord, platforms, saveProfile } from './profile-content.js?v=appearance';
 import { manageDevices } from './device-client.js';
+import { appearanceLimits, applyAppearance, colorGroups, normalizeAppearance, renderTitle, socialColorLabels } from './profile-appearance.js';
+import { cursorTrail } from './cursor-trail.js';
 
 const $ = selector => document.querySelector(selector);
 const form = $('#profile-editor');
@@ -13,6 +15,80 @@ let editClient;
 let revision = null, dirty = false, saving = false;
 const existingPhotos = { x: 'x', github: 'mqmr', instagram: 'instagram', youtube: 'youtube', discord: 'youtube' };
 let dragged = null, photoReads = 0;
+const themePreview = $('#theme-preview');
+const previewTrail = cursorTrail(themePreview, $('#preview-trail'));
+const sliders = {
+  endingDelay: { input: $('#edit-ending-delay'), output: $('#ending-delay-value'), format: value => value + ' ms' },
+  wordSpacing: { input: $('#edit-word-spacing'), output: $('#word-spacing-value'), format: value => (value / 100).toFixed(2) + ' em' },
+  handleGap: { input: $('#edit-handle-gap'), output: $('#handle-gap-value'), format: value => (value / 100).toFixed(2) + ' em' }
+};
+
+$('#edit-ending').maxLength = appearanceLimits.endingLength;
+for (const [key, { input: slider }] of Object.entries(sliders)) Object.assign(slider, appearanceLimits[key]);
+
+function colorChoice(label, key, value) {
+  const wrapper = document.createElement('label');
+  wrapper.className = 'color-choice';
+  const control = document.createElement('input');
+  control.type = 'color';
+  control.setAttribute('aria-label', label + ' color');
+  control.name = 'color-' + key;
+  control.value = value;
+  const hex = document.createElement('span');
+  hex.className = 'color-value';
+  hex.setAttribute('aria-hidden', 'true');
+  hex.textContent = value;
+  wrapper.append(label, hex, control);
+  return wrapper;
+}
+
+function colorSection(title, parent, accordion) {
+  const details = document.createElement('details');
+  details.name = accordion;
+  const summary = document.createElement('summary');
+  summary.textContent = title;
+  const content = document.createElement('div');
+  details.append(summary, content);
+  parent.append(details);
+  return content;
+}
+
+const colorControls = $('#color-groups');
+const themeDefaults = normalizeAppearance();
+for (const [title, values] of Object.entries(colorGroups)) {
+  const panel = colorSection(title, colorControls, 'page-colors');
+  for (const [key, [label, color]] of Object.entries(values)) panel.append(colorChoice(label, key, color));
+}
+const socialColors = colorSection('Platform colors', colorControls, 'page-colors');
+for (const [key, platform] of Object.entries(platforms)) {
+  const panel = colorSection(platform.label, socialColors, 'platform-colors');
+  for (const [field, label] of Object.entries(socialColorLabels)) {
+    panel.append(colorChoice(platform.label + ' ' + label.toLowerCase(), key + '-' + field, themeDefaults.social[key][field]));
+  }
+}
+
+function colorValues(appearance) {
+  const controls = form.elements;
+  for (const [key, value] of Object.entries(appearance.colors)) controls.namedItem('color-' + key).value = value;
+  for (const [key, swatches] of Object.entries(appearance.social)) {
+    for (const [field, value] of Object.entries(swatches)) controls.namedItem('color-' + key + '-' + field).value = value;
+  }
+}
+
+function appearanceInputs() {
+  const values = {};
+  for (const color of colorControls.querySelectorAll('input[type="color"]')) values[color.name.slice(6)] = color.value;
+  return normalizeAppearance({
+    ending: { enabled: $('#edit-ending-enabled').checked, text: $('#edit-ending').value, delay: sliders.endingDelay.input.valueAsNumber },
+    wordSpacing: sliders.wordSpacing.input.valueAsNumber,
+    handleGap: sliders.handleGap.input.valueAsNumber,
+    trail: $('#edit-trail').checked,
+    colors: values,
+    social: Object.fromEntries(Object.keys(platforms).map(key => [key, Object.fromEntries(
+      Object.keys(socialColorLabels).map(field => [field, values[key + '-' + field]])
+    )]))
+  });
+}
 
 function setDirty(value) {
   dirty = value;
@@ -65,22 +141,64 @@ async function loadEditor() {
     $('#edit-name').value = profile.name;
     $('#edit-handle').value = profile.handle;
     $('#edit-note').value = profile.note;
-    $('#edit-semicolon').checked = profile.showSemicolon;
+  const { appearance } = profile;
+  $('#edit-ending-enabled').checked = appearance.ending.enabled;
+  $('#edit-ending').value = appearance.ending.text;
+  $('#edit-trail').checked = appearance.trail;
+  sliders.endingDelay.input.value = appearance.ending.delay;
+  sliders.wordSpacing.input.value = appearance.wordSpacing;
+  sliders.handleGap.input.value = appearance.handleGap;
+  colorValues(appearance);
     $('#edit-links').replaceChildren();
     for (const key of profile.order) $('#edit-links').append(accountRow(key, profile.links[key]));
     refreshMoveControls();
-    updateTitlePreview();
-
     form.hidden = false;
+  updatePreview();
     lock.hidden = false;
     reload.hidden = true;
     setDirty(false);
     status.textContent = isLocalPreview ? 'Edits are saved on this device.' : 'Changes appear on the public profile.';
 }
 
-function updateTitlePreview() {
-  $('#edit-title-preview').textContent = $('#edit-name').value + ' {' + $('#edit-handle').value + '}' +
-    ($('#edit-semicolon').checked ? ';' : '');
+function updatePreview(animate = false) {
+  const appearance = appearanceInputs();
+  renderTitle($('#edit-title-preview'), {
+    name: $('#edit-name').value, handle: $('#edit-handle').value, appearance
+  }, animate);
+  $('#preview-note').textContent = $('#edit-note').value;
+  for (const { input: slider, output, format } of Object.values(sliders)) {
+    output.value = format(slider.valueAsNumber);
+    slider.setAttribute('aria-valuetext', output.value);
+  }
+  for (const color of colorControls.querySelectorAll('input[type="color"]')) {
+    color.previousElementSibling.textContent = color.value;
+  }
+  const rows = [...$('#edit-links').children].filter(row => $('#' + row.dataset.account + '-hidden').checked);
+  $('#preview-social').hidden = !rows.length;
+  $('#preview-accounts').replaceChildren(...rows.map(row => {
+    const key = row.dataset.account;
+    const item = document.createElement('li');
+    const preview = document.createElement('div');
+    preview.className = 'profile';
+    preview.dataset.profile = key;
+    const photo = row.querySelector('img').cloneNode();
+    photo.className = 'profile-photo';
+    const line = document.createElement('span');
+    const handle = document.createElement('strong');
+    const label = document.createElement('small');
+    const icon = document.createElement('i');
+    handle.textContent = $('#' + key + '-handle').value;
+    handle.hidden = handle.textContent.toLowerCase() === platforms[key].label.toLowerCase();
+    icon.className = 'platform-logo logo-' + key;
+    icon.setAttribute('aria-hidden', 'true');
+    label.append(icon, platforms[key].label);
+    line.append(handle, label);
+    preview.append(photo, line);
+    item.append(preview);
+    return item;
+  }));
+  applyAppearance(themePreview, appearance);
+  previewTrail(appearance);
 }
 
 function refreshMoveControls() {
@@ -121,6 +239,7 @@ function accountRow(key, link) {
     else neighbor.after(row);
     refreshMoveControls();
     (row.querySelector('[data-move="' + direction + '"]:enabled') || name).focus();
+    updatePreview();
     setDirty(true);
   };
   name.tabIndex = -1;
@@ -149,6 +268,7 @@ function accountRow(key, link) {
     else row.after(dragged);
     refreshMoveControls();
     dragged = null;
+    updatePreview();
     setDirty(true);
   });
   heading.append(handle, image, name, up, down);
@@ -175,6 +295,7 @@ function accountRow(key, link) {
   const reset = button('Restore original ' + platform + ' photo', 'Restore original', () => {
     row.dataset.photo = '';
     image.src = defaultPhoto;
+    updatePreview();
     setDirty(true);
   });
   file.addEventListener('change', async () => {
@@ -198,6 +319,7 @@ function accountRow(key, link) {
         if (!photo.startsWith('data:image/webp;') || photo.length > 24000) throw new Error('This photo is too large. Choose a simpler image.');
         row.dataset.photo = photo;
         image.src = photo;
+        updatePreview();
         status.textContent = 'Unsaved changes.';
       } finally { bitmap.close(); }
     } catch (error) { status.textContent = error.message; }
@@ -208,10 +330,18 @@ function accountRow(key, link) {
 }
 
 form.addEventListener('input', () => {
-  updateTitlePreview();
+  updatePreview();
   setDirty(true);
   if (!saving) status.textContent = 'Unsaved changes.';
 });
+
+$('#replay-title').onclick = () => updatePreview(true);
+$('#reset-colors').onclick = () => {
+  colorValues(themeDefaults);
+  updatePreview();
+  setDirty(true);
+  status.textContent = 'Unsaved changes.';
+};
 
 reload.addEventListener('click', async () => {
   if (saving || (dirty && !confirm('Replace your unsaved edits with the latest published profile?'))) return;
@@ -241,7 +371,7 @@ form.addEventListener('submit', async event => {
       name: $('#edit-name').value,
       handle: $('#edit-handle').value,
       note: $('#edit-note').value,
-      showSemicolon: $('#edit-semicolon').checked,
+      appearance: appearanceInputs(),
       order: rows.map(row => row.dataset.account),
       links
     }, editClient, revision);

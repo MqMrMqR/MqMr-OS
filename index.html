@@ -8,12 +8,13 @@
   <meta name="theme-color" content="#141414">
   <title>Ethan {MqMr};</title>
   <link rel="icon" href="profiles/mqmr.webp" type="image/webp">
-  <link rel="stylesheet" href="profile.css">
+  <link rel="stylesheet" href="profile.css?v=appearance">
   <script type="module" src="access.js"></script>
-  <script type="module" src="profile-page.js"></script>
+  <script type="module" src="profile-page.js?v=appearance"></script>
 </head>
 <body>
-  <div class="site">
+  <div class="site profile-home">
+    <canvas id="cursor-trail" class="cursor-trail" aria-hidden="true" hidden></canvas>
     <header class="masthead">
       <a class="wordmark" href="./">MqR</a>
       <div class="masthead-actions">
@@ -25,7 +26,7 @@
     <main class="layout">
       <section class="intro" aria-labelledby="name">
         <img class="portrait" src="profiles/youtube.webp" alt="" width="76" height="76">
-        <h1 id="name"><span class="typed-name"><span id="profile-name">Ethan</span> <span class="name-alias"><span class="name-brace">{</span><span class="name-handle" id="profile-handle">MqMr</span><span class="name-brace">}</span><span class="name-brace" id="profile-semicolon">;</span></span></span></h1>
+        <h1 id="name" class="profile-title"><span class="name-text">Ethan</span><span class="title-gap"> </span><span class="name-alias"><span class="name-brace">{</span><span class="name-handle">MqMr</span><span class="name-brace">}</span><span class="name-ending">;</span></span></h1>
         <p><span class="comment-marker" aria-hidden="true">// </span><span id="profile-note">Around the internet.</span></p>
       </section>
 
@@ -33,24 +34,24 @@
         <h2 id="profiles-title">Social profiles</h2>
         <ul class="profile-list">
           <li><a href="https://github.com/MqMrMqR" class="profile" data-profile="github">
-            <img src="profiles/mqmr.webp" alt="" width="44" height="44">
-            <span><strong>@MqMrMqR</strong><small>GitHub</small></span>
+            <img class="profile-photo" src="profiles/mqmr.webp" alt="" width="44" height="44">
+            <span><strong>@MqMrMqR</strong><small><i class="platform-logo logo-github" aria-hidden="true"></i>GitHub</small></span>
           </a></li>
           <li><a href="https://www.instagram.com/_.wp1/" class="profile" data-profile="instagram">
-            <img src="profiles/instagram.webp" alt="" width="44" height="44">
-            <span><strong>@_.wp1</strong><small>Instagram</small></span>
+            <img class="profile-photo" src="profiles/instagram.webp" alt="" width="44" height="44">
+            <span><strong>@_.wp1</strong><small><i class="platform-logo logo-instagram" aria-hidden="true"></i>Instagram</small></span>
           </a></li>
           <li><a href="https://www.youtube.com/@MqMr" class="profile" data-profile="youtube">
-            <img src="profiles/youtube.webp" alt="" width="44" height="44">
-            <span><strong>@MqMr</strong><small>YouTube</small></span>
+            <img class="profile-photo" src="profiles/youtube.webp" alt="" width="44" height="44">
+            <span><strong>@MqMr</strong><small><i class="platform-logo logo-youtube" aria-hidden="true"></i>YouTube</small></span>
           </a></li>
           <li><a href="https://x.com/mqmrmqr" class="profile" data-profile="x">
-            <img src="profiles/x.webp" alt="" width="44" height="44">
-            <span><strong>@mqmrmqr</strong><small>X</small></span>
+            <img class="profile-photo" src="profiles/x.webp" alt="" width="44" height="44">
+            <span><strong>@mqmrmqr</strong><small><i class="platform-logo logo-x" aria-hidden="true"></i>X</small></span>
           </a></li>
           <li><a href="https://discord.com/users/1367578118830817420" class="profile" data-profile="discord">
-            <img src="profiles/youtube.webp" alt="" width="44" height="44">
-            <span><strong>Discord</strong><small>View profile</small></span>
+            <img class="profile-photo" src="profiles/youtube.webp" alt="" width="44" height="44">
+            <span><strong hidden>Discord</strong><small><i class="platform-logo logo-discord" aria-hidden="true"></i>Discord</small></span>
           </a></li>
         </ul>
       </section>

@@ -1,5 +1,6 @@
 import { isLocalPreview } from './preview-mode.js';
 import { url, publishableKey } from './mail-access.js';
+import { normalizeAppearance } from './profile-appearance.js';
 
 const storageKey = 'mqr-profile-preview';
 export const platforms = {
@@ -35,7 +36,7 @@ export function validateProfile(data) {
     name: field(data?.name, 'Name', 32),
     handle: field(data?.handle, 'Display handle', 24),
     note: field(data?.note, 'Intro', 150),
-    showSemicolon: data.showSemicolon !== false,
+    appearance: normalizeAppearance(data.appearance, data.showSemicolon),
     order: [],
     links: {}
   };
