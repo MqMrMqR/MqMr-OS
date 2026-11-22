@@ -1,9 +1,10 @@
 import { isLocalPreview } from './preview-mode.js';
 import { isOwner, lockOwner, verifiedOwnerClient } from './mail-access.js';
-import { loadProfileRecord, platforms, saveProfile } from './profile-content.js?v=appearance';
+import { loadProfileRecord, platforms, profileChangeKey, saveProfile } from './profile-content.js?v=themes';
 import { manageDevices } from './device-client.js';
 import { appearanceLimits, applyAppearance, colorGroups, normalizeAppearance, renderTitle, socialColorLabels } from './profile-appearance.js';
 import { cursorTrail } from './cursor-trail.js';
+import { themePresets } from './profile-themes.js';
 
 const $ = selector => document.querySelector(selector);
 const form = $('#profile-editor');
@@ -55,6 +56,29 @@ function colorSection(title, parent, accordion) {
 
 const colorControls = $('#color-groups');
 const themeDefaults = normalizeAppearance();
+const paletteKey = ({ colors, social }) => JSON.stringify([colors, social]);
+const presetButtons = themePresets.map(preset => {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'theme-preset';
+  const swatches = document.createElement('span');
+  swatches.className = 'theme-swatches';
+  swatches.setAttribute('aria-hidden', 'true');
+  for (const color of preset.swatches) {
+    const chip = document.createElement('i');
+    chip.style.backgroundColor = color;
+    swatches.append(chip);
+  }
+  button.append(swatches, preset.name);
+  button.onclick = () => {
+    colorValues(preset);
+    updatePreview();
+    setDirty(true);
+    status.textContent = preset.name + ' selected. Save profile to publish.';
+  };
+  $('#theme-presets').append(button);
+  return { button, key: paletteKey(normalizeAppearance(preset)) };
+});
 for (const [title, values] of Object.entries(colorGroups)) {
   const panel = colorSection(title, colorControls, 'page-colors');
   for (const [key, [label, color]] of Object.entries(values)) panel.append(colorChoice(label, key, color));
@@ -162,6 +186,8 @@ async function loadEditor() {
 
 function updatePreview(animate = false) {
   const appearance = appearanceInputs();
+  const key = paletteKey(appearance);
+  for (const item of presetButtons) item.button.setAttribute('aria-pressed', String(item.key === key));
   renderTitle($('#edit-title-preview'), {
     name: $('#edit-name').value, handle: $('#edit-handle').value, appearance
   }, animate);
@@ -378,6 +404,7 @@ form.addEventListener('submit', async event => {
     setDirty(false);
     reload.hidden = true;
     status.textContent = isLocalPreview ? 'Profile saved on this device.' : 'Profile published.';
+    try { localStorage.setItem(profileChangeKey, crypto.randomUUID()); } catch {}
   } catch (error) {
     status.textContent = error.message;
     reload.hidden = false;

@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Admin Panel · MqR</title>
-  <link rel="stylesheet" href="profile.css?v=appearance">
-  <script type="module" src="editor.js?v=appearance"></script>
+  <link rel="stylesheet" href="profile.css?v=themes">
+  <script type="module" src="editor.js?v=themes"></script>
 </head>
 <body>
   <div class="site editor-site">
@@ -30,6 +30,10 @@
         </fieldset>
         <fieldset>
           <legend>Appearance</legend>
+          <details class="preset-picker" open>
+            <summary>Color presets</summary>
+            <div id="theme-presets" class="theme-presets" role="group" aria-label="Color presets"></div>
+          </details>
           <div class="appearance-layout">
             <div class="appearance-controls">
               <label class="check-row"><input id="edit-ending-enabled" type="checkbox"> Show title ending</label>

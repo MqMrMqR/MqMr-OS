@@ -3,6 +3,7 @@ import { url, publishableKey } from './mail-access.js';
 import { normalizeAppearance } from './profile-appearance.js';
 
 const storageKey = 'mqr-profile-preview';
+export const profileChangeKey = 'mqr-profile-published';
 export const platforms = {
   github: { label: 'GitHub', hostnames: ['github.com', 'www.github.com'] },
   instagram: { label: 'Instagram', hostnames: ['instagram.com', 'www.instagram.com'] },

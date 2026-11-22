@@ -1,3 +1,6 @@
+import { renderMessageBody } from './mail-format.js';
+import { richComposer } from './mail-compose.js';
+
 /* Gmail tokens stay in memory and never pass through the site backend. */
 (() => {
  const siteBackend=window.privateMailbox;
@@ -70,7 +73,37 @@
   selectAccount('domain');
  };
  function summary(message,key){if(key==='domain')return message;return {id:message.id,threadId:message.threadId,from:header(message,'From'),to:header(message,'To'),subject:header(message,'Subject')||'(No subject)',snippet:message.snippet,date:Number(message.internalDate),unread:message.labelIds?.includes('UNREAD'),starred:message.labelIds?.includes('STARRED')};}
- function renderRow(message){const button=text('button','',`message-row${message.unread?' unread':''}`);button.dataset.id=message.id;const top=text('div','','message-top');top.append(text('span',message.from,'message-sender'),text('span',new Date(message.date||message.created_at).toLocaleDateString(undefined,{month:'short',day:'numeric'}),'message-date'));button.append(top,text('div',message.subject,'message-subject'),text('div',message.snippet,'message-snippet'));for (const label of [top.firstElementChild, ...button.children].filter(Boolean)) label.dir = 'auto';button.onclick=()=>read(message,button);$('#messages').append(button);}
+ function senderName(value) {
+  return String(value || '').replace(/\s*<[^>]*>\s*$/, '').replace(/^"|"$/g, '').trim() || String(value || 'Unknown sender');
+ }
+ function avatar(value) {
+  const name = senderName(value);
+  const icon = text('span', Array.from(name)[0].toLocaleUpperCase(), 'mail-avatar');
+  icon.dataset.tone = String(name.codePointAt(0) % 4);
+  icon.setAttribute('aria-hidden', 'true');
+  return icon;
+ }
+ function renderRow(message) {
+  const button = text('button', '', `message-row${message.unread ? ' unread' : ''}`);
+  button.dataset.id = message.id;
+  const top = text('span', '', 'message-top');
+  const sender = text('span', senderName(message.from), 'message-sender');
+  sender.dir = 'auto';
+  const date = new Date(message.date || message.created_at);
+  const dateLabel = text('time', date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), 'message-date');
+  const rowState = text('span', message.starred ? '★' : '', 'row-star');
+  rowState.setAttribute('aria-label', 'Starred');
+  rowState.hidden = !message.starred;
+  top.append(sender, rowState, dateLabel);
+  const subject = text('span', message.subject || '(No subject)', 'message-subject');
+  const teaser = text('span', (message.snippet || '').split(/\s+On\s.{0,220}?\bwrote\s*:|\n\s*>/i)[0], 'message-snippet');
+  subject.dir = teaser.dir = 'auto';
+  const entry = text('span', '', 'message-entry');
+  entry.append(top, subject, teaser);
+  button.append(avatar(message.from), entry);
+  button.onclick = () => read(message, button);
+  $('#messages').append(button);
+ }
  function cacheKey(...parts) { return JSON.stringify(parts); }
  function remember(cache, id, entry, limit) {
   cache.delete(id);
@@ -91,6 +124,7 @@
   for (const button of box.children) {
    if (button.dataset.id === selected) {
     button.classList.add('selected');
+    button.setAttribute('aria-current', 'true');
     lastMessageButton = button;
    }
    if (button.dataset.id === focused) button.focus({ preventScroll: true });
@@ -198,14 +232,6 @@
  $('#search').onkeydown = event => { if (event.key === 'Enter') load(); };
  $('#search').onsearch = () => load();
 
- function plainText(content) {
-  if (content.text || !content.html) return content.text;
-  const template = document.createElement('template');
-  template.innerHTML = content.html;
-  template.content.querySelectorAll('script, style, title').forEach(node => node.remove());
-  return template.content.textContent;
- }
-
  async function messageContent(key, messageId) {
   const id = cacheKey(key, messageId);
   const cached = bodies.get(id);
@@ -215,7 +241,7 @@
    ? await domain('read', { id: messageId })
    : await gmail('messages/' + messageId + '?format=full', {}, key);
   const content = key === 'domain' ? { text: full.text_body, html: full.html_body, files: full.attachments || [] }
-   : await resolveParts(full.payload, id => gmail(`messages/${messageId}/attachments/${encodeURIComponent(id)}`, {}, key));
+   : await resolveParts(full.payload, id => gmail(`messages/${messageId}/attachments/${encodeURIComponent(id)}`, {}, key), { includeHtml: true });
   const value = { full, content };
   if (accounts.get(key) === account && JSON.stringify(value).length < 250000) {
    remember(bodies, id, { key, time: Date.now(), value }, 12);
@@ -250,7 +276,13 @@
   } else {
    request.rows.forEach(row => { if (row.id === message.id) Object.assign(row, flags); });
    for (const row of $('#messages').children) {
-    if (row.dataset.id === message.id && 'unread' in flags) row.classList.toggle('unread', flags.unread);
+    if (row.dataset.id !== message.id) continue;
+    if ('unread' in flags) row.classList.toggle('unread', flags.unread);
+    if ('starred' in flags) {
+     const star = row.querySelector('.row-star');
+     star.textContent = flags.starred ? '★' : '';
+     star.hidden = !flags.starred;
+    }
    }
   }
  }
@@ -266,7 +298,11 @@
    if (!active()) return;
 
    button = [...$('#messages').children].find(row => row.dataset.id === message.id) || button;
-   document.querySelectorAll('.message-row').forEach(row => row.classList.toggle('selected', row === button));
+   document.querySelectorAll('.message-row').forEach(row => {
+    row.classList.toggle('selected', row === button);
+    if (row === button) row.setAttribute('aria-current', 'true');
+    else row.removeAttribute('aria-current');
+   });
    lastMessageButton = button;
    mailbox.dataset.reading = 'true';
    const reader = $('#reader');
@@ -278,13 +314,19 @@
     $('.reader-pane').scrollTop = 0;
     title.focus({ preventScroll: true });
    }
-   reader.append(text('div', `From: ${message.from}
-To: ${message.to}
-${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'));
+   const sender = text('div', '', 'reader-sender');
+   const meta = text('div', '', 'reader-meta');
+   const from = text('strong', message.from || 'Unknown sender');
+   const to = text('span', 'To ' + (message.to || '—'));
+   const date = text('time', new Date(message.date || message.created_at).toLocaleString());
+   from.dir = to.dir = 'auto';
+   meta.append(from, to, date);
+   sender.append(avatar(message.from), meta);
+   reader.append(sender);
 
    const actions = text('div', '', 'reader-actions');
    const action = (label, run) => {
-    const control = text('button', label);
+    const control = text('button', label, label === 'Reply' ? 'reply-action' : '');
     control.onclick = async () => {
      if (!active()) return;
      control.disabled = true;
@@ -325,8 +367,9 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
    if (targetFolder === 'INBOX') action('Archive', () => changeAndRefresh({ archive: true }));
    reader.append(actions);
 
-   const body = text('pre', plainText(content) || '(No message body)', 'mail-text');
+   const body = text('div', '', 'mail-text');
    body.dir = 'auto';
+   renderMessageBody(body, content);
    reader.append(body);
    const files = text('div', '', 'file-list');
    for (const file of content.files) {
@@ -363,11 +406,12 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
   return addressRequest;
  }
  const composeDialog = $('#compose-dialog');
+ const composer = richComposer($('#body'), $('#format-toolbar'), $('#link-panel'));
  const composerFields = () => ({
   from: $('#from').value,
   to: $('#to').value,
   subject: $('#subject').value,
-  text: $('#body').value
+  ...composer.fields()
  });
  async function compose(message = null) {
   if (!current || composing || sending || composeDialog.open) return;
@@ -390,12 +434,14 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
     : header(message.full, 'Reply-To') || message.from;
    $('#to').value = recipient.match(/<([^>]+)>/)?.[1] || recipient;
    $('#subject').value = message ? (/^Re:/i.test(message.subject) ? message.subject : 'Re: ' + message.subject) : '';
-   $('#body').value = '';
+   composer.reset();
+   $('#compose-title').textContent = message ? 'Reply' : 'New message';
    $('#attachments').value = '';
    $('#compose-status').textContent = '';
    draft = { account, reply: message, id: crypto.randomUUID(), initial: JSON.stringify(composerFields()) };
    composeDialog.showModal();
-   $('#to').focus();
+   if (message) composer.focus();
+   else $('#to').focus();
   } catch (error) { fail(error); }
   finally { composing = false; }
  }
@@ -418,9 +464,15 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
 
   const { account, reply, id } = draft;
   const message = { ...composerFields(), idempotencyKey: id };
+  if (!message.text) {
+   $('#compose-status').textContent = 'Write a message before sending.';
+   composer.focus();
+   return;
+  }
   const selected = [...$('#attachments').files];
   const controls = [...composeDialog.querySelectorAll('button, input, select, textarea')].filter(control => !control.disabled);
   sending = true;
+  $('#body').contentEditable = 'false';
   controls.forEach(control => { control.disabled = true; });
   $('#compose-status').textContent = 'Sending…';
   try {
@@ -449,6 +501,7 @@ ${new Date(message.date || message.created_at).toLocaleString()}`, 'reader-meta'
   } catch (error) { $('#compose-status').textContent = error.message; }
   finally {
    sending = false;
+   $('#body').contentEditable = 'true';
    controls.forEach(control => { control.disabled = false; });
   }
  };

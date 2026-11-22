@@ -2,7 +2,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test migrations.test.mjs ingest.test.mjs devices.test.mjs profile.test.mjs"
+    "test": "node --test migrations.test.mjs ingest.test.mjs devices.test.mjs profile.test.mjs mail-format.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.17",

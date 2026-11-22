@@ -18,7 +18,7 @@ async function unlock() {
     let client;
     if (isLocalPreview) {
       if (sessionStorage.getItem('mqmr-inbox-preview') !== '1') return redirect();
-      const { previewMailbox } = await import('./preview-inbox.js');
+      const { previewMailbox } = await import('./preview-inbox.js?v=reader');
       client = previewMailbox();
       mailbox.dataset.preview = 'true';
       document.querySelector('#preview-label').hidden = false;
@@ -49,7 +49,7 @@ async function unlock() {
     });
 
     window.privateMailbox = client;
-    await import('./inbox.js');
+    await import('./inbox.js?v=reader');
     mailbox.hidden = false;
     gate.hidden = true;
 

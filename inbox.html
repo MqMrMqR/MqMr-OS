@@ -7,7 +7,7 @@
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#141414">
   <title>Inbox · MqR</title>
-  <link rel="stylesheet" href="inbox.css">
+  <link rel="stylesheet" href="inbox.css?v=reader">
 </head>
 <body>
   <section class="mailbox-gate" id="mailbox-gate" aria-labelledby="gate-title">
@@ -71,7 +71,24 @@
         <label>From <select id="from" required></select></label>
         <label>To <input id="to" type="email" required></label>
         <label>Subject <input id="subject" maxlength="998" required></label>
-        <textarea id="body" aria-label="Message" placeholder="Write your message…" required></textarea>
+        <div class="compose-editor">
+          <div id="format-toolbar" class="format-toolbar" role="group" aria-label="Message formatting">
+            <button type="button" data-command="bold" aria-label="Bold" aria-pressed="false"><b>B</b></button>
+            <button type="button" data-command="italic" aria-label="Italic" aria-pressed="false"><i>I</i></button>
+            <button type="button" data-command="underline" aria-label="Underline" aria-pressed="false"><u>U</u></button>
+            <button type="button" data-command="insertUnorderedList" aria-label="Bulleted list" aria-pressed="false">• List</button>
+            <button type="button" data-command="insertOrderedList" aria-label="Numbered list" aria-pressed="false">1. List</button>
+            <button type="button" data-command="link" aria-label="Insert link">Link</button>
+            <button type="button" data-command="removeFormat" aria-label="Clear formatting">Clear</button>
+          </div>
+          <div id="link-panel" class="link-panel" hidden>
+            <label>Link URL <input inputmode="url" placeholder="https://example.com"></label>
+            <button type="button" data-insert-link>Insert</button>
+            <button type="button" data-cancel-link>Cancel</button>
+            <p role="status"></p>
+          </div>
+          <div id="body" role="textbox" contenteditable="true" aria-label="Message" aria-multiline="true" aria-required="true" data-placeholder="Write your message…" dir="auto"></div>
+        </div>
         <label>Attachments <input id="attachments" type="file" multiple></label>
         <p id="compose-status" role="status"></p>
         <footer><button type="submit" class="primary" id="send">Send message</button></footer>
@@ -90,7 +107,7 @@
     </dialog>
   </div>
   <script src="inbox-config.js"></script>
-  <script src="mail-core.js"></script>
-  <script type="module" src="private-inbox.js"></script>
+  <script src="mail-core.js?v=reader"></script>
+  <script type="module" src="private-inbox.js?v=reader"></script>
 </body>
 </html>
