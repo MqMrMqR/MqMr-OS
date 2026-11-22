@@ -1,3 +1,5 @@
+import { deviceSessionsAvailable, lockRemembered, rememberedOwnerClient } from './device-client.js';
+
 export const ownerEmail = 'mqmrpc@gmail.com';
 export const ownerId = '5922fd59-f07a-4ec9-8939-abc615b7c640';
 export const url = 'https://ebufvcuxcypoxwbvcbjg.supabase.co';
@@ -5,6 +7,7 @@ export const publishableKey = 'sb_publishable_3UET6C2bQ5vwSE8wzTY5Tw_jt2NiAvJ';
 export const sdkUrl = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js';
 export const sdkIntegrity = 'sha384-l7yJnh/cWKcqeTC5adHUdc5b+J4Kb2QTGRSkCQehn1YT5xEFlrgwnXOYuvrtI1F6';
 let clientPromise;
+export const sessionStorageKey = 'mqmr-private-inbox';
 
 export function mailboxClient() {
   clientPromise ??= new Promise((resolve, reject) => {
@@ -18,7 +21,7 @@ export function mailboxClient() {
           auth: {
             detectSessionInUrl: false,
             storage: sessionStorage,
-            storageKey: 'mqmr-private-inbox',
+            storageKey: sessionStorageKey,
             persistSession: true,
             autoRefreshToken: true
           }
@@ -51,12 +54,21 @@ export function isOwner(user, token, requireMfa = false) {
 }
 
 export async function verifiedOwnerClient() {
+  if (!sessionStorage.getItem(sessionStorageKey)) {
+    return await deviceSessionsAvailable() ? rememberedOwnerClient() : null;
+  }
   const client = await mailboxClient();
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError && (!sessionError.status || sessionError.status >= 500)) throw sessionError;
-  if (!session) return null;
+  if (!session) return await deviceSessionsAvailable() ? rememberedOwnerClient() : null;
 
   const { data, error } = await client.auth.getUser(session.access_token);
   if (error && (!error.status || error.status >= 500)) throw error;
-  return !error && isOwner(data.user, session.access_token, true) ? client : null;
+  if (!error && isOwner(data.user, session.access_token, true)) return client;
+  return await deviceSessionsAvailable() ? rememberedOwnerClient() : null;
+}
+export async function lockOwner(client) {
+  if (!client.remembered) await lockRemembered();
+  const { error } = await client.auth.signOut({ scope: 'local' });
+  if (error) throw error;
 }

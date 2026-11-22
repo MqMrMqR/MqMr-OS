@@ -35,8 +35,13 @@ export function validateProfile(data) {
     name: field(data?.name, 'Name', 32),
     handle: field(data?.handle, 'Display handle', 24),
     note: field(data?.note, 'Intro', 150),
+    showSemicolon: data.showSemicolon !== false,
+    order: [],
     links: {}
   };
+  for (const key of [...(Array.isArray(data.order) ? data.order : []), ...Object.keys(platforms)]) {
+    if (Object.hasOwn(platforms, key) && !profile.order.includes(key)) profile.order.push(key);
+  }
   for (const [key, platform] of Object.entries(platforms)) {
     const link = data.links?.[key];
     let address;
@@ -45,9 +50,16 @@ export function validateProfile(data) {
         || !platform.hostnames.includes(address.hostname)) {
       throw new Error('Enter a valid https URL for ' + platform.label + '.');
     }
+    const photo = link.photo || '';
+    if (typeof photo !== 'string' || (photo && (photo.length > 24000 ||
+        !/^data:image\/webp;base64,[A-Za-z0-9+/]+={0,2}$/.test(photo)))) {
+      throw new Error('Choose a smaller image for ' + platform.label + '.');
+    }
     profile.links[key] = {
       handle: field(link.handle, platform.label + ' handle', 48),
-      href: address.href
+      href: address.href,
+      hidden: link.hidden === true,
+      photo
     };
   }
   return profile;
@@ -85,6 +97,7 @@ export async function saveProfile(data, client, revision) {
     localStorage.setItem(storageKey, JSON.stringify({ profile, revision: next }));
     return next;
   }
+  if (client.saveProfile) return client.saveProfile(profile, revision);
   const table = client.from('profile_homepage');
   const request = revision === null
     ? table.insert({ singleton: true, payload: profile })

@@ -17,7 +17,12 @@
   </section>
 
   <div class="mail-app" id="mailbox" hidden>
-    <aside class="mail-sidebar">
+    <div class="mobile-mail-bar">
+      <button id="open-folders" type="button" aria-haspopup="dialog" aria-controls="mobile-mailboxes" aria-expanded="false">Mailboxes</button>
+      <span>Inbox</span>
+      <button id="mobile-compose" type="button" class="primary" disabled>Compose</button>
+    </div>
+    <aside class="mail-sidebar" aria-label="Mailbox settings">
       <div class="mail-brand"><a href="index.html">MqR</a><strong>Inbox</strong></div>
       <button id="compose" class="primary" disabled>New message</button>
       <h2>Mailboxes</h2>
@@ -55,6 +60,10 @@
         </div>
       </div>
     </main>
+
+    <dialog id="mobile-mailboxes" aria-labelledby="mobile-folders-title">
+      <header><h2 id="mobile-folders-title">Mailboxes</h2><button type="button" id="close-folders" aria-label="Close mailboxes">×</button></header>
+    </dialog>
 
     <dialog id="compose-dialog" aria-labelledby="compose-title">
       <form id="compose-form" method="post">

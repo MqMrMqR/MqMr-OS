@@ -22,6 +22,8 @@ button:disabled { cursor: wait; opacity: .65; }
 :focus-visible { outline: 2px solid var(--purple); outline-offset: 4px; }
 
 .site {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   min-height: calc(100svh - 2 * var(--frame));
   display: grid;
@@ -29,6 +31,21 @@ button:disabled { cursor: wait; opacity: .65; }
   border: 1px solid #28282a;
   border-radius: 28px;
   background: var(--panel);
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .site:not(.editor-site)::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(420px circle at var(--glow-x, 50%) var(--glow-y, 50%), #ab7be51b, transparent 78%);
+    opacity: 0;
+    transition: opacity 260ms ease;
+  }
+  .site[data-glow="true"]::before { opacity: 1; }
 }
 
 .masthead {
@@ -100,9 +117,8 @@ button:disabled { cursor: wait; opacity: .65; }
 .intro p { margin: 0; color: var(--muted); font: 400 1.1rem/1.5 var(--mono); }
 .comment-marker { color: var(--purple); }
 .profiles h2 { margin: 0 0 12px; color: var(--yellow); font: 500 1rem/1.4 var(--mono); }
-.profile-list { list-style: none; padding: 0; margin: 0; }
+.profile-list { list-style: none; padding: 0; margin: 0; border-bottom: 1px solid var(--line); }
 .profile-list li { border-top: 1px solid var(--line); }
-.profile-list li:last-child { border-bottom: 1px solid var(--line); }
 .profile {
   display: grid;
   grid-template-columns: 3rem minmax(0, 1fr);
@@ -112,6 +128,7 @@ button:disabled { cursor: wait; opacity: .65; }
   transition: background 160ms ease;
 }
 .profile:hover { background: #ffffff08; }
+.profile:hover, .profile:focus-visible { box-shadow: inset 2px 0 0 var(--yellow); }
 .profile img { width: 3rem; height: 3rem; border-radius: 13px; object-fit: cover; background: #2e2b32; }
 .profile strong, .profile small { display: block; }
 .profile strong { font-size: 1.125rem; font-weight: 620; letter-spacing: -.012em; overflow-wrap: anywhere; }
@@ -151,6 +168,24 @@ dialog input { display: block; width: 100%; min-height: 46px; padding: 10px 12px
 .editor-layout label { display: block; margin-bottom: .75rem; color: var(--muted); }
 .editor-layout :is(input, textarea) { display: block; width: 100%; min-width: 0; padding: .6rem; margin-top: .3rem; color: inherit; background: #1b1a1d; border: 1px solid #444148; border-radius: 6px; }
 .editor-pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr); gap: 1rem; }
+.editor-example { font: 1rem/1.5 var(--mono); color: var(--purple); }
+.editor-account { padding: .85rem 0; border-bottom: 1px solid var(--line); }
+.editor-account:last-child { border-bottom: 0; }
+.account-heading { display: flex; align-items: center; gap: .5rem; margin-bottom: .75rem; }
+.account-heading strong { flex: 1; }
+.account-heading img { width: 2rem; height: 2rem; border-radius: 7px; object-fit: cover; }
+.account-heading button, .editor-account > button, #device-list button {
+  min-height: 2.2rem; padding: .25rem .6rem; color: inherit; background: #232127;
+  border: 1px solid #403a46; border-radius: 6px;
+}
+.drag-handle { cursor: grab; color: var(--muted); }
+label.check-row { display: flex; align-items: center; gap: .5rem; margin: .8rem 0; }
+label.check-row input[type="checkbox"] { width: 1rem; height: 1rem; min-height: 0; margin: 0; accent-color: var(--purple); }
+#devices-panel { margin-top: 2rem; border-top: 1px solid var(--line); }
+#device-list { padding: 0; list-style: none; }
+#device-list li { display: flex; gap: 1rem; align-items: center; justify-content: space-between; padding: .5rem 0; border-bottom: 1px solid var(--line); }
+#device-list small { display: block; color: var(--muted); overflow-wrap: anywhere; }
+#devices-status a { text-decoration: underline; text-underline-offset: .2em; }
 
 @media (min-width: 76rem) {
   .intro h1 { font-size: 4.15rem; }
@@ -176,7 +211,7 @@ dialog input { display: block; width: 100%; min-height: 46px; padding: 10px 12px
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .typed-name { animation: type-name 1.35s steps(var(--characters, 12), end) .16s both; }
+  .typed-name { animation: type-name 1.35s steps(var(--characters, 13), end) .16s both; }
   .intro h1::after {
     content: "";
     position: absolute;
@@ -185,7 +220,7 @@ dialog input { display: block; width: 100%; min-height: 46px; padding: 10px 12px
     width: 2px;
     height: .9em;
     background: var(--yellow);
-    animation: advance-caret 1.35s steps(var(--characters, 12), end) .16s both,
+    animation: advance-caret 1.35s steps(var(--characters, 13), end) .16s both,
       blink-caret .55s step-end 1.51s 4 forwards;
   }
   @keyframes type-name {
