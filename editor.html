@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Admin Panel · MqR</title>
-  <link rel="stylesheet" href="profile.css">
-  <script type="module" src="editor.js"></script>
+  <link rel="stylesheet" href="profile.css?v=appearance">
+  <script type="module" src="editor.js?v=appearance"></script>
 </head>
 <body>
   <div class="site editor-site">
@@ -27,8 +27,52 @@
             <label>Display handle <input id="edit-handle" required maxlength="24"></label>
           </div>
           <label>Intro <textarea id="edit-note" required maxlength="150" rows="2"></textarea></label>
-          <label class="check-row"><input id="edit-semicolon" type="checkbox"> Show semicolon</label>
-          <p class="editor-example"><output id="edit-title-preview"></output></p>
+        </fieldset>
+        <fieldset>
+          <legend>Appearance</legend>
+          <div class="appearance-layout">
+            <div class="appearance-controls">
+              <label class="check-row"><input id="edit-ending-enabled" type="checkbox"> Show title ending</label>
+              <label>Ending text <input id="edit-ending" autocomplete="off" spellcheck="false" placeholder=";"></label>
+              <div class="range-row">
+                <div><label for="edit-ending-delay">Ending delay</label><output id="ending-delay-value" for="edit-ending-delay" aria-hidden="true"></output></div>
+                <input id="edit-ending-delay" type="range">
+              </div>
+              <div class="range-row">
+                <div><label for="edit-word-spacing">Word spacing</label><output id="word-spacing-value" for="edit-word-spacing" aria-hidden="true"></output></div>
+                <input id="edit-word-spacing" type="range">
+              </div>
+              <div class="range-row">
+                <div><label for="edit-handle-gap">Gap before handle</label><output id="handle-gap-value" for="edit-handle-gap" aria-hidden="true"></output></div>
+                <input id="edit-handle-gap" type="range">
+              </div>
+              <label class="check-row"><input id="edit-trail" type="checkbox"> Enable cursor trail</label>
+              <div id="color-groups"></div>
+              <button class="connect-button" id="reset-colors" type="button">Reset colors</button>
+            </div>
+            <section class="appearance-preview" aria-label="Live preview">
+              <div class="preview-tools"><span>Live preview</span>
+                <button class="connect-button" id="replay-title" type="button">Replay typing</button>
+              </div>
+              <div class="preview-frame" id="theme-preview">
+                <div class="preview-surface">
+                  <canvas class="cursor-trail" id="preview-trail" aria-hidden="true" hidden></canvas>
+                  <div class="masthead preview-nav" aria-hidden="true">
+                    <span class="wordmark">MqR</span>
+                    <span class="masthead-actions"><span class="connect-button">Connect</span><span class="access-button">Access</span></span>
+                  </div>
+                  <div class="intro preview-intro">
+                    <h2 class="profile-title" id="edit-title-preview"></h2>
+                    <p><span class="comment-marker" aria-hidden="true">// </span><span id="preview-note"></span></p>
+                  </div>
+                  <div class="profiles" id="preview-social">
+                    <h2>Social profiles</h2>
+                    <ul class="profile-list" id="preview-accounts"></ul>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         </fieldset>
         <fieldset>
           <legend>Social profiles</legend>

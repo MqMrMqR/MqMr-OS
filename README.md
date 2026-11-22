@@ -2,6 +2,8 @@
 
 A public profile with a private Inbox and profile editor.
 
+The editor's Appearance section controls the title ending, spacing, colors and cursor trail. Platform marks are from [Simple Icons](https://github.com/simple-icons/simple-icons) v16.38.1.
+
 ## Preview the design
 
 ```sh

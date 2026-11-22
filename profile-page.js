@@ -1,45 +1,44 @@
-import { loadProfile } from './profile-content.js';
+import { loadProfile, platforms } from './profile-content.js?v=appearance';
+import { applyAppearance, normalizeAppearance, renderTitle, titleText } from './profile-appearance.js';
+import { cursorTrail } from './cursor-trail.js';
 
-const site = document.querySelector('.site');
-const followPointer = matchMedia('(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)');
-let frame = null;
-let position;
-site.addEventListener('pointermove', event => {
-  if (!followPointer.matches || event.pointerType !== 'mouse') return;
-  position = { x: event.clientX, y: event.clientY };
-  if (frame !== null) return;
-  frame = requestAnimationFrame(() => {
-    frame = null;
-    const bounds = site.getBoundingClientRect();
-    site.style.setProperty('--glow-x', (position.x - bounds.left) + 'px');
-    site.style.setProperty('--glow-y', (position.y - bounds.top) + 'px');
-    site.dataset.glow = 'true';
-  });
-});
-function clearGlow() {
-  if (frame !== null) cancelAnimationFrame(frame);
-  frame = null;
-  delete site.dataset.glow;
+const site = document.querySelector('.profile-home');
+const title = document.querySelector('#name');
+const setTrail = cursorTrail(site, document.querySelector('#cursor-trail'));
+let rendered;
+
+function showTitle(profile) {
+  const text = titleText(profile);
+  const { ending: { delay } } = profile.appearance;
+  if (rendered?.text === text && rendered.delay === delay) return;
+  renderTitle(title, profile, true);
+  document.title = text;
+  rendered = { text, delay };
 }
-site.addEventListener('pointerleave', clearGlow);
-followPointer.addEventListener('change', clearGlow);
+
+const fallback = setTimeout(() => {
+  const appearance = normalizeAppearance();
+  setTrail(appearance);
+  showTitle({ name: 'Ethan', handle: 'MqMr', appearance });
+}, 390);
 
 try {
   const profile = await loadProfile();
-  document.querySelector('#profile-name').textContent = profile.name;
-  document.querySelector('#profile-handle').textContent = profile.handle;
+  clearTimeout(fallback);
+  applyAppearance(document.body, profile.appearance);
+  document.querySelector('meta[name="theme-color"]').content = profile.appearance.colors['page-background'];
+  setTrail(profile.appearance);
+  showTitle(profile);
   document.querySelector('#profile-note').textContent = profile.note;
-  document.querySelector('#profile-semicolon').hidden = !profile.showSemicolon;
-  const title = profile.name + ' {' + profile.handle + '}' + (profile.showSemicolon ? ';' : '');
-  document.title = title;
-  document.querySelector('#name').style.setProperty('--characters', Math.min(48, Array.from(title).length));
   const list = document.querySelector('.profile-list');
   for (const key of profile.order) {
     const link = profile.links[key];
     const anchor = document.querySelector('[data-profile="' + key + '"]');
     anchor.href = link.href;
-    anchor.querySelector('strong').textContent = link.handle;
-    if (link.photo) anchor.querySelector('img').src = link.photo;
+    const handle = anchor.querySelector('strong');
+    handle.textContent = link.handle;
+    handle.hidden = link.handle.toLowerCase() === platforms[key].label.toLowerCase();
+    if (link.photo) anchor.querySelector('.profile-photo').src = link.photo;
     anchor.parentElement.hidden = link.hidden;
     list.append(anchor.parentElement);
   }
