@@ -10,6 +10,10 @@ window.addEventListener('pagehide', () => { mailbox.hidden = true; });
 window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });
 
 async function unlock() {
+  if (window.self !== window.top) {
+    gateStatus.textContent = 'Open Inbox directly to sign in.';
+    return;
+  }
   try {
     let client;
     if (isLocalPreview) {

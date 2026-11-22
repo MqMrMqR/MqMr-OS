@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; img-src 'self' data:; style-src 'self' https://accounts.google.com/gsi/style; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js https://accounts.google.com/gsi/client; connect-src 'self' https://ebufvcuxcypoxwbvcbjg.supabase.co https://gmail.googleapis.com https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#141414">
@@ -24,7 +25,6 @@
       <h2>Accounts</h2>
       <div id="accounts"></div>
       <button id="connect">Add Google account</button>
-      <button id="domain" hidden>mqmr.bio</button>
       <button id="aliases" hidden>Manage addresses</button>
       <button id="disconnect" disabled>Disconnect account</button>
       <div class="sidebar-footer">
@@ -56,9 +56,9 @@
       </div>
     </main>
 
-    <dialog id="compose-dialog">
+    <dialog id="compose-dialog" aria-labelledby="compose-title">
       <form id="compose-form" method="post">
-        <header><h2>New message</h2><button type="button" id="close-compose" aria-label="Close composer">×</button></header>
+        <header><h2 id="compose-title">New message</h2><button type="button" id="close-compose" aria-label="Close composer">×</button></header>
         <label>From <select id="from" required></select></label>
         <label>To <input id="to" type="email" required></label>
         <label>Subject <input id="subject" maxlength="998" required></label>
@@ -69,8 +69,8 @@
       </form>
     </dialog>
 
-    <dialog id="alias-dialog">
-      <header><h2>Domain addresses</h2><button id="close-aliases" aria-label="Close addresses">×</button></header>
+    <dialog id="alias-dialog" aria-labelledby="alias-title">
+      <header><h2 id="alias-title">Domain addresses</h2><button id="close-aliases" aria-label="Close addresses">×</button></header>
       <p>Add a sending address for this inbox.</p>
       <ul id="alias-list"></ul>
       <form id="alias-form" method="post">

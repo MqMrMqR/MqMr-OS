@@ -35,18 +35,25 @@ Deno.serve(async req=>{
   if(input.action==='addresses'){const {data,error}=await db.from('mail_addresses').select('*').order('created_at');fail(error);return result({addresses:data});}
   if(input.action==='add-address'){const name=String(input.name||'').trim().toLowerCase();if(!/^[a-z0-9][a-z0-9._+-]{0,63}$/.test(name))return result({error:'Use letters, numbers, dots, dashes, plus or underscore'},400);const {error}=await db.from('mail_addresses').insert({address:name+'@mqmr.bio'});if(error?.code==='23505')return result({error:'Address already exists'},409);fail(error);return result({ok:true});}
   if(input.action==='list'){
-   let query=db.from('mail_messages').select('id,direction,sender,recipients,subject,text_body,unread,starred,created_at').order('created_at',{ascending:false}).order('id',{ascending:false}).limit(26);
+   let query=db.from('mail_messages').select('id,direction,sender,recipients,subject,body_preview,unread,starred,created_at').order('created_at',{ascending:false}).order('id',{ascending:false}).limit(26);
    if(input.folder==='TRASH')query=query.eq('trash',true);else query=query.eq('trash',false);
    if(input.folder==='SENT')query=query.eq('direction','outbound');else if(input.folder==='STARRED')query=query.eq('starred',true);else if(input.folder==='INBOX')query=query.eq('direction','inbound').eq('archived',false);
    if(input.search){const term=String(input.search).slice(0,200).replace(/[\\%_]/g,'\\$&');query=query.ilike('subject','%'+term+'%');}
    if(input.cursor){const cursor=input.cursor;if(!uuid.test(cursor.id)||!Number.isFinite(Date.parse(cursor.date)))return result({error:'Invalid cursor'},400);const date=new Date(cursor.date).toISOString();query=query.or(`created_at.lt.${date},and(created_at.eq.${date},id.lt.${cursor.id})`);}
-   const {data,error}=await query;fail(error);const rows=data||[];const visible=rows.slice(0,25);const last=visible.at(-1);return result({messages:visible.map(m=>({id:m.id,from:m.sender,to:m.recipients.join(', '),subject:m.subject,snippet:m.text_body.slice(0,150),unread:m.unread,starred:m.starred,date:m.created_at})),next:rows.length>25?{date:last!.created_at,id:last!.id}:null});
+   const {data,error}=await query;fail(error);const rows=data||[];const visible=rows.slice(0,25);const last=visible.at(-1);return result({messages:visible.map(m=>({id:m.id,from:m.sender,to:m.recipients.join(', '),subject:m.subject,snippet:m.body_preview,unread:m.unread,starred:m.starred,date:m.created_at})),next:rows.length>25?{date:last!.created_at,id:last!.id}:null});
   }
   if(['read','modify','attachment'].includes(input.action)){
    if(!uuid.test(String(input.id)))return result({error:'Invalid message'},400);
-   if(input.action==='read'){const {data,error}=await db.from('mail_messages').select('*').eq('id',input.id).single();fail(error);return result(data);}
+   if(input.action==='read'){
+    const {data,error}=await db.rpc('mail_read',{p_message_id:input.id});
+    fail(error);
+    return data ? result(data) : result({error:'Message not found'},404);
+   }
    if(input.action==='modify'){const change:Record<string,boolean>={};for(const field of ['unread','starred','trash'])if(typeof input[field]==='boolean')change[field]=input[field];if(input.archive===true)change.archived=true;const {error}=await db.from('mail_messages').update(change).eq('id',input.id);fail(error);return result({ok:true});}
-   const {data,error}=await db.from('mail_messages').select('attachments').eq('id',input.id).single();fail(error);const attachment=data?.attachments.find((a:any)=>a.id===input.attachment);if(!attachment)return result({error:'Attachment not found'},404);return result({data:attachment.data});
+   if(typeof input.attachment!=='string'||input.attachment.length>80)return result({error:'Invalid attachment'},400);
+   const {data,error}=await db.rpc('mail_attachment',{p_message_id:input.id,p_attachment_id:input.attachment});
+   fail(error);
+   return data===null ? result({error:'Attachment not found'},404) : result({data});
   }
   if(input.action==='send'){
    const apiKey=Deno.env.get('RESEND_API_KEY');if(!apiKey)return result({error:'Resend sending connection has not been configured'},503);

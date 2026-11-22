@@ -1,0 +1,13 @@
+{
+  "action": "rewrite",
+  "description": "Prevent framing of MqR pages",
+  "expression": "(http.host in {\"mqmr.bio\" \"www.mqmr.bio\"})",
+  "action_parameters": {
+    "headers": {
+      "Content-Security-Policy": { "operation": "set", "value": "frame-ancestors 'none'" },
+      "X-Frame-Options": { "operation": "set", "value": "DENY" },
+      "Referrer-Policy": { "operation": "set", "value": "strict-origin-when-cross-origin" },
+      "X-Content-Type-Options": { "operation": "set", "value": "nosniff" }
+    }
+  }
+}

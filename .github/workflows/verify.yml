@@ -1,0 +1,21 @@
+name: Mail and schema checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+      - run: npm ci --prefix tests --ignore-scripts
+      - run: npm test --prefix tests
+      - run: node verify-mail.cjs && node verify-mail-worker.mjs
+      - run: node build-static.mjs && node build-static.mjs --preview

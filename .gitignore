@@ -4,5 +4,6 @@ dist/
 .sites-runtime/
 .preview/
 node_modules/
+supabase/.temp/
 .env*
 !.env.example

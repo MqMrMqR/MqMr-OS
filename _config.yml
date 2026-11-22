@@ -3,11 +3,13 @@ exclude:
   - README.md
   - build-static.mjs
   - cloudflare-mail-worker.js
+  - deployment
   - mail-domain.ts
   - mail-ingest.ts
   - mail-schema.sql
   - preview-inbox.js
   - supabase
+  - tests
   - tools
   - verify-mail-worker.mjs
   - verify-mail.cjs

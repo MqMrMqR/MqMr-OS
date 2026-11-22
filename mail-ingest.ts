@@ -1,14 +1,40 @@
-import PostalMime from 'npm:postal-mime@3.0.0';
+import PostalMime from 'npm:postal-mime@4.2.1';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.8';
 const db=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,{auth:{persistSession:false}});
+const maxEnvelopeBytes = 15_000_000;
+
+async function readEnvelope(req: Request) {
+ if (!req.body) return '';
+ const reader = req.body.getReader();
+ const decoder = new TextDecoder();
+ const chunks: string[] = [];
+ let size = 0;
+ try {
+  for (;;) {
+   const { done, value } = await reader.read();
+   if (done) return chunks.join('') + decoder.decode();
+   size += value.byteLength;
+   if (size > maxEnvelopeBytes) {
+    await reader.cancel().catch(() => {});
+    return null;
+   }
+   chunks.push(decoder.decode(value, { stream: true }));
+  }
+ } finally {
+  reader.releaseLock();
+ }
+}
 // Cloudflare signs the exact payload. Timestamp bounds and unique message IDs prevent replay duplicates.
 Deno.serve(async req=>{
  if(req.method!=='POST')return new Response('Method not allowed',{status:405});
  const secret=Deno.env.get('MAIL_INGEST_SECRET');if(!secret)return new Response('Receiver not configured',{status:503});
  const timestamp=req.headers.get('x-mail-timestamp')||'',signature=req.headers.get('x-mail-signature')||'';
  if(!/^\d+$/.test(timestamp)||Math.abs(Date.now()-Number(timestamp))>300000||!/^[a-f0-9]{64}$/.test(signature))return new Response('Unauthorized',{status:401});
- if(Number(req.headers.get('content-length')||0)>15000000)return new Response('Too large',{status:413});
- const body=await req.text();if(body.length>15000000)return new Response('Too large',{status:413});
+ if(Number(req.headers.get('content-length')||0)>maxEnvelopeBytes)return new Response('Too large',{status:413});
+ let body;
+ try { body = await readEnvelope(req); }
+ catch { return new Response('Invalid request body',{status:400}); }
+ if (body === null) return new Response('Too large',{status:413});
  const hmac=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
  const bytes=Uint8Array.from(signature.match(/../g)!,value=>parseInt(value,16));
  if(!await crypto.subtle.verify('HMAC',hmac,bytes,new TextEncoder().encode(timestamp+'.'+body)))return new Response('Unauthorized',{status:401});

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; img-src 'self' data:; style-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js; connect-src 'self' https://ebufvcuxcypoxwbvcbjg.supabase.co">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Admin Panel · MqR</title>
@@ -17,6 +18,7 @@
     <main class="editor-layout">
       <h1>Admin Panel</h1>
       <p class="editor-status" id="editor-status" role="status">Checking access…</p>
+      <button class="connect-button" id="reload-profile" type="button" hidden>Load latest profile</button>
       <form id="profile-editor" method="post" hidden>
         <fieldset>
           <legend>Profile</legend>

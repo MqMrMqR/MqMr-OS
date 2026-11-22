@@ -8,7 +8,38 @@
  const clean=value=>String(value||'').replace(/[\r\n]/g,' ').trim();
  const subjectWords=value=>Array.from(clean(value)).reduce((chunks,char,i)=>{if(i%10===0)chunks.push('');chunks[chunks.length-1]+=char;return chunks;},[]).map(chunk=>`=?UTF-8?B?${encode(chunk)}?=`).join('\r\n ');
  const header=(message,name)=>(message.payload?.headers||[]).find(h=>h.name.toLowerCase()===name.toLowerCase())?.value||'';
- function parts(payload){const out={text:'',html:'',files:[]};function visit(p){if(p.filename){out.files.push({name:p.filename,id:p.body?.attachmentId,data:p.body?.data,type:p.mimeType,size:p.body?.size});}else if(p.body?.data){if(p.mimeType==='text/plain')out.text+=decode(p.body.data);if(p.mimeType==='text/html')out.html+=decode(p.body.data);} (p.parts||[]).forEach(visit);}visit(payload||{});return out;}
+ function collectParts(payload) {
+  const out = { text: [], html: [], files: [] };
+  function visit(part) {
+   const body = part.body;
+   if (part.filename) {
+    out.files.push({ name: part.filename, id: body?.attachmentId, data: body?.data, type: part.mimeType, size: body?.size });
+    return;
+   }
+   if (body && (body.data || body.attachmentId)) {
+    if (part.mimeType === 'text/plain') out.text.push(body);
+    if (part.mimeType === 'text/html') out.html.push(body);
+   }
+   (part.parts || []).forEach(visit);
+  }
+  visit(payload || {});
+  return out;
+ }
+ function parts(payload) {
+  const { text, html, files } = collectParts(payload);
+  const inline = bodies => bodies.map(body => decode(body.data)).join('');
+  return { text: inline(text), html: inline(html), files };
+ }
+ async function resolveParts(payload, fetchPart) {
+  const { text, html, files } = collectParts(payload);
+  const resolve = async bodies => {
+   const decoded = [];
+   for (const body of bodies) decoded.push(decode(body.data || (await fetchPart(body.attachmentId)).data));
+   return decoded.join('');
+  };
+  const plain = await resolve(text);
+  return { text: plain, html: plain ? '' : await resolve(html), files };
+ }
  function mime({from,to,subject,text,replyId,files=[]}){
  const boundary='mqmr_'+crypto.randomUUID();
  const lines=[`From: ${clean(from)}`,`To: ${clean(to)}`,`Subject: ${subjectWords(subject)}`, 'MIME-Version: 1.0'];
@@ -17,5 +48,5 @@
  files.forEach(file=>lines.push(`--${boundary}`,`Content-Type: ${/^[\w.+-]+\/[\w.+-]+$/.test(file.type)?file.type:'application/octet-stream'}`,`Content-Disposition: attachment; filename="attachment"; filename*=UTF-8''${encodeURIComponent(clean(file.name))}`,'Content-Transfer-Encoding: base64','',wrap(file.content)));
  lines.push(`--${boundary}--`,'');return url64(lines.join('\r\n'));
  }
- const api={decode,encode,url64,b64bytes,clean,header,parts,mime}; if(typeof module!=='undefined')module.exports=api;else window.MailCore=api;
+ const api={decode,encode,url64,b64bytes,clean,header,parts,resolveParts,mime}; if(typeof module!=='undefined')module.exports=api;else window.MailCore=api;
 })();
