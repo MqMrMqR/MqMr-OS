@@ -53,6 +53,7 @@ a { color: var(--purple); text-underline-offset: 3px; }
 .mail-sidebar h2 { margin: .95rem .3rem 0; color: var(--yellow); font: 500 .8rem/1.5 var(--mono); }
 .mail-sidebar nav, #accounts { display: grid; gap: .25rem; }
 .mail-sidebar button { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .875rem; }
+.mail-sidebar :is(#connect, #aliases, #disconnect) { font-size: .8rem; white-space: normal; }
 .mail-sidebar :where(nav, #accounts) button { text-align: left; border-color: transparent; background: transparent; }
 .mail-sidebar :where(nav, #accounts) button:hover { background: var(--os-hover); }
 .mail-sidebar button[aria-current="true"] { color: var(--purple); background: #25212b; }

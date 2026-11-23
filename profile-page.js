@@ -1,4 +1,4 @@
-import { loadProfileRecord, platforms, profileChangeKey } from './profile-content.js?v=themes';
+import { loadProfileRecord, platforms, profileChangeKey } from './profile-content.js?v=quick';
 import { applyAppearance, normalizeAppearance, renderTitle, titleText } from './profile-appearance.js';
 import { cursorTrail } from './cursor-trail.js';
 

@@ -1,6 +1,6 @@
 import { isLocalPreview } from './preview-mode.js';
 import { isOwner, lockOwner, verifiedOwnerClient } from './mail-access.js?v=quick';
-import { loadProfileRecord, platforms, profileChangeKey, saveProfile } from './profile-content.js?v=themes';
+import { loadProfileRecord, platforms, profileChangeKey, saveProfile } from './profile-content.js?v=quick';
 import { manageDevices } from './device-client.js?v=quick';
 import { appearanceLimits, applyAppearance, colorGroups, normalizeAppearance, renderTitle, socialColorLabels } from './profile-appearance.js';
 import { cursorTrail } from './cursor-trail.js';
