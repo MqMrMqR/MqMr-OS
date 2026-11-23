@@ -7,7 +7,7 @@ const samples = [
   ['review@source.example.test', 'Review requested · inbox styles', 'The inbox colors and spacing are ready for review. There are three changed files, with separate styles for the list and reader.', false],
   ['sam@workspace.example.test', 'Workspace links', 'I put the references together. Let’s review the notes and keep the first release small.', false],
   ['release@pipeline.example.test', 'Release notes', 'This update adds mobile navigation, improved keyboard focus and a separate profile editor.', false],
-  ['photos@studio.example.test', 'Images and attachments', 'There is an inline image and a file you can preview.', false]
+  ['photos@studio.example.test', 'Images and attachments', 'Two illustrations and a separate image attachment.', false]
 ];
 
 export function previewMailbox() {
@@ -18,8 +18,12 @@ export function previewMailbox() {
     html_body: index === 2 ? '<p>The <strong>updated inbox layout</strong> is ready.</p><p><a href="https://example.test/review" role="button">View review notes</a></p><blockquote><p>Earlier review feedback goes here.</p></blockquote>' : null
   }));
   Object.assign(messages.at(-1), {
-    html_body: '<p>There is an inline image and a file you can preview.</p><img src="cid:sample@example.test" alt="Purple landscape"><p><img src="https://mqmr.bio/profiles/mqmr.webp" alt="Remote illustration"></p>',
-    attachments: [{ id: '0', name: 'landscape.png', type: 'image/png', contentId: '<sample@example.test>', data: previewPng }]
+    html_body: '<p>First illustration</p><img src="cid:sample@example.test" alt="Purple landscape"><p>Between illustrations</p><img src="https://mqmr.bio/profiles/mqmr.webp" alt="Remote illustration"><p>Closing note</p>',
+    attachments: [
+      { id: '0', name: 'landscape.png', type: 'image/png', contentId: '<sample@example.test>', data: previewPng },
+      { id: '1', name: 'snapshot.png', type: 'image/png', data: previewPng },
+      { id: '2', name: 'notes.txt', type: 'text/plain', data: 'Tm90ZXM=' }
+    ]
   });
 
   return { functions: { async invoke(_functionName, { body }) {

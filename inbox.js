@@ -1,5 +1,5 @@
-import { attachmentImageType, renderMessageBody } from './mail-format.js?v=inbox-media-1';
-import { richComposer } from './mail-compose.js?v=inbox-media-1';
+import { attachmentImageType, renderMessageBody } from './mail-format.js?v=inbox-media-2';
+import { richComposer } from './mail-compose.js?v=inbox-media-2';
 
 /* Gmail tokens stay in memory and never pass through the site backend. */
 export function initializeInbox(siteBackend) {
@@ -276,7 +276,7 @@ export function initializeInbox(siteBackend) {
    return urls.get(file);
   }
 
-  function renderImage(source, alt) {
+  function queueImage(alt, source, file) {
    const frame = text('span', '', 'mail-image-frame');
    const description = text('span', alt || 'Image', 'mail-image-caption');
    const image = new Image();
@@ -291,13 +291,12 @@ export function initializeInbox(siteBackend) {
    image.onload = () => { description.hidden = true; };
    image.onerror = unavailable;
    frame.append(image, description);
-   deferred.push({ frame, remote: source.kind === 'remote', async start() {
+   deferred.push({ frame, file, async start() {
+    if (disposed || !frame.isConnected) return;
     try {
-     const file = source.kind === 'cid' ? inline.get(source.id) : null;
-     const url = source.kind === 'cid' ? (file && await previewUrl(file)) : source.url;
+     const url = await source();
      if (disposed || !frame.isConnected) return;
      if (!url) return unavailable();
-     if (source.kind === 'remote') image.loading = 'lazy';
      image.hidden = false;
      image.src = url;
     } catch { if (!disposed) unavailable(); }
@@ -305,30 +304,28 @@ export function initializeInbox(siteBackend) {
    return frame;
   }
 
-  function mount(body) {
-   const items = deferred.filter(item => body.contains(item.frame));
-   const local = new Map(items.filter(item => !item.remote).map(item => [item.frame, item]));
-   if (local.size) {
-    observer = new IntersectionObserver(entries => {
-     for (const entry of entries) {
-      if (!entry.isIntersecting) continue;
-      observer.unobserve(entry.target);
-      local.get(entry.target).start();
-      local.delete(entry.target);
-     }
-    }, { root: $('.reader-pane'), rootMargin: '160px' });
-    local.forEach(({ frame }) => observer.observe(frame));
-   }
-   const remote = items.filter(item => item.remote);
-   if (!remote.length) return;
-   const notice = text('div', '', 'mail-image-notice');
-   const show = text('button', 'Show remote images');
-   notice.append(show, text('span', 'Loading remote images can tell the sender you opened this email.'));
-   show.onclick = () => {
-    remote.forEach(item => item.start());
-    notice.remove();
-   };
-   body.before(notice);
+  function renderImage(source, alt) {
+   if (source.kind !== 'cid') return queueImage(alt, () => source.url);
+   const file = inline.get(source.id);
+   return queueImage(alt, () => file && previewUrl(file), file);
+  }
+
+  function inlineFiles(body) {
+   return new Set(deferred.filter(({ frame, file }) => file && body.contains(frame)).map(({ file }) => file));
+  }
+
+  function mount(reader) {
+   const pending = new Map(deferred.filter(({ frame }) => reader.contains(frame)).map(item => [item.frame, item.start]));
+   if (!pending.size) return;
+   observer = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+     if (!entry.isIntersecting) continue;
+     observer.unobserve(entry.target);
+     pending.get(entry.target)?.();
+     pending.delete(entry.target);
+    }
+   }, { root: $('.reader-pane'), rootMargin: '160px' });
+   for (const frame of pending.keys()) observer.observe(frame);
   }
 
   async function previewFile(file) {
@@ -354,7 +351,8 @@ export function initializeInbox(siteBackend) {
    } catch { unavailable(); }
   }
 
-  return { renderImage, mount, previewFile, dispose() {
+  return { renderImage, inlineFiles, mount, previewFile,
+   thumbnail: file => queueImage(file.name, () => previewUrl(file)), dispose() {
    disposed = true;
    observer?.disconnect();
    if (imageDialog.open) imageDialog.close();
@@ -493,7 +491,7 @@ export function initializeInbox(siteBackend) {
    readerMedia = media;
    renderMessageBody(body, content, media.renderImage);
    reader.append(body);
-   media.mount(body);
+   const inlineFiles = media.inlineFiles(body);
    const files = text('div', '', 'file-list');
    for (const file of content.files) {
     const download = text('button', '↓ ' + file.name);
@@ -510,17 +508,18 @@ export function initializeInbox(siteBackend) {
      } catch (error) { if (active()) fail(error); }
      finally { download.disabled = false; }
     };
-    const item = text('div', '', 'file-entry');
-    item.append(download);
-    if (attachmentImageType(file)) {
-     const open = text('button', 'Preview');
-     open.setAttribute('aria-label', `Preview ${file.name}`);
+    if (attachmentImageType(file) && !inlineFiles.has(file)) {
+     const item = text('div', '', 'file-image');
+     const open = text('button', '', 'file-thumbnail');
+     open.setAttribute('aria-label', `Open ${file.name}`);
+     open.append(media.thumbnail(file));
      open.onclick = () => { if (active()) media.previewFile(file); };
-     item.append(open);
-    }
-    files.append(item);
+     item.append(open, download);
+     files.append(item);
+    } else files.append(download);
    }
    reader.append(files);
+   media.mount(reader);
    status('');
   } catch (error) { if (active()) fail(error); }
  }

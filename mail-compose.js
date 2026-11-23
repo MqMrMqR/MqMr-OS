@@ -1,4 +1,4 @@
-import { composerHtml, safeMailUrl } from './mail-format.js?v=inbox-media-1';
+import { composerHtml, safeMailUrl } from './mail-format.js?v=inbox-media-2';
 
 export function richComposer(editor, toolbar, linkPanel) {
   const urlField = linkPanel.querySelector('input');

@@ -17,9 +17,9 @@ async function unlock() {
   try {
     if (isLocalPreview && sessionStorage.getItem('mqmr-inbox-preview') !== '1') return redirect();
     const clientRequest = isLocalPreview
-      ? import('./preview-inbox.js?v=inbox-media-1').then(({ previewMailbox }) => previewMailbox())
+      ? import('./preview-inbox.js?v=inbox-media-2').then(({ previewMailbox }) => previewMailbox())
       : verifiedOwnerClient({ preloadInbox: true });
-    const [client, { initializeInbox }] = await Promise.all([clientRequest, import('./inbox.js?v=inbox-media-1')]);
+    const [client, { initializeInbox }] = await Promise.all([clientRequest, import('./inbox.js?v=inbox-media-2')]);
     if (!client) return redirect();
     if (isLocalPreview) {
       mailbox.dataset.preview = 'true';
