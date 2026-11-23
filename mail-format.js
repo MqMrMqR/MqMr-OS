@@ -12,6 +12,33 @@ export function safeMailUrl(value) {
   return null;
 }
 
+const rasterTypes = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/avif', 'image/bmp', 'image/x-icon', 'image/vnd.microsoft.icon']);
+const rasterExtensions = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', avif: 'image/avif', bmp: 'image/bmp', ico: 'image/x-icon' };
+
+export function attachmentImageType({ type, name }) {
+  const mime = typeof type === 'string' && type.split(';')[0].trim().toLowerCase();
+  if (rasterTypes.has(mime)) return mime;
+  if (mime && mime !== 'application/octet-stream') return null;
+  const extension = typeof name === 'string' && name.match(/\.([a-z0-9]+)$/i)?.[1].toLowerCase();
+  return Object.hasOwn(rasterExtensions, extension) ? rasterExtensions[extension] : null;
+}
+
+export function mailImageSource(value) {
+  if (typeof value !== 'string' || /[\u0000-\u001f\u007f]/u.test(value)) return null;
+  const src = value.trim();
+  if (/^cid:/i.test(src)) {
+    try {
+      const id = decodeURIComponent(src.slice(4)).replace(/^<|>$/g, '');
+      if (id && id.length <= 998 && !/[\s<>]/u.test(id)) return { kind: 'cid', id };
+    } catch {}
+    return null;
+  }
+  const data = /^data:(image\/[a-z0-9.+-]+);base64,([a-z0-9+/]+={0,2})$/i.exec(src);
+  if (data && rasterTypes.has(data[1].toLowerCase())) return { kind: 'data', url: src };
+  const url = safeMailUrl(src);
+  return url?.startsWith('https://') ? { kind: 'remote', url } : null;
+}
+
 // The sender accepts only the small HTML subset emitted by the composer.
 export function validOutgoingHtml(html) {
   if (typeof html !== 'string' || html.length > 1000000) return false;
@@ -155,7 +182,7 @@ function renderPlain(parent, parts) {
   }
 }
 
-function rebuild(nodes, target, mode, depth = 0, inAnchor = false) {
+function rebuild(nodes, target, mode, depth = 0, inAnchor = false, renderImage) {
   if (depth > 60) return;
   for (const node of nodes) {
     if (node.nodeType === 3) {
@@ -163,10 +190,16 @@ function rebuild(nodes, target, mode, depth = 0, inAnchor = false) {
       else target.append(node.data);
       continue;
     }
-    if (node.nodeType !== 1 || node.namespaceURI !== 'http://www.w3.org/1999/xhtml' || skippedTags.has(node.localName)) continue;
+    if (node.nodeType !== 1 || node.namespaceURI !== 'http://www.w3.org/1999/xhtml') continue;
     const tag = node.localName;
+    if (tag === 'img' && renderImage) {
+      const source = mailImageSource(node.getAttribute('src'));
+      if (source) target.append(renderImage(source, node.getAttribute('alt')?.slice(0, 300) || ''));
+      continue;
+    }
+    if (skippedTags.has(tag)) continue;
     if (mode === 'reader' && (tag === 'blockquote' || (node.classList.contains('gmail_quote') && !node.querySelector('blockquote')))) {
-      rebuild(node.childNodes, quoteCard(target), mode, depth + 1);
+      rebuild(node.childNodes, quoteCard(target), mode, depth + 1, false, renderImage);
       continue;
     }
     if (tag === 'a') {
@@ -175,12 +208,14 @@ function rebuild(nodes, target, mode, depth = 0, inAnchor = false) {
         const label = node.textContent.trim();
         const button = node.getAttribute('role') === 'button' || (label.length < 55 && label && node.parentElement?.textContent.trim() === label);
         const anchor = mode === 'reader' ? link(href, label || new URL(href).hostname || href, button) : document.createElement('a');
-        if (mode !== 'reader') {
+        if (mode !== 'reader' || (renderImage && node.querySelector('img'))) {
           anchor.href = href;
-          rebuild(node.childNodes, anchor, mode, depth + 1, true);
+          anchor.replaceChildren();
+          rebuild(node.childNodes, anchor, mode, depth + 1, true, renderImage);
+          if (mode === 'reader' && !anchor.textContent.trim() && !anchor.querySelector('.mail-image-frame')) anchor.textContent = new URL(href).hostname || href;
         }
         target.append(anchor);
-      } else rebuild(node.childNodes, target, mode, depth + 1, inAnchor);
+      } else rebuild(node.childNodes, target, mode, depth + 1, inAnchor, renderImage);
       continue;
     }
     const wrapped = basicTags.has(tag) ? tag : mode === 'reader' && ['table','tr','td','section','center','article'].includes(tag) ? 'div' : '';
@@ -189,17 +224,17 @@ function rebuild(nodes, target, mode, depth = 0, inAnchor = false) {
       parent = document.createElement(wrapped);
       target.append(parent);
     }
-    rebuild(node.childNodes, parent, mode, depth + 1, inAnchor || tag === 'pre' || tag === 'code');
+    rebuild(node.childNodes, parent, mode, depth + 1, inAnchor || tag === 'pre' || tag === 'code', renderImage);
   }
 }
 
-export function renderMessageBody(target, { text, html }) {
+export function renderMessageBody(target, { text, html }, renderImage) {
   if (html) {
     const content = document.createDocumentFragment();
-    rebuild(htmlNodes(html), content, 'reader');
-    if (content.textContent.trim()) {
+    rebuild(htmlNodes(html), content, 'reader', 0, false, renderImage);
+    if (content.textContent.trim() || content.querySelector('.mail-image-frame')) {
       const hasTextQuotes = /^\s*>/m.test(text || '');
-      if (!hasTextQuotes || content.querySelector('.mail-quote')) {
+      if (!hasTextQuotes || content.querySelector('.mail-quote, .mail-image-frame')) {
         target.append(content);
         return;
       }

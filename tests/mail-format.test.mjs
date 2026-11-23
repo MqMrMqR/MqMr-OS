@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 import PostalMime from 'postal-mime';
 import core from '../mail-core.js';
-import { quoteParts, safeMailUrl, validOutgoingHtml } from '../mail-format.js';
+import { attachmentImageType, mailImageSource, quoteParts, safeMailUrl, validOutgoingHtml } from '../mail-format.js';
 
 test('plain replies keep separate quotes and a nested quote with wrapped attribution', () => {
   const parsed = quoteParts('Reply\n\nOn Saturday, Alex\nwrote:\n> Previous\n> On Friday, Pat wrote:\n> > Original\n\nCurrent note\n\nOn Thursday, Lee wrote:\n> Second quote');
@@ -24,6 +24,22 @@ test('email hyperlinks and composed markup use the supported format', () => {
   assert.equal(validOutgoingHtml('<div>Hello <b>Ethan</b><br><a href="https://example.test/?a=1&amp;b=2">Visit</a></div>'), true);
   assert.equal(validOutgoingHtml('<span style="color:red">Text</span>'), false);
   assert.equal(validOutgoingHtml('<p><b>Unbalanced</p>'), false);
+});
+
+test('image sources distinguish embedded rasters from remote requests', () => {
+  const cid = 'cid:Photo%40example.test';
+  assert.deepEqual(mailImageSource(cid), { kind: 'cid', id: 'Photo@example.test' });
+  const data = 'data:image/png;base64,aGk=';
+  assert.deepEqual(mailImageSource(data), { kind: 'data', url: data });
+  const remote = 'https://example.test/banner.png';
+  assert.deepEqual(mailImageSource(remote), { kind: 'remote', url: remote });
+  for (const source of ['cid:bad%Z0', 'http://example.test/banner.png', 'https://secret@example.test/a.png',
+    '//example.test/banner.png', 'data:image/svg+xml;base64,aGk=', 'javascript:alert(1)', 'blob:https://example.test/image']) {
+    assert.equal(mailImageSource(source), null);
+  }
+  assert.equal(attachmentImageType({ name: 'Image.JPG', type: 'application/octet-stream' }), 'image/jpeg');
+  assert.equal(attachmentImageType({ name: 'image.png', type: 'image/svg+xml' }), null);
+  assert.equal(validOutgoingHtml('<img src="https://example.test/p.png">'), false);
 });
 
 test('Gmail rich mail preserves the plain alternative, Unicode, and attachments', async () => {

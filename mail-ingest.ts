@@ -43,7 +43,7 @@ Deno.serve(async req=>{
  const bytes=Uint8Array.from(atob(envelope.raw),c=>c.charCodeAt(0));if(bytes.length>10*1024*1024)return new Response('Too large',{status:413});
  const parsed=await PostalMime.parse(bytes);
  const base64=(buffer:ArrayBuffer|Uint8Array)=>{const bytes=new Uint8Array(buffer);let value='';for(let i=0;i<bytes.length;i+=32768)value+=String.fromCharCode(...bytes.subarray(i,i+32768));return btoa(value);};
- const data={id:envelope.id,from:parsed.from?.address||envelope.from,to:[envelope.to.toLowerCase()],replyTo:parsed.replyTo?.[0]?.address||null,subject:parsed.subject||'',text:parsed.text||'',html:parsed.html||'',attachments:(parsed.attachments||[]).map((file,index)=>({id:String(index),name:file.filename||'attachment',type:file.mimeType,data:base64(file.content)}))};
+ const data={id:envelope.id,from:parsed.from?.address||envelope.from,to:[envelope.to.toLowerCase()],replyTo:parsed.replyTo?.[0]?.address||null,subject:parsed.subject||'',text:parsed.text||'',html:parsed.html||'',attachments:(parsed.attachments||[]).map((file,index)=>({id:String(index),name:file.filename||'attachment',type:file.mimeType,data:base64(file.content),...(file.contentId&&{contentId:file.contentId})}))};
  const {error}=await db.from('mail_messages').upsert({provider_id:'cloudflare:'+data.id,direction:'inbound',sender:data.from,recipients:data.to,reply_to:data.replyTo||null,subject:String(data.subject||'').slice(0,998),text_body:String(data.text||''),html_body:String(data.html||''),attachments:data.attachments||[]},{onConflict:'provider_id',ignoreDuplicates:true});if(error)return new Response('Storage unavailable',{status:503});return Response.json({ok:true});
  }catch{return new Response('Invalid mail',{status:400});}
 });

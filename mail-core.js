@@ -12,8 +12,11 @@
   const out = { text: [], html: [], files: [] };
   function visit(part) {
    const body = part.body;
-   if (part.filename) {
-    out.files.push({ name: part.filename, id: body?.attachmentId, data: body?.data, type: part.mimeType, size: body?.size });
+   const contentId = header({ payload: part }, 'Content-ID').trim();
+   const image = part.mimeType?.startsWith('image/');
+   const disposition = image && header({ payload: part }, 'Content-Disposition');
+   if (part.filename || (image && (contentId || /^attachment\b/i.test(disposition)))) {
+    out.files.push({ name: part.filename || 'Inline image', id: body?.attachmentId, data: body?.data, type: part.mimeType, size: body?.size, ...(contentId && { contentId }) });
     return;
    }
    if (body && (body.data || body.attachmentId)) {
