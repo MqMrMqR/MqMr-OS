@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; img-src 'self' data:; style-src 'self' https://accounts.google.com/gsi/style; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js https://accounts.google.com/gsi/client; connect-src 'self' https://ebufvcuxcypoxwbvcbjg.supabase.co https://gmail.googleapis.com https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; form-action 'none'; img-src 'self' data: blob: https:; style-src 'self' https://accounts.google.com/gsi/style; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8/dist/umd/supabase.js https://accounts.google.com/gsi/client; connect-src 'self' https://ebufvcuxcypoxwbvcbjg.supabase.co https://gmail.googleapis.com https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#141414">
   <title>Inbox · MqR</title>
   <link rel="preconnect" href="https://ebufvcuxcypoxwbvcbjg.supabase.co" crossorigin>
-  <link rel="stylesheet" href="inbox.css?v=quick">
+  <link rel="stylesheet" href="inbox.css?v=images">
 </head>
 <body>
   <section class="mailbox-gate" id="mailbox-gate" aria-labelledby="gate-title">
@@ -106,9 +106,14 @@
       </form>
       <p id="alias-status" role="status"></p>
     </dialog>
+    <dialog id="image-dialog" aria-labelledby="image-title">
+      <header><h2 id="image-title">Image preview</h2><button type="button" id="close-image" aria-label="Close image preview">×</button></header>
+      <p id="image-status" role="status"></p>
+      <div id="image-preview"></div>
+    </dialog>
   </div>
   <script src="inbox-config.js"></script>
-  <script src="mail-core.js?v=quick"></script>
-  <script type="module" src="private-inbox.js?v=quick"></script>
+  <script src="mail-core.js?v=images"></script>
+  <script type="module" src="private-inbox.js?v=images"></script>
 </body>
 </html>

@@ -135,13 +135,37 @@ a { color: var(--purple); text-underline-offset: 3px; }
 .mail-quote summary span { display: block; color: var(--os-muted); font-size: .78rem; }
 .mail-quote blockquote { margin: .35rem 0 0; color: #cbc5d2; font-size: .86rem; }
 .mail-empty { margin: 2rem 0; color: var(--os-muted); }
+.mail-image-notice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .45rem .7rem;
+  margin-top: .85rem;
+  padding-bottom: .65rem;
+  border-bottom: 1px solid var(--os-border);
+  color: var(--os-muted);
+  font-size: .8rem;
+}
+.mail-image-notice button { color: var(--purple); }
+.mail-image-frame { display: block; margin-block: .45rem; }
+.mail-image-frame img { display: block; max-width: 100%; height: auto; }
+.mail-image-caption { color: var(--os-muted); font-size: .8rem; }
 .file-list { display: flex; flex-wrap: wrap; gap: .5rem; }
 .file-list:not(:empty) { margin-top: 1rem; }
+.file-entry { display: flex; flex-wrap: wrap; gap: .25rem; min-width: 0; max-width: 100%; }
+.file-entry button { min-width: 0; overflow-wrap: anywhere; }
+.file-entry button + button { color: var(--purple); background: transparent; }
+.file-entry button + button:hover { background: var(--os-hover); }
 
 dialog { width: min(42rem, calc(100% - 1.5rem)); max-height: 90dvh; padding: 1.25rem; color: var(--os-text); background: var(--os-panel); border: 1px solid var(--os-border); border-radius: 8px; box-shadow: 0 20px 70px #08070b99; }
 dialog::backdrop { background: #09090acb; }
 dialog header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
 dialog h2 { margin: 0; font: 650 1.15rem/1.4 var(--mono); }
+#image-dialog { width: min(64rem, calc(100% - 1.5rem)); }
+#image-dialog h2 { overflow-wrap: anywhere; min-width: 0; }
+#image-status:empty, #image-preview:empty { display: none; }
+#image-preview { display: grid; place-items: center; margin-top: .75rem; }
+#image-preview img { display: block; max-width: 100%; max-height: 72dvh; object-fit: contain; }
 dialog form { display: grid; gap: .65rem; }
 dialog :is(label, p) { color: var(--os-muted); font-size: .9rem; }
 dialog :is(input, select, textarea) { display: block; width: 100%; min-width: 0; }

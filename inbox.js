@@ -1,4 +1,4 @@
-import { renderMessageBody } from './mail-format.js';
+import { attachmentImageType, renderMessageBody } from './mail-format.js?v=images';
 import { richComposer } from './mail-compose.js';
 
 /* Gmail tokens stay in memory and never pass through the site backend. */
@@ -13,6 +13,13 @@ export function initializeInbox(siteBackend) {
  const sidebar = $('.mail-sidebar');
  const drawer = $('#mobile-mailboxes');
  const drawerButton = $('#open-folders');
+ const imageDialog = $('#image-dialog');
+ const imagePreview = $('#image-preview');
+ const imageStatus = $('#image-status');
+ $('#close-image').onclick = () => imageDialog.close();
+ imageDialog.onclose = () => {
+  if (!imageDialog.open) imagePreview.replaceChildren();
+ };
  function placeSidebar() {
   if (onMobile.matches) drawer.append(sidebar);
   else {
@@ -36,6 +43,8 @@ export function initializeInbox(siteBackend) {
  const showList = () => { delete mailbox.dataset.reading; };
  const resetReader = () => {
   readerTicket++;
+  readerMedia?.dispose();
+  readerMedia = null;
   showList();
   lastMessageButton = null;
   $('#reader').replaceChildren(text('p', 'Select a message to read it.', 'mail-empty'));
@@ -49,6 +58,7 @@ export function initializeInbox(siteBackend) {
  const listFreshness = 12000;
  const rowDates = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
  let current = null, folder = 'INBOX', view = null, readerTicket = 0;
+ let readerMedia = null;
  let draft = null, composing = false, sending = false;
  const text=(tag,value,className)=>{const el=document.createElement(tag);el.textContent=value||'';if(className)el.className=className;return el;};
  const status=value=>$('#mail-status').textContent=value;
@@ -245,6 +255,114 @@ export function initializeInbox(siteBackend) {
   return value;
  }
 
+ function messageMedia(files, loadFile) {
+  const urls = new Map();
+  const inline = new Map();
+  const deferred = [];
+  let disposed = false;
+  let observer;
+  for (const file of files) {
+   const id = file.contentId?.trim().replace(/^<|>$/g, '');
+   if (id && attachmentImageType(file) && !inline.has(id)) inline.set(id, file);
+  }
+
+  function previewUrl(file) {
+   if (!urls.has(file)) {
+    const pending = loadFile(file).then(bytes => disposed ? null
+     : URL.createObjectURL(new Blob([bytes], { type: attachmentImageType(file) })));
+    urls.set(file, pending);
+    pending.catch(() => { if (urls.get(file) === pending) urls.delete(file); });
+   }
+   return urls.get(file);
+  }
+
+  function renderImage(source, alt) {
+   const frame = text('span', '', 'mail-image-frame');
+   const description = text('span', alt || 'Image', 'mail-image-caption');
+   const image = new Image();
+   image.alt = alt;
+   image.decoding = 'async';
+   image.referrerPolicy = 'no-referrer';
+   image.hidden = true;
+   const unavailable = () => {
+    image.hidden = true;
+    description.textContent = alt ? `${alt} · Image unavailable` : 'Image unavailable';
+   };
+   image.onload = () => { description.hidden = true; };
+   image.onerror = unavailable;
+   frame.append(image, description);
+   deferred.push({ frame, remote: source.kind === 'remote', async start() {
+    try {
+     const file = source.kind === 'cid' ? inline.get(source.id) : null;
+     const url = source.kind === 'cid' ? (file && await previewUrl(file)) : source.url;
+     if (disposed || !frame.isConnected) return;
+     if (!url) return unavailable();
+     if (source.kind === 'remote') image.loading = 'lazy';
+     image.hidden = false;
+     image.src = url;
+    } catch { if (!disposed) unavailable(); }
+   } });
+   return frame;
+  }
+
+  function mount(body) {
+   const items = deferred.filter(item => body.contains(item.frame));
+   const local = new Map(items.filter(item => !item.remote).map(item => [item.frame, item]));
+   if (local.size) {
+    observer = new IntersectionObserver(entries => {
+     for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      observer.unobserve(entry.target);
+      local.get(entry.target).start();
+      local.delete(entry.target);
+     }
+    }, { root: $('.reader-pane'), rootMargin: '160px' });
+    local.forEach(({ frame }) => observer.observe(frame));
+   }
+   const remote = items.filter(item => item.remote);
+   if (!remote.length) return;
+   const notice = text('div', '', 'mail-image-notice');
+   const show = text('button', 'Show remote images');
+   notice.append(show, text('span', 'Loading remote images can tell the sender you opened this email.'));
+   show.onclick = () => {
+    remote.forEach(item => item.start());
+    notice.remove();
+   };
+   body.before(notice);
+  }
+
+  async function previewFile(file) {
+   const image = new Image();
+   image.alt = file.name;
+   image.decoding = 'async';
+   image.hidden = true;
+   imagePreview.replaceChildren(image);
+   $('#image-title').textContent = file.name;
+   imageStatus.textContent = 'Loading image…';
+   imageDialog.showModal();
+   const viewing = () => !disposed && imageDialog.open && imagePreview.contains(image);
+   const unavailable = () => { if (viewing()) imageStatus.textContent = 'Could not preview this image. You can still download it.'; };
+   image.onerror = unavailable;
+   image.onload = () => {
+    if (!viewing()) return;
+    imageStatus.textContent = '';
+    image.hidden = false;
+   };
+   try {
+    const url = await previewUrl(file);
+    if (viewing() && url) image.src = url;
+   } catch { unavailable(); }
+  }
+
+  return { renderImage, mount, previewFile, dispose() {
+   disposed = true;
+   observer?.disconnect();
+   if (imageDialog.open) imageDialog.close();
+   for (const pending of urls.values()) pending.then(url => { if (url) URL.revokeObjectURL(url); }, () => {});
+   urls.clear();
+  } };
+ }
+
  function updateRows(key, message, flags, remove = false) {
   // Do not let a list request started before a mutation restore older flags.
   const request = view;
@@ -302,6 +420,7 @@ export function initializeInbox(siteBackend) {
    lastMessageButton = button;
    mailbox.dataset.reading = 'true';
    const reader = $('#reader');
+   readerMedia?.dispose();
    const title = text('h2', message.subject, 'reader-subject');
    title.tabIndex = -1;
    title.dir = 'auto';
@@ -363,18 +482,26 @@ export function initializeInbox(siteBackend) {
 
    const body = text('div', '', 'mail-text');
    body.dir = 'auto';
-   renderMessageBody(body, content);
+   async function loadFile(file) {
+    const result = file.data ? { data: file.data }
+     : key === 'domain' ? await domain('attachment', { id: message.id, attachment: file.id })
+      : await gmail(`messages/${message.id}/attachments/${encodeURIComponent(file.id)}`, {}, key);
+    if (typeof result.data !== 'string') throw Error('This attachment is unavailable.');
+    return b64bytes(result.data);
+   }
+   const media = messageMedia(content.files, loadFile);
+   readerMedia = media;
+   renderMessageBody(body, content, media.renderImage);
    reader.append(body);
+   media.mount(body);
    const files = text('div', '', 'file-list');
    for (const file of content.files) {
     const download = text('button', '↓ ' + file.name);
     download.onclick = async () => {
      download.disabled = true;
      try {
-      const result = file.data ? { data: file.data }
-       : key === 'domain' ? await domain('attachment', { id: message.id, attachment: file.id })
-        : await gmail(`messages/${message.id}/attachments/${encodeURIComponent(file.id)}`, {}, key);
-      const bytes = b64bytes(result.data);
+      const bytes = await loadFile(file);
+      if (!active()) return;
       const link = document.createElement('a');
       link.href = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
       link.download = file.name;
@@ -383,7 +510,15 @@ export function initializeInbox(siteBackend) {
      } catch (error) { if (active()) fail(error); }
      finally { download.disabled = false; }
     };
-    files.append(download);
+    const item = text('div', '', 'file-entry');
+    item.append(download);
+    if (attachmentImageType(file)) {
+     const open = text('button', 'Preview');
+     open.setAttribute('aria-label', `Preview ${file.name}`);
+     open.onclick = () => { if (active()) media.previewFile(file); };
+     item.append(open);
+    }
+    files.append(item);
    }
    reader.append(files);
    status('');
