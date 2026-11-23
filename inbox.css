@@ -135,27 +135,19 @@ a { color: var(--purple); text-underline-offset: 3px; }
 .mail-quote summary span { display: block; color: var(--os-muted); font-size: .78rem; }
 .mail-quote blockquote { margin: .35rem 0 0; color: #cbc5d2; font-size: .86rem; }
 .mail-empty { margin: 2rem 0; color: var(--os-muted); }
-.mail-image-notice {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: .45rem .7rem;
-  margin-top: .85rem;
-  padding-bottom: .65rem;
-  border-bottom: 1px solid var(--os-border);
-  color: var(--os-muted);
-  font-size: .8rem;
-}
-.mail-image-notice button { color: var(--purple); }
 .mail-image-frame { display: block; margin-block: .45rem; }
 .mail-image-frame img { display: block; max-width: 100%; height: auto; }
 .mail-image-caption { color: var(--os-muted); font-size: .8rem; }
-.file-list { display: flex; flex-wrap: wrap; gap: .5rem; }
-.file-list:not(:empty) { margin-top: 1rem; }
-.file-entry { display: flex; flex-wrap: wrap; gap: .25rem; min-width: 0; max-width: 100%; }
-.file-entry button { min-width: 0; overflow-wrap: anywhere; }
-.file-entry button + button { color: var(--purple); background: transparent; }
-.file-entry button + button:hover { background: var(--os-hover); }
+.file-list { display: flex; flex-wrap: wrap; align-items: start; gap: .65rem; }
+.file-list:not(:empty) { margin-top: 1.2rem; }
+.file-list button { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.file-image { display: grid; width: min(10rem, 45%); min-width: 0; }
+.file-thumbnail { padding: 0; overflow: hidden; background: var(--os-input); }
+.file-thumbnail .mail-image-frame { display: grid; place-items: center; aspect-ratio: 4 / 3; margin: 0; }
+.file-thumbnail img { width: 100%; height: 100%; object-fit: contain; }
+.file-thumbnail .mail-image-caption { padding: .35rem; }
+.file-image > button + button { background: transparent; border-color: transparent; color: var(--os-muted); font-size: .78rem; }
+.file-image > button + button:hover { color: var(--purple); background: var(--os-hover); }
 
 dialog { width: min(42rem, calc(100% - 1.5rem)); max-height: 90dvh; padding: 1.25rem; color: var(--os-text); background: var(--os-panel); border: 1px solid var(--os-border); border-radius: 8px; box-shadow: 0 20px 70px #08070b99; }
 dialog::backdrop { background: #09090acb; }
