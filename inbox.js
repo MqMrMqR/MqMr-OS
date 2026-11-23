@@ -1,5 +1,5 @@
-import { attachmentImageType, renderMessageBody } from './mail-format.js?v=images';
-import { richComposer } from './mail-compose.js';
+import { attachmentImageType, renderMessageBody } from './mail-format.js?v=inbox-media-1';
+import { richComposer } from './mail-compose.js?v=inbox-media-1';
 
 /* Gmail tokens stay in memory and never pass through the site backend. */
 export function initializeInbox(siteBackend) {
