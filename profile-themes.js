@@ -1,4 +1,4 @@
-import { normalizeAppearance } from './profile-appearance.js';
+import { colorGroups, normalizeAppearance } from './profile-appearance.js';
 
 // Outer, panel, nav, line, ink, muted, then five syntax accents.
 const themes = [
@@ -38,3 +38,37 @@ export const themePresets = themes.map(([name, values], index) => {
   ]));
   return { name, colors, social, swatches };
 });
+
+export const presetTextKeys = [...Object.keys(colorGroups['Title and intro']), 'social-title'];
+const rgb = value => value.slice(1).match(/.{2}/g).map(channel => Number.parseInt(channel, 16));
+const brightness = channels => channels.reduce((total, channel, index) => {
+  const srgb = channel / 255;
+  const linear = srgb <= .04045 ? srgb / 12.92 : ((srgb + .055) / 1.055) ** 2.4;
+  return total + linear * [.2126, .7152, .0722][index];
+}, 0);
+
+function readable(color, surface) {
+  const original = rgb(color);
+  const level = brightness(rgb(surface));
+  const contrast = tone => (Math.max(tone, level) + .05) / (Math.min(tone, level) + .05);
+  if (contrast(brightness(original)) >= 4.5) return color;
+  const target = contrast(1) > contrast(0) ? 255 : 0;
+  for (let weight = .1; weight < 1; weight += .1) {
+    const adjusted = original.map(channel => Math.round(channel + (target - channel) * weight));
+    if (contrast(brightness(adjusted)) >= 4.5) {
+      return '#' + adjusted.map(channel => channel.toString(16).padStart(2, '0')).join('');
+    }
+  }
+  return target === 255 ? '#ffffff' : '#000000';
+}
+
+export function presetPalette(preset, current, scope) {
+  if (scope !== 'text') return { colors: preset.colors, social: preset.social };
+  const backdrop = current.colors.panel;
+  const colors = { ...current.colors };
+  for (const key of presetTextKeys) colors[key] = readable(preset.colors[key], backdrop);
+  const social = Object.fromEntries(Object.entries(current.social).map(([key, value]) => [
+    key, { ...value, handle: readable(preset.social[key].handle, backdrop), label: readable(preset.social[key].label, backdrop) }
+  ]));
+  return { colors, social };
+}

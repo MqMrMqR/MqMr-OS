@@ -1,7 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeAppearance, titleText } from '../profile-appearance.js';
-import { themePresets } from '../profile-themes.js';
+import { presetPalette, themePresets } from '../profile-themes.js';
+
+test('text-only themes change title, intro, and social names without restyling surrounding elements', () => {
+  const before = normalizeAppearance({ colors: { 'page-background': '#123456', 'nav-surface': '#234567' }, social: { github: { icon: '#345678' } } });
+  const paper = themePresets.find(theme => theme.name === 'Paper');
+  const next = presetPalette(paper, before, 'text');
+  assert.equal(next.colors['page-background'], '#123456');
+  assert.equal(next.colors['nav-surface'], '#234567');
+  assert.equal(next.colors['trail-primary'], before.colors['trail-primary']);
+  assert.equal(next.social.github.icon, '#345678');
+  assert.equal(next.social.github.accent, before.social.github.accent);
+  assert.notEqual(next.colors['name-text'], before.colors['name-text']);
+  assert.notEqual(next.colors['name-text'], paper.colors['name-text']);
+  assert.notEqual(next.colors['intro-text'], before.colors['intro-text']);
+  assert.notEqual(next.social.github.label, before.social.github.label);
+});
 
 test('presets provide distinct complete light and dark palettes', () => {
   assert.equal(themePresets.length, 16);

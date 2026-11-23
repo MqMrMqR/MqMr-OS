@@ -1,10 +1,10 @@
 import { isLocalPreview } from './preview-mode.js';
-import { isOwner, lockOwner, verifiedOwnerClient } from './mail-access.js';
-import { loadProfileRecord, platforms, profileChangeKey, saveProfile } from './profile-content.js?v=themes';
-import { manageDevices } from './device-client.js';
+import { isOwner, lockOwner, verifiedOwnerClient } from './mail-access.js?v=quick';
+import { loadProfileRecord, platforms, profileChangeKey, saveProfile } from './profile-content.js?v=quick';
+import { manageDevices } from './device-client.js?v=quick';
 import { appearanceLimits, applyAppearance, colorGroups, normalizeAppearance, renderTitle, socialColorLabels } from './profile-appearance.js';
 import { cursorTrail } from './cursor-trail.js';
-import { themePresets } from './profile-themes.js';
+import { presetPalette, presetTextKeys, themePresets } from './profile-themes.js?v=quick';
 
 const $ = selector => document.querySelector(selector);
 const form = $('#profile-editor');
@@ -56,7 +56,11 @@ function colorSection(title, parent, accordion) {
 
 const colorControls = $('#color-groups');
 const themeDefaults = normalizeAppearance();
-const paletteKey = ({ colors, social }) => JSON.stringify([colors, social]);
+const paletteKey = ({ colors, social }, mode) => mode === 'text'
+  ? JSON.stringify([presetTextKeys.map(key => colors[key]), Object.values(social).map(item => [item.handle, item.label])])
+  : JSON.stringify([colors, social]);
+const scope = $('#preset-scope');
+let presetContext;
 const presetButtons = themePresets.map(preset => {
   const button = document.createElement('button');
   button.type = 'button';
@@ -71,13 +75,13 @@ const presetButtons = themePresets.map(preset => {
   }
   button.append(swatches, preset.name);
   button.onclick = () => {
-    colorValues(preset);
+    colorValues(presetPalette(preset, appearanceInputs(), scope.value));
     updatePreview();
     setDirty(true);
     status.textContent = preset.name + ' selected. Save profile to publish.';
   };
   $('#theme-presets').append(button);
-  return { button, key: paletteKey(normalizeAppearance(preset)) };
+  return { button, preset };
 });
 for (const [title, values] of Object.entries(colorGroups)) {
   const panel = colorSection(title, colorControls, 'page-colors');
@@ -140,18 +144,25 @@ async function init() {
     if (isLocalPreview) {
       if (sessionStorage.getItem('mqmr-editor-preview') !== '1') return focusDestination();
     } else {
+      const profileRequest = loadProfileRecord().catch(error => ({ error }));
       editClient = await verifiedOwnerClient();
       if (!editClient) return focusDestination();
       editClient.auth.onAuthStateChange((_event, session) => {
         if (!isOwner(session?.user, session?.access_token, true)) {
+          editClient = null;
           form.hidden = true;
           focusDestination();
         }
       });
+      const record = await profileRequest;
+      if (!editClient) return;
+      if (record.error) throw record.error;
+      showEditor(record);
+      manageDevices(editClient);
+      return;
     }
 
     await loadEditor();
-    if (!isLocalPreview) manageDevices(editClient);
   } catch (error) {
     status.textContent = error.message;
     reload.hidden = false;
@@ -159,7 +170,10 @@ async function init() {
 }
 
 async function loadEditor() {
-    const record = await loadProfileRecord();
+  showEditor(await loadProfileRecord());
+}
+
+function showEditor(record) {
     const profile = record.profile;
     revision = record.revision;
     $('#edit-name').value = profile.name;
@@ -186,8 +200,7 @@ async function loadEditor() {
 
 function updatePreview(animate = false) {
   const appearance = appearanceInputs();
-  const key = paletteKey(appearance);
-  for (const item of presetButtons) item.button.setAttribute('aria-pressed', String(item.key === key));
+  updatePresetSelection(appearance);
   renderTitle($('#edit-title-preview'), {
     name: $('#edit-name').value, handle: $('#edit-handle').value, appearance
   }, animate);
@@ -226,6 +239,21 @@ function updatePreview(animate = false) {
   applyAppearance(themePreview, appearance);
   previewTrail(appearance);
 }
+
+function updatePresetSelection(appearance) {
+  const mode = scope.value;
+  const context = mode === 'text' ? mode + appearance.colors.panel : mode;
+  if (presetContext !== context) {
+    for (const item of presetButtons) {
+      item.key = paletteKey(normalizeAppearance(presetPalette(item.preset, appearance, mode)), mode);
+    }
+    presetContext = context;
+  }
+  const key = paletteKey(appearance, mode);
+  for (const { button, key: presetKey } of presetButtons) button.setAttribute('aria-pressed', String(presetKey === key));
+}
+
+scope.addEventListener('change', () => updatePresetSelection(appearanceInputs()));
 
 function refreshMoveControls() {
   const rows = [...$('#edit-links').children];
@@ -355,7 +383,8 @@ function accountRow(key, link) {
   return row;
 }
 
-form.addEventListener('input', () => {
+form.addEventListener('input', event => {
+  if (event.target === scope) return;
   updatePreview();
   setDirty(true);
   if (!saving) status.textContent = 'Unsaved changes.';
@@ -384,7 +413,7 @@ form.addEventListener('submit', async event => {
   if (saving || !dirty || photoReads) return;
   saving = true;
   setDirty(true);
-  const controls = [...form.querySelectorAll('input,textarea,button')].filter(control => !control.disabled);
+  const controls = [...form.querySelectorAll('input,textarea,select,button')].filter(control => !control.disabled);
   controls.forEach(control => { control.disabled = true; });
   try {
     const rows = [...$('#edit-links').children];

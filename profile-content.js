@@ -1,5 +1,5 @@
 import { isLocalPreview } from './preview-mode.js';
-import { url, publishableKey } from './mail-access.js';
+import { url, publishableKey } from './mail-access.js?v=quick';
 import { normalizeAppearance } from './profile-appearance.js';
 
 const storageKey = 'mqr-profile-preview';
