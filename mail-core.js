@@ -37,12 +37,14 @@
    for (const body of bodies) decoded.push(decode(body.data || (await fetchPart(body.attachmentId)).data));
    return decoded.join('');
   };
+  if (includeHtml) {
+   const [plain, rich] = await Promise.allSettled([resolve(text), resolve(html)]);
+   if (plain.status === 'rejected' && (rich.status === 'rejected' || !rich.value)) throw plain.reason;
+   if (rich.status === 'rejected' && !plain.value) throw rich.reason;
+   return { text: plain.value || '', html: rich.value || '', files };
+  }
   const plain = await resolve(text);
-  const formatted = !plain || includeHtml ? await resolve(html).catch(error => {
-   if (!plain) throw error;
-   return '';
-  }) : '';
-  return { text: plain, html: formatted, files };
+  return { text: plain, html: plain ? '' : await resolve(html), files };
  }
  function mime({from,to,subject,text,html,replyId,files=[]}){
  const boundary='mqmr_'+crypto.randomUUID();

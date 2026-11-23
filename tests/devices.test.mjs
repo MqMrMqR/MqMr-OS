@@ -2,6 +2,7 @@ import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import worker from '../supabase/functions/device-sessions/session.mjs';
 import proxy from '../deployment/device-session-worker.mjs';
+import { rememberedOwnerClient } from '../device-client.js';
 
 const env = {
   SITE_ORIGIN: 'https://profile.example.test',
@@ -23,6 +24,37 @@ function accessToken({ expiration = now + 1200, totp = now, aal = 'aal2', sessio
 }
 
 afterEach(() => { globalThis.fetch = originalFetch; });
+
+test('remembered Inbox opens with the authenticated first page in one request', async () => {
+  const requests = [];
+  const firstPage = { messages: [{ id: 'sample' }], next: null };
+  globalThis.fetch = async (url, input) => {
+    requests.push(url);
+    assert.equal(input.credentials, 'same-origin');
+    assert.deepEqual(JSON.parse(input.body), { action: 'list', folder: 'INBOX' });
+    return Response.json(firstPage);
+  };
+  const client = await rememberedOwnerClient({ preloadInbox: true });
+  assert.equal(client.remembered, true);
+  assert.deepEqual(client.initialInbox, firstPage);
+  assert.deepEqual(requests, ['api/device-session/mail']);
+});
+
+test('Inbox rejects expired remembered access and can recover from a mailbox service interruption', async () => {
+  globalThis.fetch = async () => Response.json({ error: 'Sign in' }, { status: 401 });
+  assert.equal(await rememberedOwnerClient({ preloadInbox: true }), null);
+  const requests = [];
+  globalThis.fetch = async url => {
+    requests.push(url);
+    return url.endsWith('/status')
+      ? Response.json({ remembered: true })
+      : Response.json({ error: 'Service unavailable' }, { status: 503 });
+  };
+  const client = await rememberedOwnerClient({ preloadInbox: true });
+  assert.equal(client.remembered, true);
+  assert.equal(client.initialInbox, undefined);
+  assert.deepEqual(requests, ['api/device-session/mail', 'api/device-session/status']);
+});
 
 test('same-origin proxy forwards only the private session cookie and preserves its flags', async () => {
   const cookie = '__Host-mqr-device=; Max-Age=0; Path=/; Secure; HttpOnly; SameSite=Strict';

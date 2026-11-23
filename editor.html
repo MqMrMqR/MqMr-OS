@@ -6,8 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>Admin Panel · MqR</title>
-  <link rel="stylesheet" href="profile.css?v=themes">
-  <script type="module" src="editor.js?v=themes"></script>
+  <link rel="preconnect" href="https://ebufvcuxcypoxwbvcbjg.supabase.co" crossorigin>
+  <link rel="stylesheet" href="profile.css?v=quick">
+  <script type="module" src="editor.js?v=quick"></script>
 </head>
 <body>
   <div class="site editor-site">
@@ -32,6 +33,12 @@
           <legend>Appearance</legend>
           <details class="preset-picker" open>
             <summary>Color presets</summary>
+            <label class="preset-scope">Apply preset to
+              <select id="preset-scope">
+                <option value="full">Entire page</option>
+                <option value="text">Intro, title &amp; social names</option>
+              </select>
+            </label>
             <div id="theme-presets" class="theme-presets" role="group" aria-label="Color presets"></div>
           </details>
           <div class="appearance-layout">

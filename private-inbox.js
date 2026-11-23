@@ -1,4 +1,4 @@
-import { isOwner, lockOwner, verifiedOwnerClient } from './mail-access.js';
+import { isOwner, lockOwner, verifiedOwnerClient } from './mail-access.js?v=quick';
 import { isLocalPreview } from './preview-mode.js';
 
 const mailbox = document.querySelector('#mailbox');
@@ -15,17 +15,17 @@ async function unlock() {
     return;
   }
   try {
-    let client;
+    if (isLocalPreview && sessionStorage.getItem('mqmr-inbox-preview') !== '1') return redirect();
+    const clientRequest = isLocalPreview
+      ? import('./preview-inbox.js?v=reader').then(({ previewMailbox }) => previewMailbox())
+      : verifiedOwnerClient({ preloadInbox: true });
+    const [client, { initializeInbox }] = await Promise.all([clientRequest, import('./inbox.js?v=quick')]);
+    if (!client) return redirect();
     if (isLocalPreview) {
-      if (sessionStorage.getItem('mqmr-inbox-preview') !== '1') return redirect();
-      const { previewMailbox } = await import('./preview-inbox.js?v=reader');
-      client = previewMailbox();
       mailbox.dataset.preview = 'true';
       document.querySelector('#preview-label').hidden = false;
       document.querySelector('#connect').hidden = true;
     } else {
-      client = await verifiedOwnerClient();
-      if (!client) return redirect();
       client.auth.onAuthStateChange((_event, session) => {
         if (!isOwner(session?.user, session?.access_token, true)) {
           mailbox.hidden = true;
@@ -48,8 +48,7 @@ async function unlock() {
       }
     });
 
-    window.privateMailbox = client;
-    await import('./inbox.js?v=reader');
+    initializeInbox(client);
     mailbox.hidden = false;
     gate.hidden = true;
 

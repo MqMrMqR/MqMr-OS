@@ -1,5 +1,6 @@
 import { isLocalPreview } from './preview-mode.js';
-import { deviceSessionsAvailable, rememberDevice, rememberedOwnerClient } from './device-client.js';
+import { deviceSessionsAvailable, hasRememberedHint, rememberDevice, rememberedOwnerClient } from './device-client.js?v=quick';
+import { isOwner, mailboxClient, sessionStorageKey } from './mail-access.js?v=quick';
 
 if (window.self !== window.top) throw new Error('Open MqR directly to sign in.');
 
@@ -16,9 +17,10 @@ const qr = $('#authenticator-qr');
 let editor = false;
 let busy = false;
 let client = null;
-let ownerCheck;
 let factorId;
 let pendingFactor;
+let challengeRequest;
+let accessOpening = 0;
 
 function openAccess(forEditor) {
   if (dialog.open || busy) return;
@@ -32,7 +34,10 @@ function openAccess(forEditor) {
   password.autocomplete = isLocalPreview ? 'off' : 'current-password';
   hint.hidden = !isLocalPreview || editor;
   hint.textContent = hint.hidden ? '' : 'Use a sample password to open the inbox preview.';
-  if (!isLocalPreview) deviceSessionsAvailable().then(available => { $('#remember-field').hidden = !available; });
+  if (!isLocalPreview) {
+    mailboxClient().catch(() => {});
+    deviceSessionsAvailable().then(available => { $('#remember-field').hidden = !available; });
+  }
   dialog.showModal();
   (email.required && !email.value ? email : password).focus();
 }
@@ -60,6 +65,11 @@ function showVerification() {
   hint.textContent = isLocalPreview ? 'Enter the preview code 69.' : 'Enter the six-digit code from your authenticator.';
   hint.hidden = false;
   code.focus();
+  if (!isLocalPreview) primeChallenge();
+}
+
+function primeChallenge() {
+  challengeRequest = client.auth.mfa.challenge({ factorId }).catch(() => null);
 }
 
 async function cancelPendingLogin() {
@@ -68,14 +78,20 @@ async function cancelPendingLogin() {
 }
 
 async function openPrivate(forEditor) {
-  if (!isLocalPreview && await deviceSessionsAvailable()) {
-    const remembered = await rememberedOwnerClient().catch(() => null);
-    if (remembered) {
-      location.assign(forEditor ? 'editor.html' : 'inbox.html');
-      return;
-    }
+  if (dialog.open || busy) return;
+  const next = forEditor ? 'editor.html' : 'inbox.html';
+  if (!isLocalPreview && (hasRememberedHint() || sessionStorage.getItem(sessionStorageKey))) {
+    location.assign(next);
+    return;
   }
   openAccess(forEditor);
+  if (isLocalPreview) return;
+  const opening = ++accessOpening;
+  // An older remembered cookie can be discovered without delaying the form.
+  const remembered = await rememberedOwnerClient().catch(() => null);
+  if (remembered && opening === accessOpening && dialog.open && !busy && !email.value && !password.value) {
+    location.assign(next);
+  }
 }
 
 $('#open-access').addEventListener('click', () => openPrivate(false));
@@ -83,6 +99,7 @@ $('#open-connect').addEventListener('click', () => openPrivate(true));
 $('#close-access').addEventListener('click', () => dialog.close());
 dialog.addEventListener('cancel', event => { if (busy) event.preventDefault(); });
 dialog.addEventListener('close', async () => {
+  accessOpening++;
   const signinInProgress = Boolean(client);
   if (signinInProgress) setBusy(true);
   form.reset();
@@ -99,7 +116,7 @@ dialog.addEventListener('close', async () => {
     await cancelPendingLogin();
   } finally {
     client = null;
-    pendingFactor = factorId = undefined;
+    pendingFactor = factorId = challengeRequest = undefined;
     setBusy(false);
   }
 });
@@ -121,7 +138,6 @@ form.addEventListener('submit', async event => {
 
   setBusy(true);
   try {
-    const { mailboxClient, isOwner } = await import('./mail-access.js');
     const mailbox = await mailboxClient();
     const { data, error } = await mailbox.auth.signInWithPassword({
       email: email.value.trim(),
@@ -133,10 +149,12 @@ form.addEventListener('submit', async event => {
       return;
     }
     client = mailbox;
-    ownerCheck = isOwner;
-    const { data: factors, error: factorError } = await client.auth.mfa.listFactors();
-    if (factorError) throw factorError;
-    factorId = factors.totp.find(factor => factor.status === 'verified')?.id;
+    factorId = data.user.factors?.find(factor => factor.factor_type === 'totp' && factor.status === 'verified')?.id;
+    if (!factorId) {
+      const listed = await client.auth.mfa.listFactors();
+      if (listed.error) throw listed.error;
+      factorId = listed.data.totp[0]?.id;
+    }
     if (factorId) showVerification();
     else {
       form.hidden = true;
@@ -189,14 +207,21 @@ verification.addEventListener('submit', async event => {
   if (!client || !factorId) return;
   setBusy(true);
   try {
-    const { data, error } = await client.auth.mfa.challengeAndVerify({ factorId, code: code.value });
+    const pressedCode = code.value;
+    const primed = await challengeRequest;
+    challengeRequest = undefined;
+    const fresh = primed?.data && primed.data.expires_at * 1000 > Date.now() + 2500;
+    const { data, error } = fresh
+      ? await client.auth.mfa.verify({ factorId, challengeId: primed.data.id, code: pressedCode })
+      : await client.auth.mfa.challengeAndVerify({ factorId, code: pressedCode });
     if (error || !data?.access_token) {
       status.textContent = 'That code could not be verified. Try the current code from your authenticator.';
+      primeChallenge();
       return;
     }
     pendingFactor = undefined;
-    const result = await client.auth.getUser(data.access_token);
-    if (result.error || !ownerCheck(result.data.user, data.access_token, true)) {
+    const user = data.user || (await client.auth.getUser(data.access_token)).data.user;
+    if (!isOwner(user, data.access_token, true)) {
       status.textContent = 'Could not verify the owner session.';
       return;
     }
@@ -207,7 +232,6 @@ verification.addEventListener('submit', async event => {
         status.textContent = 'Could not remember this device. Enter another code to continue for this tab.';
         return;
       }
-      const { sessionStorageKey } = await import('./mail-access.js');
       await client.auth.stopAutoRefresh();
       sessionStorage.removeItem(sessionStorageKey);
     }

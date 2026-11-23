@@ -1,5 +1,17 @@
 const api = 'api/device-session/';
+const deviceHint = 'mqr-remembered-on-this-browser';
 let availability;
+
+export function hasRememberedHint() {
+  try { return localStorage.getItem(deviceHint) === '1'; } catch { return false; }
+}
+
+function setRememberedHint(remembered) {
+  try {
+    if (remembered) localStorage.setItem(deviceHint, '1');
+    else localStorage.removeItem(deviceHint);
+  } catch {}
+}
 
 function request(route, { body, token, signal } = {}) {
   const headers = {};
@@ -23,23 +35,45 @@ export async function rememberDevice(session) {
   const response = await request('remember', {
     token: session.access_token, body: { refreshToken: session.refresh_token }
   });
-  return response.ok && (await response.json()).remembered === true;
+  const remembered = response.ok && (await response.json()).remembered === true;
+  if (remembered) setRememberedHint(true);
+  return remembered;
 }
 
 export async function lockRemembered() {
   const response = await request('lock', { body: {} });
   if (!response.ok && response.status !== 404 && response.status !== 405) throw new Error('Could not lock this device.');
+  setRememberedHint(false);
 }
 
-export async function rememberedOwnerClient() {
-  const response = await request('status', { signal: AbortSignal.timeout(8000) });
-  if (response.status === 401 || response.status === 404) return null;
-  if (!response.ok) throw new Error('Could not verify this device.');
-  if ((await response.json()).remembered !== true) return null;
+export async function rememberedOwnerClient({ preloadInbox = false } = {}) {
+  let initialInbox;
+  if (preloadInbox) {
+    const result = await request('mail', {
+      body: { action: 'list', folder: 'INBOX' }, signal: AbortSignal.timeout(8000)
+    }).catch(() => null);
+    if (result?.status === 401 || result?.status === 404) {
+      setRememberedHint(false);
+      return null;
+    }
+    if (result?.ok) initialInbox = await result.json().catch(() => null);
+  }
+  if (!Array.isArray(initialInbox?.messages)) {
+    initialInbox = undefined;
+    const response = await request('status', { signal: AbortSignal.timeout(8000) });
+    if (response.status === 401 || response.status === 404) {
+      setRememberedHint(false);
+      return null;
+    }
+    if (!response.ok) throw new Error('Could not verify this device.');
+    if ((await response.json()).remembered !== true) return null;
+  }
+  setRememberedHint(true);
 
   const listeners = new Set();
   let timer, checking = false;
   const lock = () => {
+    setRememberedHint(false);
     clearInterval(timer);
     document.removeEventListener('visibilitychange', check);
     listeners.forEach(listener => listener('SIGNED_OUT', null));
@@ -56,6 +90,7 @@ export async function rememberedOwnerClient() {
   }
   return {
     remembered: true,
+    initialInbox,
     auth: {
       onAuthStateChange: listener => {
         listeners.add(listener);
@@ -90,7 +125,7 @@ export async function rememberedOwnerClient() {
 }
 
 export async function manageDevices(client) {
-  if (!await deviceSessionsAvailable()) return;
+  if (!client.remembered && !await deviceSessionsAvailable()) return;
   const panel = document.querySelector('#devices-panel');
   const list = document.querySelector('#device-list');
   const status = document.querySelector('#devices-status');
@@ -135,6 +170,7 @@ export async function manageDevices(client) {
           } else if (!result.ok) {
             throw new Error(data.error || 'Could not remove this device.');
           } else if (data.current && client.remembered) {
+            setRememberedHint(false);
             location.replace('index.html?connect=1');
           } else {
             await render();

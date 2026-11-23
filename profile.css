@@ -209,6 +209,8 @@ dialog input { display: block; width: 100%; min-height: 46px; padding: 10px 12px
 .appearance-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); align-items: start; gap: clamp(1rem, 3vw, 2rem); }
 .preset-picker { margin-block: .15rem 1.3rem; }
 .preset-picker summary { color: var(--muted); cursor: pointer; }
+.editor-layout .preset-scope { display: flex; flex-wrap: wrap; gap: .55rem; margin: .7rem 0 0; align-items: center; font-size: .85rem; }
+.preset-scope select { padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 6px; background: #1a191c; color: inherit; font: inherit; }
 .theme-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8.25rem), 1fr)); gap: .45rem; margin-top: .65rem; }
 .theme-preset { display: grid; gap: .35rem; padding: .45rem .5rem; border: 1px solid var(--line); border-radius: 8px; color: inherit; background: #1a191c; text-align: left; font-size: .76rem; }
 .theme-preset:hover { background: #25212c; }

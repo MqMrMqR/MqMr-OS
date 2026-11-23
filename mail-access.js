@@ -1,4 +1,4 @@
-import { deviceSessionsAvailable, lockRemembered, rememberedOwnerClient } from './device-client.js';
+import { lockRemembered, rememberedOwnerClient } from './device-client.js?v=quick';
 
 export const ownerEmail = 'mqmrpc@gmail.com';
 export const ownerId = '5922fd59-f07a-4ec9-8939-abc615b7c640';
@@ -53,19 +53,19 @@ export function isOwner(user, token, requireMfa = false) {
   }
 }
 
-export async function verifiedOwnerClient() {
+export async function verifiedOwnerClient(options) {
   if (!sessionStorage.getItem(sessionStorageKey)) {
-    return await deviceSessionsAvailable() ? rememberedOwnerClient() : null;
+    return rememberedOwnerClient(options);
   }
   const client = await mailboxClient();
   const { data: { session }, error: sessionError } = await client.auth.getSession();
   if (sessionError && (!sessionError.status || sessionError.status >= 500)) throw sessionError;
-  if (!session) return await deviceSessionsAvailable() ? rememberedOwnerClient() : null;
+  if (!session) return rememberedOwnerClient(options);
 
   const { data, error } = await client.auth.getUser(session.access_token);
   if (error && (!error.status || error.status >= 500)) throw error;
   if (!error && isOwner(data.user, session.access_token, true)) return client;
-  return await deviceSessionsAvailable() ? rememberedOwnerClient() : null;
+  return rememberedOwnerClient(options);
 }
 export async function lockOwner(client) {
   if (!client.remembered) await lockRemembered();

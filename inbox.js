@@ -2,8 +2,9 @@ import { renderMessageBody } from './mail-format.js';
 import { richComposer } from './mail-compose.js';
 
 /* Gmail tokens stay in memory and never pass through the site backend. */
-(() => {
- const siteBackend=window.privateMailbox;
+export function initializeInbox(siteBackend) {
+ let firstPage = siteBackend.initialInbox;
+ siteBackend.initialInbox = undefined;
  const $=s=>document.querySelector(s), {header,resolveParts,mime,b64bytes}=MailCore;
  const mailbox = $('#mailbox');
  const preview = mailbox.dataset.preview === 'true';
@@ -46,6 +47,7 @@ import { richComposer } from './mail-compose.js';
  const summaries = new Map();
  const bodies = new Map();
  const listFreshness = 12000;
+ const rowDates = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
  let current = null, folder = 'INBOX', view = null, readerTicket = 0;
  let draft = null, composing = false, sending = false;
  const text=(tag,value,className)=>{const el=document.createElement(tag);el.textContent=value||'';if(className)el.className=className;return el;};
@@ -76,13 +78,6 @@ import { richComposer } from './mail-compose.js';
  function senderName(value) {
   return String(value || '').replace(/\s*<[^>]*>\s*$/, '').replace(/^"|"$/g, '').trim() || String(value || 'Unknown sender');
  }
- function avatar(value) {
-  const name = senderName(value);
-  const icon = text('span', Array.from(name)[0].toLocaleUpperCase(), 'mail-avatar');
-  icon.dataset.tone = String(name.codePointAt(0) % 4);
-  icon.setAttribute('aria-hidden', 'true');
-  return icon;
- }
  function renderRow(message) {
   const button = text('button', '', `message-row${message.unread ? ' unread' : ''}`);
   button.dataset.id = message.id;
@@ -90,7 +85,7 @@ import { richComposer } from './mail-compose.js';
   const sender = text('span', senderName(message.from), 'message-sender');
   sender.dir = 'auto';
   const date = new Date(message.date || message.created_at);
-  const dateLabel = text('time', date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), 'message-date');
+  const dateLabel = text('time', Number.isFinite(date.getTime()) ? rowDates.format(date) : '', 'message-date');
   const rowState = text('span', message.starred ? '★' : '', 'row-star');
   rowState.setAttribute('aria-label', 'Starred');
   rowState.hidden = !message.starred;
@@ -100,9 +95,9 @@ import { richComposer } from './mail-compose.js';
   subject.dir = teaser.dir = 'auto';
   const entry = text('span', '', 'message-entry');
   entry.append(top, subject, teaser);
-  button.append(avatar(message.from), entry);
+  button.append(entry);
   button.onclick = () => read(message, button);
-  $('#messages').append(button);
+  return button;
  }
  function cacheKey(...parts) { return JSON.stringify(parts); }
  function remember(cache, id, entry, limit) {
@@ -119,8 +114,7 @@ import { richComposer } from './mail-compose.js';
   const selected = lastMessageButton?.dataset.id;
   const focused = document.activeElement?.dataset.id;
   const box = $('#messages');
-  box.replaceChildren();
-  request.rows.forEach(renderRow);
+  box.replaceChildren(...request.rows.map(renderRow));
   for (const button of box.children) {
    if (button.dataset.id === selected) {
     button.classList.add('selected');
@@ -192,7 +186,9 @@ import { richComposer } from './mail-compose.js';
   try {
    let rows, next;
    if (key === 'domain') {
-    const result = await domain('list', { folder: targetFolder, search: query, cursor: page });
+    const result = !page && !query && targetFolder === 'INBOX' && firstPage
+     ? firstPage : await domain('list', { folder: targetFolder, search: query, cursor: page });
+    firstPage = undefined;
     rows = result.messages;
     next = result.next;
    } else {
@@ -314,15 +310,13 @@ import { richComposer } from './mail-compose.js';
     $('.reader-pane').scrollTop = 0;
     title.focus({ preventScroll: true });
    }
-   const sender = text('div', '', 'reader-sender');
    const meta = text('div', '', 'reader-meta');
    const from = text('strong', message.from || 'Unknown sender');
    const to = text('span', 'To ' + (message.to || '—'));
    const date = text('time', new Date(message.date || message.created_at).toLocaleString());
    from.dir = to.dir = 'auto';
    meta.append(from, to, date);
-   sender.append(avatar(message.from), meta);
-   reader.append(sender);
+   reader.append(meta);
 
    const actions = text('div', '', 'reader-actions');
    const action = (label, run) => {
@@ -521,4 +515,4 @@ import { richComposer } from './mail-compose.js';
  if (preview) $('#disconnect').hidden = true;
  accounts.set('domain', { email: preview ? 'Sample mailbox' : 'All @mqmr.bio' });
  selectAccount('domain');
-})();
+}
