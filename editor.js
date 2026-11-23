@@ -4,7 +4,7 @@ import { loadProfileRecord, platforms, profileChangeKey, saveProfile } from './p
 import { manageDevices } from './device-client.js?v=quick';
 import { appearanceLimits, applyAppearance, colorGroups, normalizeAppearance, renderTitle, socialColorLabels } from './profile-appearance.js';
 import { cursorTrail } from './cursor-trail.js';
-import { presetPalette, presetTextKeys, themePresets } from './profile-themes.js?v=quick';
+import { presetPalette, presetTextKeys, themePresets } from './profile-themes.js?v=color-studies';
 
 const $ = selector => document.querySelector(selector);
 const form = $('#profile-editor');
@@ -73,14 +73,22 @@ const presetButtons = themePresets.map(preset => {
     chip.style.backgroundColor = color;
     swatches.append(chip);
   }
-  button.append(swatches, preset.name);
+  const name = document.createElement('span');
+  name.className = 'theme-preset-name';
+  name.textContent = preset.name;
+  button.append(swatches, name);
+  if (preset.harmony) {
+    const harmony = document.createElement('small');
+    harmony.textContent = preset.harmony;
+    button.append(harmony);
+  }
   button.onclick = () => {
     colorValues(presetPalette(preset, appearanceInputs(), scope.value));
     updatePreview();
     setDirty(true);
     status.textContent = preset.name + ' selected. Save profile to publish.';
   };
-  $('#theme-presets').append(button);
+  $(preset.harmony ? '#theme-presets' : '#original-presets').append(button);
   return { button, preset };
 });
 for (const [title, values] of Object.entries(colorGroups)) {
