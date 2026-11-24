@@ -1,3 +1,5 @@
+import { matchesMailSearch, normalizeMailSearch } from './mail-search.js?v=inbox-workspace-1';
+
 const mailboxAddress = 'preview@example.test';
 const previewPng = 'iVBORw0KGgoAAAANSUhEUgAAAMAAAABcCAIAAAC3Gi1oAAACWElEQVR42u3csVFDQQxFUTVCRk5GQiEURC/URDkEJI489uprd7Wcmd/A1RzAg+0XL6/v+z9vH5/PPrrmPOHEus4EhE6LrnBiXecAQqddVzixrkxXOLGuTFc4sa5MVzixrkxXOLGuTFc4sa5MVzixrkxXOLGuTFc4sa5MVzixrkxXOPHmXd9fP488q7oCne50Bhhd2BXonEHnQUaXdwU6J9G5w6ioK9DZp+tCPbeGSrsCnU26Ltfz91R3BTo7dBXpecpQ1ScS0anuKtXziKGqj7SiM6Frgp47hqo+E43OtK5VgKo+VI/OzK5pem4NVX0rA535XZMBVX2tB50lXZP1FBkKdFZ1/TtA6HTXU2Eo0AGoEBA6AA0CQgegQUDoADQICB2ABgGhA1DVu/HoANQY0Kn/JQcInVQXQOikugBCJ9V1BiAbicu6ugOykbi+q6keG4m7dLUDZCNxu64uemwkbtq1PyAbibt3bavHRmKPrg0B2Uhs9iOxjx4biV1/my7XYyOx/R/iVXpsJJ7zGm6yHhuJB778n6PHRqKhOxuJ6BQwmt9lI/GQBY9VXTYSddlIRGddl41EXTYS0VnXZSNR16WAnFjXICAn1jUIyIl1Xb8P5MS6LgbkxLoGATmxrkFATqxrEJAT6xoE5MS6BgE5sa5BQE6sq+rdeCfW1RgQOpt32UjUdRwgdBp12UjUleqykagr1WUjUVeqy0airlSXjURdqS4bibpSXTYSdaW6bCTqSnXZSNSV6rKRqCvVZSNRl41EdNZ12UjUZSMRnXVdNhJ12UhEZ13XL5vgpD/an7OlAAAAAElFTkSuQmCC';
 
@@ -41,13 +43,14 @@ export function previewMailbox() {
         return { ok: true };
       }
       case 'list': {
-        const term = String(input.search || '').toLowerCase().trim();
+        const search = normalizeMailSearch(input.criteria ?? { terms: [input.search] });
         const list = messages.filter(message => {
           if (Boolean(message.trash) !== (input.folder === 'TRASH')) return false;
           if (input.folder === 'INBOX' && (message.direction !== 'inbound' || message.archived)) return false;
           if (input.folder === 'SENT' && message.direction !== 'outbound') return false;
           if (input.folder === 'STARRED' && !message.starred) return false;
-          return !term || [message.subject, message.sender, message.text_body].some(value => value.toLowerCase().includes(term));
+          return matchesMailSearch({ ...message, from: message.sender, to: message.recipients.join(', '), body: message.text_body,
+            date: Date.parse(message.created_at), hasAttachments: Boolean(message.attachments?.length) }, search);
         });
         return { messages: list.map(message => ({ ...message, from: message.sender, to: message.recipients.join(', '), date: message.created_at, snippet: message.text_body.slice(0, 120) })), next: null };
       }

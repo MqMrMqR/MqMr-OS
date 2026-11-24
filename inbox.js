@@ -1,5 +1,7 @@
-import { attachmentImageType, renderMessageBody } from './mail-format.js?v=inbox-media-2';
-import { richComposer } from './mail-compose.js?v=inbox-media-2';
+import { attachmentImageType, renderMessageBody } from './mail-format.js?v=inbox-workspace-1';
+import { richComposer } from './mail-compose.js?v=inbox-workspace-1';
+import { openDrafts } from './mail-drafts.js?v=inbox-workspace-1';
+import { gmailMailQuery, hasMailSearch, matchesMailSearch, parseMailSearch } from './mail-search.js?v=inbox-workspace-1';
 
 /* Gmail tokens stay in memory and never pass through the site backend. */
 export function initializeInbox(siteBackend) {
@@ -50,23 +52,25 @@ export function initializeInbox(siteBackend) {
   $('#reader').replaceChildren(text('p', 'Select a message to read it.', 'mail-empty'));
  };
  $('#back-to-list').onclick = () => { showList(); lastMessageButton?.focus(); };
- const folders={INBOX:'Inbox',ALL:'All Mail',STARRED:'Starred',SENT:'Sent',DRAFT:'Drafts',SPAM:'Junk',TRASH:'Trash'};
+ const folders={INBOX:'Inbox',ALL:'All Mail',STARRED:'Starred',SENT:'Sent',LOCAL_DRAFTS:'Drafts',DRAFT:'Gmail drafts',SPAM:'Junk',TRASH:'Trash'};
  const accounts = new Map();
  const lists = new Map();
  const summaries = new Map();
  const bodies = new Map();
  const listFreshness = 12000;
  const rowDates = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+ const draftStorage = openDrafts().catch(() => null);
  let current = null, folder = 'INBOX', view = null, readerTicket = 0;
  let readerMedia = null;
- let draft = null, composing = false, sending = false;
+ let draft = null, composing = false, sending = false, closing = false;
+ let activeSearch = null;
  const text=(tag,value,className)=>{const el=document.createElement(tag);el.textContent=value||'';if(className)el.className=className;return el;};
  const status=value=>$('#mail-status').textContent=value;
  const fail=error=>status(error.message||'Mail could not load. Please try again.');
  function controls(){const connected=current&&accounts.has(current);$('#compose').disabled=$('#mobile-compose').disabled=!connected;$('#disconnect').disabled=!connected||current==='domain';$('#aliases').hidden=current!=='domain';}
  function renderAccounts(){const box=$('#accounts');box.replaceChildren();accounts.forEach((account,key)=>{const button=text('button',account.email,'account-button');button.setAttribute('aria-current',String(key===current));button.onclick=()=>selectAccount(key);box.append(button);});controls();}
- function renderFolders(){const box=$('#folders');box.replaceChildren();Object.entries(folders).forEach(([id,name])=>{if(current==='domain'&&['DRAFT','SPAM'].includes(id))return;const button=text('button',name);button.setAttribute('aria-current',String(folder===id));button.onclick=()=>{if(drawer.open)drawer.close();folder=id;renderFolders();load();};box.append(button);});$('#mailbox-title').textContent=folders[folder];}
- function selectAccount(key){if(drawer.open)drawer.close();current=key;folder='INBOX';$('#search').value='';renderAccounts();renderFolders();load();}
+ function renderFolders(){const box=$('#folders');box.replaceChildren();Object.entries(folders).forEach(([id,name])=>{if(current==='domain'&&['DRAFT','SPAM'].includes(id))return;const button=text('button',name);button.setAttribute('aria-current',String(folder===id));button.onclick=()=>{if(drawer.open)drawer.close();folder=id;resetSearch();renderFolders();load();};box.append(button);});$('#mailbox-title').textContent=folders[folder];}
+ function selectAccount(key){if(drawer.open)drawer.close();current=key;folder='INBOX';resetSearch();renderAccounts();renderFolders();load();}
  async function gmail(path,options={},key=current){const account=accounts.get(key);if(!account||Date.now()>=account.expires)throw Error('Mail access expired. Use Add Google account to reconnect.');const response=await fetch('https://gmail.googleapis.com/gmail/v1/users/me/'+path,{...options,headers:{Authorization:'Bearer '+account.token,'Content-Type':'application/json',...options.headers}});if(response.status===401){account.expires=0;throw Error('Mail access expired. Reconnect this Google account.');}const data=await response.json();if(!response.ok)throw Error(data.error?.message||'Google mail request failed.');return data;}
  async function domain(action,data={}){const result=await siteBackend.functions.invoke('mail-domain',{body:{action,...data}});if(result.error){let detail;try{detail=await result.error.context?.json();}catch{}throw Error(detail?.error||'Domain mail is unavailable. Please check its connection.');}if(result.data?.error)throw Error(result.data.error);return result.data;}
  $('#connect').onclick=async()=>{
@@ -106,7 +110,7 @@ export function initializeInbox(siteBackend) {
   const entry = text('span', '', 'message-entry');
   entry.append(top, subject, teaser);
   button.append(entry);
-  button.onclick = () => read(message, button);
+  button.onclick = () => message.localDraft ? compose(null, message.localDraft) : read(message, button);
   return button;
  }
  function cacheKey(...parts) { return JSON.stringify(parts); }
@@ -171,14 +175,17 @@ export function initializeInbox(siteBackend) {
   let cached;
   if (!append) {
    view?.controller.abort();
-   const query = $('#search').value.trim();
-   const id = cacheKey(current, folder, query);
+   const criteria = activeSearch?.criteria || { terms: [] };
+   const target = activeSearch?.scope === 'all' && folder !== 'LOCAL_DRAFTS' ? 'ALL' : folder;
+   const id = cacheKey(current, target, criteria);
    const activeAccount = accounts.get(current);
-   cached = (current === 'domain' || activeAccount?.expires > Date.now()) && lists.get(id);
-   view = { id, key: current, folder, query, page: cached?.page, rows: cached?.rows || [], controller: new AbortController() };
+   cached = target !== 'LOCAL_DRAFTS' && (current === 'domain' || activeAccount?.expires > Date.now()) && lists.get(id);
+   view = { id, key: current, folder: target, criteria, page: cached?.page, rows: cached?.rows || [], controller: new AbortController() };
    resetReader();
    $('.message-list').scrollTop = 0;
    $('#mailbox-count').textContent = current === 'domain' ? (preview ? 'preview@example.test' : 'All addresses at @mqmr.bio') : current;
+   if (target === 'LOCAL_DRAFTS') $('#mailbox-count').textContent = 'Saved on this device';
+   $('#mailbox-title').textContent = hasMailSearch(criteria) ? 'Search results' : folders[folder];
    paintRows(view);
    status(cached && !view.rows.length ? 'No messages in this mailbox.' : '');
    if (!force && cached && Date.now() - cached.time < listFreshness) {
@@ -188,16 +195,23 @@ export function initializeInbox(siteBackend) {
   }
 
   const request = view;
-  const { key, query, folder: targetFolder, controller } = request;
+  const { key, criteria, folder: targetFolder, controller } = request;
+  const searching = hasMailSearch(criteria);
   const page = append ? request.page : null;
   request.loading = true;
   $('#more').disabled = true;
   if (!cached || !request.rows.length || force) status(append ? 'Loading more…' : 'Loading mail…');
   try {
    let rows, next;
-   if (key === 'domain') {
-    const result = !page && !query && targetFolder === 'INBOX' && firstPage
-     ? firstPage : await domain('list', { folder: targetFolder, search: query, cursor: page });
+   if (targetFolder === 'LOCAL_DRAFTS') {
+    const storage = await requireDraftStorage();
+    rows = (await storage.list(key)).sort((a, b) => b.updatedAt - a.updatedAt)
+     .map(item => ({ id: item.id, from: item.from, to: item.to, subject: item.subject, body: item.text, snippet: item.text,
+      date: item.updatedAt, hasAttachments: item.hasAttachments, localDraft: item }))
+     .filter(item => matchesMailSearch(item, criteria));
+   } else if (key === 'domain') {
+    const result = !page && !searching && targetFolder === 'INBOX' && firstPage
+     ? firstPage : await domain('list', { folder: targetFolder, criteria, cursor: page });
     firstPage = undefined;
     rows = result.messages;
     next = result.next;
@@ -205,7 +219,7 @@ export function initializeInbox(siteBackend) {
     const params = new URLSearchParams({ maxResults: '25' });
     if (targetFolder !== 'ALL') params.set('labelIds', targetFolder);
     if (targetFolder === 'SPAM' || targetFolder === 'TRASH') params.set('includeSpamTrash', 'true');
-    if (query) params.set('q', query);
+    if (searching) params.set('q', gmailMailQuery(criteria));
     if (page) params.set('pageToken', page);
     const result = await gmail('messages?' + params, { signal: controller.signal }, key);
     next = result.nextPageToken;
@@ -216,11 +230,12 @@ export function initializeInbox(siteBackend) {
    request.rows = [...(append ? request.rows : []), ...rows.filter(row => !existingIds.has(row.id))];
    request.page = next || null;
    paintRows(request);
-   cacheList(request);
-   status(rows.length ? '' : append ? 'No more messages.' : 'No messages in this mailbox.');
+   if (targetFolder !== 'LOCAL_DRAFTS') cacheList(request);
+   status(rows.length ? '' : append ? 'No more messages.' : searching ? 'No messages match these filters.'
+    : targetFolder === 'LOCAL_DRAFTS' ? 'No drafts on this device.' : 'No messages in this mailbox.');
    if (preview && !previewOpened) {
     previewOpened = true;
-    if (rows.length && matchMedia('(min-width: 761px)').matches) read(rows[0], $('#messages').firstElementChild);
+    if (rows.length && targetFolder !== 'LOCAL_DRAFTS' && matchMedia('(min-width: 761px)').matches) read(rows[0], $('#messages').firstElementChild);
    }
   } catch (error) {
    if (view === request && !controller.signal.aborted) fail(error);
@@ -235,8 +250,47 @@ export function initializeInbox(siteBackend) {
 
  $('#refresh').onclick = () => load(false, true);
  $('#more').onclick = () => load(true);
- $('#search').onkeydown = event => { if (event.key === 'Enter') load(); };
- $('#search').onsearch = () => load();
+ const searchForm = $('#mail-search');
+ const searchInput = $('#search');
+ const searchOptions = $('#search-options');
+ const searchToggle = $('#open-search');
+ function showSearch(open) {
+  searchOptions.hidden = !open;
+  searchToggle.setAttribute('aria-expanded', String(open));
+ }
+ function resetSearch() {
+  activeSearch = null;
+  searchForm.reset();
+  searchToggle.textContent = 'Filters';
+  $('#search-error').textContent = '';
+  showSearch(false);
+ }
+ searchInput.addEventListener('focus', () => showSearch(true));
+ searchInput.addEventListener('click', () => showSearch(true));
+ searchInput.addEventListener('search', () => { if (!searchInput.value && activeSearch) searchForm.requestSubmit(); });
+ searchToggle.onclick = () => showSearch(searchOptions.hidden);
+ searchForm.onsubmit = event => {
+  event.preventDefault();
+  try {
+   const fields = Object.fromEntries(new FormData(searchForm));
+   const criteria = parseMailSearch(searchInput.value, fields);
+   activeSearch = hasMailSearch(criteria) ? { criteria, scope: fields.scope } : null;
+   const count = Object.keys(criteria).length - 1;
+   searchToggle.textContent = count ? `Filters (${count})` : 'Filters';
+   $('#search-error').textContent = '';
+   if (searchOptions.contains(document.activeElement)) searchInput.focus();
+   showSearch(false);
+   load();
+  } catch (error) { $('#search-error').textContent = error.message; showSearch(true); }
+ };
+ $('#clear-search').onclick = () => { resetSearch(); searchInput.focus(); showSearch(true); load(); };
+ searchForm.addEventListener('keydown', event => {
+  if (event.key !== 'Escape' || searchOptions.hidden) return;
+  event.preventDefault();
+  searchInput.focus();
+  showSearch(false);
+ });
+ document.addEventListener('pointerdown', event => { if (!searchForm.contains(event.target)) showSearch(false); });
 
  async function messageContent(key, messageId) {
   const id = cacheKey(key, messageId);
@@ -534,19 +588,30 @@ export function initializeInbox(siteBackend) {
   return addressRequest;
  }
  const composeDialog = $('#compose-dialog');
+ const composeForm = $('#compose-form');
  const composer = richComposer($('#body'), $('#format-toolbar'), $('#link-panel'));
+ const saveStatus = $('#draft-status');
+ let saveTimer;
+ async function requireDraftStorage() {
+  const storage = await draftStorage;
+  if (!storage) throw Error('This browser could not open draft storage.');
+  return storage;
+ }
  const composerFields = () => ({
   from: $('#from').value,
   to: $('#to').value,
   subject: $('#subject').value,
   ...composer.fields()
  });
- async function compose(message = null) {
+ async function compose(message = null, saved = null) {
   if (!current || composing || sending || composeDialog.open) return;
   const account = current;
   composing = true;
   try {
-   const values = account === 'domain' ? (await addresses()).map(item => item.address) : [account];
+   const [values, files] = await Promise.all([
+    account === 'domain' ? addresses().then(items => items.map(item => item.address)) : [account],
+    saved ? requireDraftStorage().then(storage => storage.files(saved)) : []
+   ]);
    if (current !== account) return;
    const from = $('#from');
    from.replaceChildren(...values.map(value => {
@@ -554,78 +619,189 @@ export function initializeInbox(siteBackend) {
     option.value = value;
     return option;
    }));
-   if (account === 'domain' && message?.full?.recipients) {
+   if (saved && values.includes(saved.from)) from.value = saved.from;
+   else if (account === 'domain' && message?.full?.recipients) {
     const match = message.full.recipients.find(recipient => values.includes(recipient));
     if (match) from.value = match;
    }
    const recipient = !message ? '' : account === 'domain' ? message.full.reply_to || message.from
     : header(message.full, 'Reply-To') || message.from;
-   $('#to').value = recipient.match(/<([^>]+)>/)?.[1] || recipient;
-   $('#subject').value = message ? (/^Re:/i.test(message.subject) ? message.subject : 'Re: ' + message.subject) : '';
+   $('#to').value = saved?.to ?? (recipient.match(/<([^>]+)>/)?.[1] || recipient);
+   $('#subject').value = saved?.subject ?? (message ? (/^Re:/i.test(message.subject) ? message.subject : 'Re: ' + message.subject) : '');
    composer.reset();
-   $('#compose-title').textContent = message ? 'Reply' : 'New message';
+   if (saved) composer.restore(saved);
+   $('#compose-title').textContent = saved ? 'Edit draft' : message ? 'Reply' : 'New message';
    $('#attachments').value = '';
    $('#compose-status').textContent = '';
-   draft = { account, reply: message, id: crypto.randomUUID(), initial: JSON.stringify(composerFields()) };
+   saveStatus.textContent = saved ? 'Saved on this device.' : '';
+   const record = saved || { account, id: crypto.randomUUID(), revision: 0, filesVersion: '',
+    replyId: message && account !== 'domain' ? header(message.full, 'Message-ID') : '', threadId: message?.threadId || '' };
+   const initial = JSON.stringify(composerFields());
+   draft = { record, files, initial, filesVersion: record.filesVersion, sendKey: record.sendKey, sendState: record.sendState,
+    queued: saved ? JSON.stringify([initial, record.filesVersion, record.sendKey]) : '', pending: Promise.resolve(true) };
+   renderDraftFiles();
    composeDialog.showModal();
-   if (message) composer.focus();
+   if (message || saved) composer.focus();
    else $('#to').focus();
   } catch (error) { fail(error); }
   finally { composing = false; }
  }
 
- function closeDraft() {
-  if (sending) return;
-  const hasEdits = draft && (draft.initial !== JSON.stringify(composerFields()) || $('#attachments').files.length);
-  if (hasEdits && !confirm('Discard this unsent message?')) return;
+ function saveDraft() {
+  clearTimeout(saveTimer);
+  if (!draft) return Promise.resolve(true);
+  const state = draft;
+  const fields = composerFields();
+  const plain = JSON.stringify(fields);
+  const { files, filesVersion, sendKey, sendState } = state;
+  const signature = JSON.stringify([plain, filesVersion, sendKey]);
+  if (signature === state.queued) return state.pending;
+  if (!state.record.revision && !state.queued && plain === state.initial && !files.length && !sendKey) return state.pending;
+  state.queued = signature;
+  if (draft === state) saveStatus.textContent = 'Saving draft…';
+  state.pending = state.pending.then(async () => {
+   const storage = await requireDraftStorage();
+   const entry = { ...state.record, ...fields, filesVersion, sendKey, sendState, hasAttachments: files.length > 0, updatedAt: Date.now() };
+   let stored = await storage.save(entry, filesVersion !== state.record.filesVersion ? files : undefined);
+   if (!stored) stored = await storage.save({ ...entry, id: crypto.randomUUID(), revision: 0 }, files);
+   state.record = stored;
+   if (draft === state && state.queued === signature) saveStatus.textContent = 'Saved on this device.';
+   return true;
+  }).catch(() => {
+   if (state.queued === signature) state.queued = '';
+   if (draft === state) saveStatus.textContent = 'Draft could not be saved on this device.';
+   return false;
+  });
+  return state.pending;
+ }
+
+ function scheduleDraft() {
+  if (!draft || sending || closing) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveDraft, 170);
+ }
+
+ function finishDraft() {
   composeDialog.close();
   draft = null;
+  if (folder === 'LOCAL_DRAFTS') load(false, true);
  }
+
+ async function closeDraft() {
+  if (sending || closing || !draft) return;
+  const state = draft;
+  const saving = saveDraft();
+  closing = composeForm.inert = true;
+  try { if (await saving && draft === state) finishDraft(); }
+  finally { closing = composeForm.inert = false; }
+ }
+
+ function renderDraftFiles() {
+  const list = $('#draft-files');
+  list.replaceChildren(...draft.files.map((file, index) => {
+   const row = text('li');
+   const remove = text('button', 'Remove');
+   remove.type = 'button';
+   remove.setAttribute('aria-label', `Remove ${file.name}`);
+   remove.onclick = () => {
+    draft.files = draft.files.filter((_, position) => position !== index);
+    draft.filesVersion = crypto.randomUUID();
+    renderDraftFiles();
+    saveDraft();
+   };
+   row.append(text('span', file.name), remove);
+   return row;
+  }));
+  list.hidden = !draft.files.length;
+ }
+
+ $('#attachments').onchange = event => {
+  if (!draft) return;
+  const files = [...draft.files, ...Array.from(event.target.files, file => ({ name: file.name, type: file.type, blob: file }))];
+  event.target.value = '';
+  if (files.length > 20 || files.reduce((total, file) => total + file.blob.size, 0) > 10 * 1024 * 1024) {
+   $('#compose-status').textContent = 'Add up to 20 attachments totaling 10 MB or less.';
+   return;
+  }
+  $('#compose-status').textContent = '';
+  draft.files = files;
+  draft.filesVersion = crypto.randomUUID();
+  renderDraftFiles();
+  saveDraft();
+ };
+ composeForm.addEventListener('input', scheduleDraft);
+ composeForm.addEventListener('change', scheduleDraft);
+ $('#format-toolbar').addEventListener('click', scheduleDraft);
+ $('#link-panel').addEventListener('click', scheduleDraft);
+ document.addEventListener('visibilitychange', () => { if (document.hidden && !sending) saveDraft(); });
+ window.addEventListener('pagehide', () => { if (!sending) saveDraft(); }, { capture: true });
+ $('#discard-draft').onclick = async () => {
+  if (!draft || sending || closing || !confirm('Discard this unsent message?')) return;
+  const state = draft;
+  clearTimeout(saveTimer);
+  closing = composeForm.inert = true;
+  try {
+   await state.pending;
+   if (state.record.revision) await (await requireDraftStorage()).remove(state.record);
+   if (draft === state) finishDraft();
+  } catch { saveStatus.textContent = 'Draft could not be discarded. Try again.'; }
+  finally { closing = composeForm.inert = false; }
+ };
  $('#compose').onclick = () => compose();
  $('#mobile-compose').onclick = () => compose();
  $('#close-compose').onclick = closeDraft;
  composeDialog.addEventListener('cancel', event => { event.preventDefault(); closeDraft(); });
 
- $('#compose-form').onsubmit = async event => {
+ composeForm.onsubmit = async event => {
   event.preventDefault();
-  if (!draft || sending || !composeDialog.open) return;
+  if (!draft || sending || closing || !composeDialog.open) return;
 
-  const { account, reply, id } = draft;
-  const message = { ...composerFields(), idempotencyKey: id };
+  const state = draft;
+  const { account, replyId, threadId } = state.record;
+  const message = composerFields();
   if (!message.text) {
    $('#compose-status').textContent = 'Write a message before sending.';
    composer.focus();
    return;
   }
-  const selected = [...$('#attachments').files];
+  const sendState = JSON.stringify([message, state.filesVersion]);
+  if (state.sendState !== sendState) {
+   state.sendState = sendState;
+   state.sendKey = crypto.randomUUID();
+  }
+  const saving = saveDraft();
   const controls = [...composeDialog.querySelectorAll('button, input, select, textarea')].filter(control => !control.disabled);
   sending = true;
   $('#body').contentEditable = 'false';
   controls.forEach(control => { control.disabled = true; });
   $('#compose-status').textContent = 'Sending…';
   try {
-   if (selected.reduce((sum, file) => sum + file.size, 0) > 10 * 1024 * 1024) throw Error('Attachments must total 10 MB or less.');
+   await saving;
    const files = [];
-   for (const file of selected) {
-    const bytes = new Uint8Array(await file.arrayBuffer());
+   for (const file of state.files) {
+    const bytes = new Uint8Array(await file.blob.arrayBuffer());
     let binary = '';
     for (let i = 0; i < bytes.length; i += 32768) binary += String.fromCharCode(...bytes.subarray(i, i + 32768));
     files.push({ name: file.name, type: file.type, content: btoa(binary) });
    }
-   const data = { ...message, files };
+   const data = { ...message, files, idempotencyKey: state.sendKey };
    if (account === 'domain') await domain('send', data);
    else {
-    const raw = mime({ ...data, replyId: reply ? header(reply.full, 'Message-ID') : null });
+    const raw = mime({ ...data, replyId });
     await gmail('messages/send', {
      method: 'POST',
-     body: JSON.stringify({ raw, ...(reply?.threadId ? { threadId: reply.threadId } : {}) })
+     body: JSON.stringify({ raw, ...(threadId ? { threadId } : {}) })
     }, account);
    }
-   composeDialog.close();
-   draft = null;
+   let removed = true;
+   if (state.record.revision) {
+    try { removed = await (await requireDraftStorage()).remove(state.record); }
+    catch { removed = false; }
+   }
+   finishDraft();
    for (const [cacheId, entry] of lists) if (entry.key === account) lists.delete(cacheId);
    if (current === account && folder === 'SENT') await load(false, true);
-   status(preview ? 'Sample message saved to Sent.' : 'Message sent.');
+   status(!removed ? 'Message sent. A copy of the draft remains on this device.' : preview ? 'Sample message saved to Sent.' : 'Message sent.');
   } catch (error) { $('#compose-status').textContent = error.message; }
   finally {
    sending = false;
