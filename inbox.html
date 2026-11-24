@@ -8,7 +8,7 @@
   <meta name="theme-color" content="#141414">
   <title>Inbox · MqR</title>
   <link rel="preconnect" href="https://ebufvcuxcypoxwbvcbjg.supabase.co" crossorigin>
-  <link rel="stylesheet" href="inbox.css?v=inbox-media-2">
+  <link rel="stylesheet" href="inbox.css?v=inbox-workspace-1">
 </head>
 <body>
   <section class="mailbox-gate" id="mailbox-gate" aria-labelledby="gate-title">
@@ -46,7 +46,30 @@
           <span id="mailbox-count"></span>
         </div>
         <span class="preview-label" id="preview-label" hidden>Sample messages</span>
-        <input id="search" type="search" placeholder="Search mail" aria-label="Search mail">
+        <form id="mail-search" role="search" aria-label="Mail search">
+          <div class="search-controls">
+            <input id="search" type="search" placeholder="Search mail" aria-label="Search mail" aria-controls="search-options" maxlength="500" autocomplete="off">
+            <button id="open-search" type="button" aria-controls="search-options" aria-expanded="false">Filters</button>
+          </div>
+          <div id="search-options" class="search-options" hidden>
+            <div class="search-fields">
+              <label>From <input name="from" placeholder="Sender or email" maxlength="200"></label>
+              <label>To <input name="to" placeholder="Recipient or email" maxlength="200"></label>
+              <label>Subject <input name="subject" maxlength="200"></label>
+              <label>Status <select name="status"><option value="">Any status</option><option value="unread">Unread</option><option value="read">Read</option></select></label>
+              <label>On or after <input name="after" type="date"></label>
+              <label>Before <input name="before" type="date"></label>
+              <label>Search in <select name="scope"><option value="all">All mail</option><option value="folder">Current folder</option></select></label>
+            </div>
+            <div class="search-flags">
+              <label><input name="attachments" type="checkbox"> Has attachments</label>
+              <label><input name="starred" type="checkbox"> Starred</label>
+            </div>
+            <p class="search-hint">Search message text or type <code>from:</code>, <code>has:attachment</code>, or <code>is:unread</code>.</p>
+            <p id="search-error" role="status"></p>
+            <div class="search-actions"><button type="button" id="clear-search">Clear</button><button type="submit" class="primary">Search</button></div>
+          </div>
+        </form>
         <button id="refresh" aria-label="Refresh mail">↻</button>
       </header>
       <p id="mail-status" role="status"></p>
@@ -90,9 +113,11 @@
           </div>
           <div id="body" role="textbox" contenteditable="true" aria-label="Message" aria-multiline="true" aria-required="true" data-placeholder="Write your message…" dir="auto"></div>
         </div>
-        <label>Attachments <input id="attachments" type="file" multiple></label>
+        <label>Add attachments <input id="attachments" type="file" multiple></label>
+        <ul id="draft-files" aria-label="Attachments in this draft" hidden></ul>
+        <p id="draft-status" role="status"></p>
         <p id="compose-status" role="status"></p>
-        <footer><button type="submit" class="primary" id="send">Send message</button></footer>
+        <footer><button type="button" id="discard-draft">Discard draft</button><button type="submit" class="primary" id="send">Send message</button></footer>
       </form>
     </dialog>
 
@@ -113,7 +138,7 @@
     </dialog>
   </div>
   <script src="inbox-config.js"></script>
-  <script src="mail-core.js?v=inbox-media-2"></script>
-  <script type="module" src="private-inbox.js?v=inbox-media-2"></script>
+  <script src="mail-core.js?v=inbox-workspace-1"></script>
+  <script type="module" src="private-inbox.js?v=inbox-workspace-1"></script>
 </body>
 </html>

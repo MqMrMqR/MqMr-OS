@@ -5,6 +5,20 @@ import { stripTypeScriptTypes } from 'node:module';
 import PostalMime from 'postal-mime';
 import core from '../mail-core.js';
 import { attachmentImageType, mailImageSource, quoteParts, safeMailUrl, validOutgoingHtml } from '../mail-format.js';
+import { gmailMailQuery, hasMailSearch, matchesMailSearch, normalizeMailSearch, parseMailSearch } from '../mail-search.js';
+
+test('search combines visible filters, phrases, and Gmail operators', () => {
+  const search = parseMailSearch('from:billing "repair kit" has:attachment is:read', { to: 'owner', after: '2026-11-23', starred: true });
+  assert.deepEqual(search.terms, ['repair kit']);
+  assert.equal(search.from, 'billing');
+  assert.equal(search.unread, false);
+  assert.match(gmailMailQuery(search), /"repair kit" from:"billing" to:"owner" after:\d+ has:attachment is:starred is:read/);
+  const message = { from: 'Billing team', to: 'Owner@example.test', subject: 'Notice', body: 'Your repair kit is ready.',
+    date: Date.parse(search.after), hasAttachments: true, starred: true, unread: false };
+  assert.equal(matchesMailSearch(message, search), true);
+  assert.equal(matchesMailSearch({ ...message, body: 'An unrelated body.' }, search), false);
+  assert.throws(() => parseMailSearch('after:2026-02-30'), /valid date/);
+});
 
 test('plain replies keep separate quotes and a nested quote with wrapped attribution', () => {
   const parsed = quoteParts('Reply\n\nOn Saturday, Alex\nwrote:\n> Previous\n> On Friday, Pat wrote:\n> > Original\n\nCurrent note\n\nOn Thursday, Lee wrote:\n> Second quote');
@@ -53,15 +67,19 @@ test('Gmail rich mail preserves the plain alternative, Unicode, and attachments'
   assert.equal(message.attachments[0].filename, 'note.txt');
 });
 
-test('domain sender forwards and stores supported formatting while keeping plain-only mail compatible', async () => {
+test('domain endpoint routes indexed search and preserves formatting on send', async () => {
   const owner = '5922fd59-f07a-4ec9-8939-abc615b7c640';
   const email = 'mqmrpc@gmail.com';
   const token = 'fixture.' + Buffer.from(JSON.stringify({
     sub: owner, aal: 'aal2', amr: [{ method: 'password' }, { method: 'totp' }]
   })).toString('base64url') + '.fixture';
-  let receive, claim, stored, provider;
+  let receive, claim, stored, provider, query;
   const db = {
     auth: { getUser: async () => ({ data: { user: { id: owner, email, app_metadata: { role: 'admin' } } } }) },
+    rpc: async (name, args) => {
+      query = { name, args };
+      return { data: [{ id: 'fixture', sender: 'fixture@example.test', recipients: ['reader@example.test'], subject: 'Notice', body_preview: 'Sample', unread: false }] };
+    },
     from: table => ({
       select: () => ({
         eq: () => ({
@@ -81,7 +99,8 @@ test('domain sender forwards and stores supported formatting while keeping plain
     return Response.json({ id: 'fixture-id' });
   };
   const source = readFileSync(new URL('../mail-domain.ts', import.meta.url), 'utf8').replace(/^import .*;\r?\n/gm, '');
-  new Function('Deno', 'createClient', 'validOutgoingHtml', 'fetch', stripTypeScriptTypes(source))(runtime, () => db, validOutgoingHtml, request);
+  new Function('Deno', 'createClient', 'validOutgoingHtml', 'hasMailSearch', 'normalizeMailSearch', 'fetch', stripTypeScriptTypes(source))
+    (runtime, () => db, validOutgoingHtml, hasMailSearch, normalizeMailSearch, request);
   const send = values => receive(new Request('https://example.test', {
     method: 'POST',
     headers: { Authorization: 'Bearer ' + token },
@@ -98,4 +117,8 @@ test('domain sender forwards and stores supported formatting while keeping plain
   assert.equal((await send({})).status, 200);
   assert.equal(Object.hasOwn(provider, 'html'), false);
   assert.equal(stored.html_body, '');
+  const search = await send({ action: 'list', folder: 'ARCHIVE', criteria: { terms: ['  inside body  '], unread: false, attachments: true } });
+  assert.equal(search.status, 200);
+  assert.deepEqual(query, { name: 'mail_search', args: { p_folder: 'ARCHIVE', p_filters: { terms: ['inside body'], unread: false, attachments: true }, p_cursor_date: null, p_cursor_id: null } });
+  assert.equal((await search.json()).messages[0].subject, 'Notice');
 });

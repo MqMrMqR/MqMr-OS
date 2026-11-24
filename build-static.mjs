@@ -10,7 +10,7 @@ const publicFiles = [
   'index.html', 'profile.css', 'access.js', 'mail-access.js', 'device-client.js', 'profiles',
   'profile-content.js', 'profile-appearance.js', 'profile-themes.js', 'profile-page.js', 'cursor-trail.js', 'editor.html', 'editor.js',
   'inbox.html', 'inbox.css', 'inbox.js', 'private-inbox.js', 'inbox-config.js',
-  'mail-core.js', 'mail-format.js', 'mail-compose.js', 'privacy.html', 'CNAME'
+  'mail-core.js', 'mail-format.js', 'mail-compose.js', 'mail-drafts.js', 'mail-search.js', 'privacy.html', 'CNAME'
 ];
 
 for (const directory of [output, ...(preview ? [previewRoot] : [])]) {

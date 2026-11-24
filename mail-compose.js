@@ -1,4 +1,4 @@
-import { composerHtml, safeMailUrl } from './mail-format.js?v=inbox-media-2';
+import { composerHtml, safeMailUrl, validOutgoingHtml } from './mail-format.js?v=inbox-workspace-1';
 
 export function richComposer(editor, toolbar, linkPanel) {
   const urlField = linkPanel.querySelector('input');
@@ -94,6 +94,10 @@ export function richComposer(editor, toolbar, linkPanel) {
       editor.replaceChildren();
       linkPanel.hidden = true;
       for (const button of toolbar.querySelectorAll('[aria-pressed]')) button.setAttribute('aria-pressed', 'false');
+    },
+    restore({ html, text }) {
+      if (html && validOutgoingHtml(html)) editor.innerHTML = html;
+      else editor.innerText = text || '';
     },
     focus: () => editor.focus()
   };

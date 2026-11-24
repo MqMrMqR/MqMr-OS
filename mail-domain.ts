@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.49.8';
 import { validOutgoingHtml } from './mail-format.js';
+import { hasMailSearch, normalizeMailSearch } from './mail-search.js';
 const url=Deno.env.get('SUPABASE_URL')!, key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const db=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
 const ownerId = '5922fd59-f07a-4ec9-8939-abc615b7c640';
@@ -36,12 +37,22 @@ Deno.serve(async req=>{
   if(input.action==='addresses'){const {data,error}=await db.from('mail_addresses').select('*').order('created_at');fail(error);return result({addresses:data});}
   if(input.action==='add-address'){const name=String(input.name||'').trim().toLowerCase();if(!/^[a-z0-9][a-z0-9._+-]{0,63}$/.test(name))return result({error:'Use letters, numbers, dots, dashes, plus or underscore'},400);const {error}=await db.from('mail_addresses').insert({address:name+'@mqmr.bio'});if(error?.code==='23505')return result({error:'Address already exists'},409);fail(error);return result({ok:true});}
   if(input.action==='list'){
+   const cursor=input.cursor;
+   if(cursor&&(!uuid.test(cursor.id)||!Number.isFinite(Date.parse(cursor.date))))return result({error:'Invalid cursor'},400);
+   const criteria=normalizeMailSearch(input.criteria??{terms:[input.search]});
+   let rows;
+   if(hasMailSearch(criteria)){
+    const {data,error}=await db.rpc('mail_search',{p_folder:input.folder||'ALL',p_filters:criteria,
+     p_cursor_date:cursor?new Date(cursor.date).toISOString():null,p_cursor_id:cursor?.id??null});
+    fail(error); rows=data||[];
+   }else{
    let query=db.from('mail_messages').select('id,direction,sender,recipients,subject,body_preview,unread,starred,created_at').order('created_at',{ascending:false}).order('id',{ascending:false}).limit(26);
    if(input.folder==='TRASH')query=query.eq('trash',true);else query=query.eq('trash',false);
    if(input.folder==='SENT')query=query.eq('direction','outbound');else if(input.folder==='STARRED')query=query.eq('starred',true);else if(input.folder==='INBOX')query=query.eq('direction','inbound').eq('archived',false);
-   if(input.search){const term=String(input.search).slice(0,200).replace(/[\\%_]/g,'\\$&');query=query.ilike('subject','%'+term+'%');}
-   if(input.cursor){const cursor=input.cursor;if(!uuid.test(cursor.id)||!Number.isFinite(Date.parse(cursor.date)))return result({error:'Invalid cursor'},400);const date=new Date(cursor.date).toISOString();query=query.or(`created_at.lt.${date},and(created_at.eq.${date},id.lt.${cursor.id})`);}
-   const {data,error}=await query;fail(error);const rows=data||[];const visible=rows.slice(0,25);const last=visible.at(-1);return result({messages:visible.map(m=>({id:m.id,from:m.sender,to:m.recipients.join(', '),subject:m.subject,snippet:m.body_preview,unread:m.unread,starred:m.starred,date:m.created_at})),next:rows.length>25?{date:last!.created_at,id:last!.id}:null});
+   if(cursor){const date=new Date(cursor.date).toISOString();query=query.or(`created_at.lt.${date},and(created_at.eq.${date},id.lt.${cursor.id})`);}
+   const {data,error}=await query;fail(error);rows=data||[];
+   }
+   const visible=rows.slice(0,25);const last=visible.at(-1);return result({messages:visible.map(m=>({id:m.id,from:m.sender,to:m.recipients.join(', '),subject:m.subject,snippet:m.body_preview,unread:m.unread,starred:m.starred,date:m.created_at})),next:rows.length>25?{date:last!.created_at,id:last!.id}:null});
   }
   if(['read','modify','attachment'].includes(input.action)){
    if(!uuid.test(String(input.id)))return result({error:'Invalid message'},400);
